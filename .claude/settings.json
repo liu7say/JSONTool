@@ -1,0 +1,7 @@
+{
+	"env": {
+		"ANTHROPIC_AUTH_TOKEN": "sk-DSv8yleIYgJYFVTAH4aOfJMRcED48zxGJ2dF2DvJunvdkDeY",
+		"ANTHROPIC_BASE_URL": "https://runanytime.hxi.me",
+		"CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+	}
+}

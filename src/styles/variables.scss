@@ -1,0 +1,52 @@
+// 颜色变量定义
+// 默认 (Dark)
+$bg-primary-dark: #1e1e1e;
+$bg-secondary-dark: #252526;
+$bg-tertiary-dark: #2d2d2d;
+$text-primary-dark: #d4d4d4;
+$text-secondary-dark: #969696;
+$border-color-dark: #333333;
+$accent-color-dark: #42b983;
+$hover-color-dark: #2a2d2e;
+
+// Light
+$bg-primary-light: #ffffff;
+$bg-secondary-light: #f3f3f3;
+$bg-tertiary-light: #e5e5e5;
+$text-primary-light: #333333;
+$text-secondary-light: #666666;
+$border-color-light: #e0e0e0;
+$accent-color-light: #42b983;
+$hover-color-light: #f0f0f0;
+
+// 混合宏：定义 CSS 变量
+@mixin theme-dark {
+  --bg-primary: #{$bg-primary-dark};
+  --bg-secondary: #{$bg-secondary-dark};
+  --bg-tertiary: #{$bg-tertiary-dark};
+  --text-primary: #{$text-primary-dark};
+  --text-secondary: #{$text-secondary-dark};
+  --border-color: #{$border-color-dark};
+  --accent-color: #{$accent-color-dark};
+  --hover-color: #{$hover-color-dark};
+  
+  --editor-bg: #1e1e1e;
+  --scrollbar-track: #1e1e1e;
+  --scrollbar-thumb: #424242;
+}
+
+@mixin theme-light {
+  --bg-primary: #{$bg-primary-light};
+  --bg-secondary: #{$bg-secondary-light};
+  --bg-tertiary: #{$bg-tertiary-light};
+  --text-primary: #{$text-primary-light};
+  --text-secondary: #{$text-secondary-light};
+  --border-color: #{$border-color-light};
+  --accent-color: #{$accent-color-light};
+  --hover-color: #{$hover-color-light};
+
+  --editor-bg: #ffffff;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #c1c1c1;
+}
+
