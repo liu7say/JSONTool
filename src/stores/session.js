@@ -1,0 +1,80 @@
+import { defineStore } from 'pinia'
+import { createDocument, updateDocumentText } from '../domain/document'
+import { createId } from '../utils/id'
+
+export const useSessionStore = defineStore('session', {
+  state: () => ({
+    tabs: [],
+    activeTabId: null,
+  }),
+  
+  getters: {
+    activeTab: (state) => state.tabs.find(t => t.id === state.activeTabId),
+  },
+
+  actions: {
+    createTab(sourceText = '') {
+      const id = createId()
+      const doc = createDocument(sourceText)
+      // 自动命名：Tab 1, Tab 2...
+      const num = this.tabs.length + 1
+      
+      const newTab = {
+        id,
+        title: `Tab ${num}`,
+        doc,
+        // 每个 Tab 独立的视图状态
+        viewMode: 'code', // 'code' | 'table'
+        splitRatio: 50, // 左右分栏比例
+      }
+      
+      this.tabs.push(newTab)
+      this.activeTabId = id
+      return newTab
+    },
+
+    closeTab(id) {
+      const idx = this.tabs.findIndex(t => t.id === id)
+      if (idx === -1) return
+
+      this.tabs.splice(idx, 1)
+
+      // 如果关闭的是当前 Tab，且还有其他 Tab，则激活相邻的
+      if (this.activeTabId === id) {
+        if (this.tabs.length > 0) {
+          // 优先激活左边的，如果没有则激活现在的第一个
+          const nextTab = this.tabs[idx - 1] || this.tabs[0]
+          this.activeTabId = nextTab.id
+        } else {
+          this.activeTabId = null
+          // 如果全关了，自动创建一个新的，保证界面不空
+          this.createTab()
+        }
+      }
+    },
+
+    setActive(id) {
+      if (this.tabs.find(t => t.id === id)) {
+        this.activeTabId = id
+      }
+    },
+
+    updateTabDoc(id, text) {
+      const tab = this.tabs.find(t => t.id === id)
+      if (!tab) return
+      
+      tab.doc = updateDocumentText(tab.doc, text)
+    },
+
+    updateTabTitle(id, title) {
+      const tab = this.tabs.find(t => t.id === id)
+      if (tab) tab.title = title
+    },
+    
+    updateTabViewMode(id, mode) {
+        const tab = this.tabs.find(t => t.id === id)
+        if (tab) tab.viewMode = mode
+    }
+  }
+})
+
