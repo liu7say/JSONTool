@@ -18,15 +18,21 @@ import {
 	ArrowRight,
 } from '@element-plus/icons-vue';
 
+// 状态管理 stores
 const sessionStore = useSessionStore();
 const historyStore = useHistoryStore();
 const themeStore = useThemeStore();
 
-const showHistory = ref(false);
-const tabsContainer = ref(null);
-const showLeftGradient = ref(false);
-const showRightGradient = ref(false);
+// UI 状态 refs
+const showHistory = ref(false); // 控制历史记录抽屉的显示
+const tabsContainer = ref(null); // Tab 容器的 DOM 引用
+const showLeftGradient = ref(false); // 是否显示左侧滚动遮罩
+const showRightGradient = ref(false); // 是否显示右侧滚动遮罩
 
+/**
+ * 检查 Tab 栏的滚动状态，决定是否显示左右的渐变遮罩
+ * 这是一个纯粹的 UI 辅助函数，提升用户体验
+ */
 const checkScroll = () => {
 	if (!tabsContainer.value) return;
 	const { scrollLeft, scrollWidth, clientWidth } = tabsContainer.value;
@@ -34,6 +40,10 @@ const checkScroll = () => {
 	showRightGradient.value = Math.ceil(scrollLeft + clientWidth) < scrollWidth;
 };
 
+/**
+ * 手动滚动 Tab 栏
+ * @param {string} direction - 滚动方向 'left' | 'right'
+ */
 const scrollTabs = (direction) => {
 	if (!tabsContainer.value) return;
 	const scrollAmount = 200;
@@ -59,6 +69,10 @@ onMounted(() => {
 	}
 });
 
+/**
+ * 将当前激活的 Tab 滚动到可视区域
+ * 使用 scrollIntoView 实现丝滑的定位
+ */
 const scrollToActiveTab = () => {
 	if (!tabsContainer.value || !sessionStore.activeTabId) return;
 
@@ -70,12 +84,12 @@ const scrollToActiveTab = () => {
 		activeTabEl.scrollIntoView({
 			behavior: 'smooth',
 			block: 'nearest',
-			inline: 'center', // Center the tab
+			inline: 'center', // 保持 Tab 居中
 		});
 	}
 };
 
-// Watch for active tab changes to scroll into view
+// 监听当前激活 Tab 的变化，自动滚动
 watch(
 	() => sessionStore.activeTabId,
 	async () => {
@@ -84,7 +98,7 @@ watch(
 	}
 );
 
-// Watch for tab changes to update scroll indicators
+// 监听 Tab 数量变化，更新滚动状态指示器
 import { watch, nextTick } from 'vue';
 watch(
 	() => sessionStore.tabs.length,
@@ -94,22 +108,41 @@ watch(
 	}
 );
 
+/**
+ * 处理文档更新事件
+ * @param {string} id - Tab ID
+ * @param {string} text - 新的文本内容
+ */
 const onUpdateDoc = (id, text) => {
 	sessionStore.updateTabDoc(id, text);
 };
 
+/**
+ * 处理视图模式更新事件 (code/tree/table)
+ * @param {string} id - Tab ID
+ * @param {string} mode - 新的视图模式
+ */
 const onUpdateViewMode = (id, mode) => {
 	sessionStore.updateTabViewMode(id, mode);
 };
 
+/**
+ * 处理 JSON 路径选择更新
+ * @param {string} id - Tab ID
+ * @param {string} path - JSON 路径
+ */
 const onUpdateArrayPath = (id, path) => {
 	sessionStore.updateTabArrayPath(id, path);
 };
 
+/**
+ * 保存当前快照到历史记录
+ * @param {Object} tab - 当前 Tab 对象
+ */
 const onSaveHistory = async (tab) => {
 	try {
 		await historyStore.saveEntry({
-			doc: { ...tab.doc, parsedValue: null },
+			doc: { ...tab.doc, parsedValue: null }, // 不保存解析后的值，只保存源码
 			toolState: { viewMode: tab.viewMode },
 			title: tab.title || '未命名快照',
 		});
@@ -118,6 +151,10 @@ const onSaveHistory = async (tab) => {
 	}
 };
 
+/**
+ * 加载历史记录条目
+ * @param {Object} entry - 历史记录条目
+ */
 const loadHistoryEntry = async (entry) => {
 	const data = await historyStore.loadEntry(entry.id);
 	if (data && data.doc) {

@@ -36,24 +36,26 @@ const emit = defineEmits([
 	'save',
 ]);
 
-// --- Compare Logic ---
+// --- 核心逻辑 ---
+
+// --- 比较功能逻辑 ---
 const compareContent = ref('');
 
-// --- Table Logic ---
+// --- 表格视图逻辑 ---
 
-// Available paths
+// 计算可用的数组路径（用于将 JSON 展平为表格）
 const availableArrayPaths = computed(() => {
 	if (!props.doc || props.doc.parseError) return [];
 	return findArrayPaths(props.doc.parsedValue);
 });
 
-// Selected Path Logic
+// 选中的数组路径
 const selectedPath = computed({
 	get: () => props.selectedArrayPath,
 	set: (val) => emit('update:selectedArrayPath', val),
 });
 
-// Auto-select first path if available and none selected
+// 如果有可用路径且未选择，自动选中第一个
 watch(
 	availableArrayPaths,
 	(paths) => {
@@ -64,23 +66,23 @@ watch(
 	{ immediate: true }
 );
 
-// Raw Table Data
+// 原始表格数据
 const rawTableData = computed(() => jsonToTable(props.doc, selectedPath.value));
 
-// State for Table Features
+// 表格功能状态
 const filterText = ref('');
 const sortCol = ref(null);
 const sortAsc = ref(true); // true = asc, false = desc
 const colWidths = ref({}); // { colName: widthPx }
 
-// Computed: Processed Data (Filter -> Sort)
+// 计算属性：处理后的数据（先过滤 -> 再排序）
 const processedRows = computed(() => {
 	const { rows, columns } = rawTableData.value;
 	if (!rows) return [];
 
 	let result = [...rows];
 
-	// 1. Filter
+	// 1. 过滤
 	if (filterText.value.trim()) {
 		const lowerFilter = filterText.value.toLowerCase();
 		result = result.filter((row) => {
@@ -93,7 +95,7 @@ const processedRows = computed(() => {
 		});
 	}
 
-	// 2. Sort
+	// 2. 排序
 	if (sortCol.value) {
 		const key = sortCol.value;
 		const multiplier = sortAsc.value ? 1 : -1;
@@ -127,7 +129,7 @@ const handleSort = (col) => {
 	}
 };
 
-// Column Resizing logic
+// 列宽调整逻辑
 const resizingCol = ref(null);
 const startX = ref(0);
 const startWidth = ref(0);
@@ -157,7 +159,7 @@ const onMouseUp = () => {
 	document.body.style.cursor = '';
 };
 
-// --- Editor Actions ---
+// --- 编辑器操作 ---
 const isSorting = ref(false);
 const showLoader = ref(false);
 const codeEditorRef = ref(null);
@@ -173,11 +175,11 @@ const jumpToNextError = () => {
 };
 
 const applyFormat = () => {
-	// Format Main Doc
+	// 格式化主文档
 	const { text, error } = formatJsonText(props.doc, { indent: 2 });
 	if (!error && text) emit('update:doc', text);
 
-	// Format Compare Doc
+	// 格式化对比文档
 	if (props.viewMode === 'diff' && compareContent.value) {
 		try {
 			const parsed = JSON.parse(compareContent.value);
@@ -192,11 +194,11 @@ const applyFormat = () => {
 };
 
 const applyCompact = () => {
-	// Compact Main Doc
+	// 压缩主文档
 	const { text, error } = formatJsonText(props.doc, { indent: 0 });
 	if (!error && text) emit('update:doc', text);
 
-	// Compact Compare Doc
+	// 压缩对比文档
 	if (props.viewMode === 'diff' && compareContent.value) {
 		try {
 			const parsed = JSON.parse(compareContent.value);
@@ -219,14 +221,14 @@ const applySort = () => {
 		showLoader.value = true;
 	}, 100);
 
-	// Use nextTick -> setTimeout(0) to allow UI render cycle to start before heavy task
+	// 使用 nextTick -> setTimeout(0) 让 UI 渲染周期先运行，避免阻塞
 	setTimeout(() => {
 		try {
-			// Sort Main Doc
+			// 排序主文档
 			const { text, error } = sortJsonKeys(props.doc, { indent: 2 });
 			if (!error && text) emit('update:doc', text);
 
-			// Sort Compare Doc
+			// 排序对比文档
 			if (props.viewMode === 'diff' && compareContent.value) {
 				try {
 					const parsed = JSON.parse(compareContent.value);
