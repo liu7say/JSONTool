@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-import { EditorView, basicSetup } from 'codemirror';
+import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -8,7 +8,31 @@ import { keymap } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { lintGutter, linter, nextDiagnostic } from '@codemirror/lint';
 import { search, searchKeymap } from '@codemirror/search';
+
+// Core Extensions (Splitting basicSetup)
+import {
+	lineNumbers,
+	highlightActiveLineGutter,
+	highlightSpecialChars,
+	drawSelection,
+	dropCursor,
+	rectangularSelection,
+	crosshairCursor,
+	highlightActiveLine,
+} from '@codemirror/view';
+import {
+	defaultHighlightStyle,
+	syntaxHighlighting,
+	indentOnInput,
+	bracketMatching,
+	foldKeymap,
+} from '@codemirror/language';
+import { highlightSelectionMatches } from '@codemirror/search';
+import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
+
 import { useThemeStore } from '../stores/theme';
+import { fluentTheme } from '../features/codemirror/fluent-theme';
+import { fluentFoldGutter } from '../features/codemirror/fluent-fold';
 
 const props = defineProps({
 	modelValue: {
@@ -26,7 +50,6 @@ const emit = defineEmits(['update:modelValue', 'change']);
 const editorContainer = ref(null);
 const themeStore = useThemeStore();
 let editorView = null;
-let shouldResetToTopAfterPaste = false;
 
 const stripBom = (text) =>
 	text && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
@@ -60,12 +83,10 @@ const buildJsonDiagnostics = (sourceText, parseError) => {
 			? docLen - 1
 			: Math.min(Math.max(basePos + cleanedOffset, 0), docLen - 1);
 
-	// 如果错误位置落在换行/空白，向前找到更“像错误点”的字符，避免高亮跑到下一行
 	if (/\s/.test(original[pos])) {
 		pos = findNonWhitespaceBackward(original, pos);
 	}
 
-	// 常见：缺逗号导致 "Unexpected string" 报在下一行的下一个 key 上（通常是引号）
 	if (
 		parseError &&
 		/Unexpected\s+string/i.test(parseError) &&
@@ -100,13 +121,6 @@ const jsonSyntaxLinter = () => (view) => {
 	}
 };
 
-const isFullDocumentSelection = (selection, docLength) => {
-	if (!selection || !selection.ranges || selection.ranges.length !== 1)
-		return false;
-	const range = selection.ranges[0];
-	return range.from === 0 && range.to === docLength;
-};
-
 const jumpToNextError = () => {
 	if (!editorView) return;
 	nextDiagnostic(editorView);
@@ -115,222 +129,96 @@ const jumpToNextError = () => {
 
 defineExpose({ jumpToNextError });
 
-// 基础扩展：JSON 语法 + 历史记录 + 快捷键
-// 搜索框样式生成器
-const getSearchTheme = (isDark) => {
-	const colors = isDark
-		? {
-				bg: '#2d333b',
-				border: '#444c56',
-				text: '#c9d1d9',
-				inputBg: '#22272e',
-				inputBorder: '#444c56',
-				buttonBg: '#373e47',
-				buttonBorder: '#444c56',
-				buttonHover: '#444c56',
-				shadow: '0 4px 12px rgba(0,0,0,0.4)',
-				closeHover: '#c9d1d9',
-		  }
-		: {
-				bg: '#ffffff',
-				border: '#e1e4e8',
-				text: '#24292e',
-				inputBg: '#ffffff',
-				inputBorder: '#e1e4e8',
-				buttonBg: '#f6f8fa',
-				buttonBorder: '#d1d5da',
-				buttonHover: '#eff2f5',
-				shadow: '0 4px 12px rgba(0,0,0,0.1)',
-				closeHover: '#24292e',
-		  };
-
-	return EditorView.theme({
-		'&': { height: '100%', fontSize: '14px' }, // 稍微增大字体提升可读性
-		'.cm-scroller': { overflow: 'auto', height: '100%' },
-
-		// 搜索面板容器
-		'.cm-panels': {
-			backgroundColor: 'transparent',
-			border: 'none',
-			zIndex: '100',
-		},
-		'.cm-panels-top': {
-			borderBottom: 'none',
-		},
-
-		// 搜索框主体
-		'.cm-search': {
-			fontFamily: 'inherit',
-			fontSize: '14px',
-			padding: '6px 10px',
-			margin: '8px', // 悬浮感
-			backgroundColor: colors.bg,
-			color: colors.text,
-			border: `1px solid ${colors.border}`,
-			borderRadius: '6px',
-			boxShadow: colors.shadow,
-			display: 'flex',
-			alignItems: 'center',
-			gap: '8px',
-			flexWrap: 'wrap',
-			maxWidth: '100%',
-		},
-
-		// 输入框
-		'.cm-search input': {
-			fontSize: '13px',
-			padding: '4px 8px',
-			backgroundColor: colors.inputBg,
-			border: `1px solid ${colors.inputBorder}`,
-			borderRadius: '4px',
-			outline: 'none',
-			color: colors.text,
-			minWidth: '120px',
-		},
-		'.cm-search input:focus': {
-			borderColor: '#0366d6',
-			boxShadow: '0 0 0 2px rgba(3, 102, 214, 0.3)',
-		},
-
-		// 复选框 Label
-		'.cm-search label': {
-			fontSize: '12px',
-			display: 'flex',
-			alignItems: 'center',
-			gap: '4px',
-			cursor: 'pointer',
-			color: colors.text,
-		},
-
-		// 按钮通用
-		'.cm-search button': {
-			fontSize: '13px',
-			padding: '3px 8px',
-			backgroundColor: colors.buttonBg,
-			border: `1px solid ${colors.buttonBorder}`,
-			borderRadius: '4px',
-			color: colors.text,
-			cursor: 'pointer',
-			transition: 'all 0.15s ease',
-			textTransform: 'none', // 取消可能的默认大写
-			margin: '0', // 覆盖默认
-		},
-		'.cm-search button:hover': {
-			backgroundColor: colors.buttonHover,
-			borderColor: colors.buttonBorder,
-		},
-
-		// 关闭按钮
-		'.cm-search button[name="close"]': {
-			position: 'absolute',
-			top: '4px',
-			right: '6px',
-			padding: '0',
-			width: '20px',
-			height: '20px',
-			borderRadius: '50%',
-			border: 'none',
-			background: 'transparent',
-			fontSize: '16px',
-			lineHeight: '1',
-			color: '#999',
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-		},
-		'.cm-search button[name="close"]:hover': {
-			backgroundColor: 'transparent',
-			color: colors.closeHover,
-		},
-
-		// 图标化按钮
-		'.cm-search button[name="next"]': { minWidth: '28px' },
-		'.cm-search button[name="next"]::before': { content: '"↓"' }, // 向下箭头
-		'.cm-search button[name="prev"]': { minWidth: '28px' },
-		'.cm-search button[name="prev"]::before': { content: '"↑"' }, // 向上箭头
-		// 隐藏原始文字 (CodeMirror 默认可能有文字，设为 font-size 0 隐藏)
-		'.cm-search button[name="next"], .cm-search button[name="prev"]': {
-			color: 'transparent',
-			position: 'relative',
-			overflow: 'hidden',
-		},
-		'.cm-search button[name="next"]::before, .cm-search button[name="prev"]::before':
-			{
-				color: colors.text,
-				position: 'absolute',
-				left: '50%',
-				top: '50%',
-				transform: 'translate(-50%, -50%)',
-				fontSize: '14px',
-				fontWeight: 'bold',
-			},
-
-		// 文本按钮
-		'.cm-search button[name="replace"], .cm-search button[name="replaceAll"], .cm-search button[name="select"]':
-			{
-				padding: '3px 10px',
-			},
-	});
+// Localization Phrases
+const editorPhrases = {
+	// Search & Replace
+	Find: '查找',
+	Replace: '替换',
+	next: '下一个',
+	previous: '上一个',
+	all: '全部',
+	'match case': '区分大小写',
+	'by word': '全字匹配',
+	'case sensitive': '区分大小写',
+	regexp: '正则',
+	replace: '替换',
+	'replace all': '替换全部',
+	close: '关闭',
 };
 
-// 基础扩展：JSON 语法 + 历史记录 + 快捷键
+// Custom Basic Setup + Fluent Fold
+const customBasicSetup = [
+	lineNumbers(),
+	highlightActiveLineGutter(),
+	highlightSpecialChars(),
+	history(),
+	fluentFoldGutter, // Custom Fold Gutter
+	drawSelection(),
+	dropCursor(),
+	EditorState.allowMultipleSelections.of(true),
+	indentOnInput(),
+	syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+	bracketMatching(),
+	closeBrackets(),
+	autocompletion(),
+	rectangularSelection(),
+	crosshairCursor(),
+	highlightActiveLine(),
+	highlightSelectionMatches(),
+	keymap.of([
+		...defaultKeymap,
+		...historyKeymap,
+		...searchKeymap,
+		...foldKeymap,
+	]),
+];
+
+// Paste handler: Keep cursor at start of paste
+const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
+	if (tr.isUserEvent('input.paste')) {
+		// Calculate where the changes happened
+		let minFrom = Infinity;
+		tr.changes.iterChanges((fromA, toA, fromB, toB) => {
+			if (fromB < minFrom) minFrom = fromB;
+		});
+
+		if (minFrom !== Infinity) {
+			// Force selection to start of paste
+			return [
+				tr,
+				{
+					selection: { anchor: minFrom },
+					scrollIntoView: true,
+				},
+			];
+		}
+	}
+	return tr;
+});
+
+// Fluent Theme extensions
 const getExtensions = (isDark) => {
 	const extensions = [
-		basicSetup,
-		history(),
-		keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+		EditorState.phrases.of(editorPhrases), // Localization
+		...customBasicSetup, // Use customized setup
 		json(),
 		search({ top: true }),
 		lintGutter(),
 		linter(jsonSyntaxLinter()),
-		EditorView.domEventHandlers({
-			paste(event, view) {
-				const docLength = view.state.doc.length;
-				const isReplacingAll =
-					docLength === 0 ||
-					isFullDocumentSelection(view.state.selection, docLength);
-				if (!isReplacingAll) return false;
-
-				const pastedText = event.clipboardData?.getData('text/plain') || '';
-				if (!pastedText) return false;
-
-				shouldResetToTopAfterPaste = true;
-				return false;
-			},
-		}),
+		pasteTransactionFilter, // Inject our paste handler
 		EditorView.updateListener.of((update) => {
 			if (update.docChanged) {
 				const newVal = update.state.doc.toString();
 				emit('update:modelValue', newVal);
 				emit('change', newVal);
-
-				if (shouldResetToTopAfterPaste) {
-					shouldResetToTopAfterPaste = false;
-					update.view.dispatch({ selection: { anchor: 0 } });
-					update.view.scrollDOM.scrollTop = 0;
-				}
 			}
 		}),
 		EditorState.readOnly.of(props.readonly),
-		// 注入新的搜索主题
-		getSearchTheme(isDark),
+		fluentTheme,
 	];
 
 	if (isDark) {
 		extensions.push(oneDark);
-	} else {
-		// Light theme (默认就是 Light，但可以加点微调)
-		extensions.push(
-			EditorView.theme({
-				'&': { backgroundColor: '#ffffff', color: '#333' },
-				'.cm-gutters': {
-					backgroundColor: '#f5f5f5',
-					color: '#ddd',
-					borderRight: '1px solid #ddd',
-				},
-				'.cm-activeLineGutter': { backgroundColor: '#e8f2ff' },
-			})
-		);
 	}
 
 	return extensions;
@@ -350,7 +238,6 @@ const initEditor = () => {
 	});
 };
 
-// 监听外部 modelValue 变化（单向数据流同步）
 watch(
 	() => props.modelValue,
 	(newVal) => {
@@ -362,12 +249,11 @@ watch(
 	}
 );
 
-// 监听主题变化，重建扩展（这是最稳的方式，动态 reconfigure 也可以但容易漏）
 watch(
 	() => themeStore.isDark,
 	(isDark) => {
 		if (!editorView) return;
-		// 保持当前内容和光标位置
+		// Recreate editor to switch syntax highlighting (OneDark vs Default)
 		const content = editorView.state.doc.toString();
 		const selection = editorView.state.selection;
 
@@ -386,12 +272,10 @@ watch(
 	}
 );
 
-// 监听 readonly 变化
 watch(
 	() => props.readonly,
 	(val) => {
 		if (!editorView) return;
-		// 重新注入扩展比较重，这里可以用 reconfigure 优化，但为了稳先重刷
 		const content = editorView.state.doc.toString();
 		editorView.destroy();
 		const state = EditorState.create({

@@ -13,7 +13,6 @@
     "@vueuse/core": "^14.1.0",
     "codemirror": "^6.0.2",
     "diff": "^8.0.2",
-    "element-plus": "^2.13.0",
     "jsondiffpatch": "^0.7.3",
     "lz-string": "^1.5.0",
     "pinia": "^3.0.4",

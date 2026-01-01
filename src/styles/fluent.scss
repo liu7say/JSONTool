@@ -1,0 +1,141 @@
+/* Fluent 2 Design System Tokens */
+:root {
+	/* 
+    Brand Colors (Windows Blue) 
+    Based on Fluent 2 Brand colors
+  */
+	--f-brand-base: #0078d4;
+	--f-brand-hover: #106ebe;
+	--f-brand-pressed: #005a9e;
+	--f-brand-light: #4cc2ff;
+	--f-brand-bg-subtle: #eff6fc; /* Light blue tint for backgrounds */
+
+	/* Functional Colors */
+	--f-color-error: #c42b1c;
+	--f-color-success: #107c10;
+	--f-color-warning: #9d5d00;
+	--f-color-info: #0078d4;
+
+	/* Radius */
+	--f-radius-s: 4px; /* Controls (Button, Input) */
+	--f-radius-m: 8px; /* Cards, Flyouts, Dialogs */
+	--f-radius-l: 12px; /* Container, Windows */
+	--f-radius-circle: 50%;
+
+	/* Typography */
+	--f-font-family: 'Segoe UI Variable', 'Segoe UI', -apple-system,
+		BlinkMacSystemFont, Roboto, sans-serif;
+	--f-font-size-base: 14px;
+	--f-font-size-s: 12px;
+	--f-font-size-xs: 10px;
+	--f-font-size-l: 20px;
+	--f-font-size-xl: 28px;
+	--f-font-weight-regular: 400;
+	--f-font-weight-sembold: 600;
+
+	/* Animation */
+	--f-transition-fast: 100ms cubic-bezier(0.33, 0, 0.67, 1);
+	--f-transition-normal: 200ms cubic-bezier(0.33, 0, 0.67, 1);
+	--f-transition-slow: 400ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+
+/* Dark Mode (Default) - Fluent 2 Dark */
+:root {
+	/* Neutral Backgrounds */
+	--f-bg-base: #202020; /* Application Background */
+	--f-bg-layer1: #2c2c2c; /* Layer 1 (Cards) */
+	--f-bg-layer2: #333333; /* Layer 2 (Flyouts) */
+	--f-bg-layer3: #3b3b3b; /* Layer 3 (Dialogs) */
+
+	/* Controls */
+	--f-bg-control: rgba(255, 255, 255, 0.06);
+	--f-bg-control-hover: rgba(255, 255, 255, 0.09);
+	--f-bg-control-active: rgba(255, 255, 255, 0.04);
+	--f-bg-control-disabled: rgba(255, 255, 255, 0.04);
+	--f-bg-control-input: #1e1e1e; /* Input fields */
+	--f-bg-control-input-active: #1e1e1e;
+
+	/* Text */
+	--f-text-primary: #ffffff;
+	--f-text-secondary: #d1d1d1; /* ~82% */
+	--f-text-tertiary: #9e9e9e; /* ~60% */
+	--f-text-disabled: #6e6e6e; /* ~42% */
+	--f-text-on-accent: #ffffff;
+
+	/* Borders */
+	--f-border-subtle: rgba(255, 255, 255, 0.08); /* Divider */
+	--f-border-default: rgba(255, 255, 255, 0.12); /* Card Border */
+	--f-border-strong: rgba(255, 255, 255, 0.45); /* Input/Control Strong */
+
+	/* Elevation / Shadows */
+	--f-shadow-2: 0 2px 4px rgba(0, 0, 0, 0.24);
+	--f-shadow-4: 0 4px 8px rgba(0, 0, 0, 0.28);
+	--f-shadow-8: 0 8px 16px rgba(0, 0, 0, 0.32);
+	--f-shadow-16: 0 16px 32px rgba(0, 0, 0, 0.36);
+	--f-shadow-card: var(--f-shadow-4);
+	--f-shadow-flyout: var(--f-shadow-16);
+
+	/* Code Editor Specific */
+	--f-editor-bg: #1e1e1e;
+	--f-editor-gutter-bg: #1e1e1e;
+	--f-editor-gutter-border: #333333;
+}
+
+/* Light Mode - Fluent 2 Light */
+html.light {
+	/* Neutral Backgrounds */
+	--f-bg-base: #f3f3f3; /* Mica Alt */
+	--f-bg-layer1: #ffffff; /* Layer 0 (Cards) */
+	--f-bg-layer2: #f9f9f9; /* Layer 1 */
+	--f-bg-layer3: #fcfcfc;
+
+	/* Controls */
+	--f-bg-control: #ffffff; /* Standard Button */
+	--f-bg-control-hover: #f1f1f1;
+	--f-bg-control-active: #e1e1e1;
+	--f-bg-control-disabled: rgba(0, 0, 0, 0.04);
+	--f-bg-control-input: #ffffff;
+	--f-bg-control-input-active: #ffffff;
+
+	/* Text */
+	--f-text-primary: #242424;
+	--f-text-secondary: #5d5d5d;
+	--f-text-tertiary: #707070;
+	--f-text-disabled: #9b9b9b;
+	--f-text-on-accent: #ffffff;
+
+	/* Borders */
+	--f-border-subtle: rgba(0, 0, 0, 0.06);
+	--f-border-default: rgba(0, 0, 0, 0.1);
+	--f-border-strong: rgba(0, 0, 0, 0.45);
+
+	/* Elevation / Shadows */
+	--f-shadow-2: 0 2px 4px rgba(0, 0, 0, 0.04);
+	--f-shadow-4: 0 4px 8px rgba(0, 0, 0, 0.08);
+	--f-shadow-8: 0 8px 16px rgba(0, 0, 0, 0.12);
+	--f-shadow-16: 0 16px 32px rgba(0, 0, 0, 0.16);
+	--f-shadow-card: var(--f-shadow-2);
+	--f-shadow-flyout: var(--f-shadow-8);
+
+	/* Code Editor Specific */
+	--f-editor-bg: #ffffff;
+	--f-editor-gutter-bg: #f8f8f8;
+	--f-editor-gutter-border: #e6e6e6;
+}
+
+/* Legacy Variable Mapping (Compatibility Layer) */
+:root,
+html.light {
+	--bg-primary: var(--f-bg-base);
+	--bg-secondary: var(--f-bg-layer1);
+	--bg-tertiary: var(--f-bg-layer2);
+	--text-primary: var(--f-text-primary);
+	--text-secondary: var(--f-text-secondary);
+	--border-color: var(--f-border-default);
+	--accent-color: var(--f-brand-base);
+	--hover-color: var(--f-bg-control-hover);
+
+	/* Scrollbars */
+	--scrollbar-track: transparent;
+	--scrollbar-thumb: var(--f-text-tertiary);
+}
