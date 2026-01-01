@@ -4,6 +4,7 @@ import { useSessionStore } from './stores/session';
 import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
 import JsonEditor from './components/JsonEditor.vue';
+import GithubIcon from './components/GithubIcon.vue';
 import {
 	Plus,
 	Close,
@@ -12,6 +13,9 @@ import {
 	Moon,
 	Sunny,
 	Collection,
+	Operation,
+	ArrowLeft,
+	ArrowRight,
 } from '@element-plus/icons-vue';
 
 const sessionStore = useSessionStore();
@@ -19,13 +23,76 @@ const historyStore = useHistoryStore();
 const themeStore = useThemeStore();
 
 const showHistory = ref(false);
+const tabsContainer = ref(null);
+const showLeftGradient = ref(false);
+const showRightGradient = ref(false);
+
+const checkScroll = () => {
+	if (!tabsContainer.value) return;
+	const { scrollLeft, scrollWidth, clientWidth } = tabsContainer.value;
+	showLeftGradient.value = scrollLeft > 0;
+	showRightGradient.value = Math.ceil(scrollLeft + clientWidth) < scrollWidth;
+};
+
+const scrollTabs = (direction) => {
+	if (!tabsContainer.value) return;
+	const scrollAmount = 200;
+	tabsContainer.value.scrollBy({
+		left: direction === 'left' ? -scrollAmount : scrollAmount,
+		behavior: 'smooth',
+	});
+};
 
 onMounted(() => {
 	if (sessionStore.tabs.length === 0) {
 		sessionStore.createTab();
 	}
 	historyStore.loadIndex();
+
+	// Check scroll on mount
+	setTimeout(checkScroll, 100);
+
+	// Watch resize
+	if (tabsContainer.value) {
+		const ro = new ResizeObserver(checkScroll);
+		ro.observe(tabsContainer.value);
+	}
 });
+
+const scrollToActiveTab = () => {
+	if (!tabsContainer.value || !sessionStore.activeTabId) return;
+
+	const activeTabEl = tabsContainer.value.querySelector(
+		`[data-id="${sessionStore.activeTabId}"]`
+	);
+
+	if (activeTabEl) {
+		activeTabEl.scrollIntoView({
+			behavior: 'smooth',
+			block: 'nearest',
+			inline: 'center', // Center the tab
+		});
+	}
+};
+
+// Watch for active tab changes to scroll into view
+watch(
+	() => sessionStore.activeTabId,
+	async () => {
+		await nextTick();
+		scrollToActiveTab();
+	}
+);
+
+// Watch for tab changes to update scroll indicators
+import { watch, nextTick } from 'vue';
+watch(
+	() => sessionStore.tabs.length,
+	async () => {
+		await nextTick();
+		checkScroll();
+	}
+);
 
 const onUpdateDoc = (id, text) => {
 	sessionStore.updateTabDoc(id, text);
@@ -74,28 +141,55 @@ const loadHistoryEntry = async (entry) => {
 				<span style="font-weight: 600">JSON</span>Tool
 			</div>
 
-			<div class="tabs-scroll f-tabs">
+			<div class="tabs-wrapper">
 				<div
-					v-for="tab in sessionStore.tabs"
-					:key="tab.id"
-					class="f-tab-item"
-					:class="{ active: sessionStore.activeTabId === tab.id }"
-					@click="sessionStore.setActive(tab.id)">
-					<span class="tab-text">{{ tab.title }}</span>
-					<span class="tab-close" @click.stop="sessionStore.closeTab(tab.id)">
-						<component :is="Close" style="width: 12px; height: 12px" />
-					</span>
+					class="scroll-indicator left"
+					v-if="showLeftGradient"
+					@click="scrollTabs('left')">
+					<component :is="ArrowLeft" />
 				</div>
+				<div
+					class="tabs-scroll f-tabs"
+					ref="tabsContainer"
+					@scroll="checkScroll">
+					<div
+						v-for="tab in sessionStore.tabs"
+						:key="tab.id"
+						class="f-tab-item"
+						:class="{ active: sessionStore.activeTabId === tab.id }"
+						:data-id="tab.id"
+						@click="sessionStore.setActive(tab.id)"
+						@mousedown.middle.prevent="sessionStore.closeTab(tab.id)">
+						<span class="tab-text">{{ tab.title }}</span>
+						<span class="tab-close" @click.stop="sessionStore.closeTab(tab.id)">
+							<component :is="Close" style="width: 12px; height: 12px" />
+						</span>
+					</div>
 
-				<button
-					class="f-button small subtle icon-only"
-					@click="sessionStore.createTab()"
-					title="新建标签页">
-					<component :is="Plus" style="width: 16px" />
-				</button>
+					<button
+						class="f-button small subtle icon-only"
+						@click="sessionStore.createTab()"
+						title="新建标签页">
+						<component :is="Plus" style="width: 16px" />
+					</button>
+				</div>
+				<div
+					class="scroll-indicator right"
+					v-if="showRightGradient"
+					@click="scrollTabs('right')">
+					<component :is="ArrowRight" />
+				</div>
 			</div>
 
 			<div class="header-actions">
+				<!-- 保存快照 -->
+				<button
+					v-if="sessionStore.activeTab"
+					class="f-button small primary"
+					@click="onSaveHistory(sessionStore.activeTab)">
+					<component :is="Operation" style="width: 14px" /> 保存快照
+				</button>
+
 				<!-- 主题切换 -->
 				<button
 					class="f-button small subtle icon-only"
@@ -112,6 +206,20 @@ const loadHistoryEntry = async (entry) => {
 					title="历史记录">
 					<component :is="Clock" style="width: 16px" />
 				</button>
+
+				<a
+					class="f-button small subtle icon-only"
+					title="GitHub"
+					href="https://github.com/liu7say/JSONTool"
+					target="_blank"
+					style="
+						text-decoration: none;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+					">
+					<GithubIcon style="width: 16px; height: 16px" />
+				</a>
 			</div>
 		</div>
 
@@ -223,10 +331,76 @@ const loadHistoryEntry = async (entry) => {
 	}
 }
 
+.tabs-wrapper {
+	flex: 1;
+	height: 100%;
+	position: relative;
+	display: flex;
+	align-items: center;
+	min-width: 0; /* Prevent flex item from overflowing */
+}
+
 .tabs-scroll {
 	flex: 1;
 	height: 100%;
+	display: flex;
 	align-items: center;
+	overflow-x: auto;
+	/* Hide scrollbar */
+	scrollbar-width: none;
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+.scroll-indicator {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 24px; /* Narrower touch target */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+	cursor: pointer;
+	color: var(--f-text-tertiary); /* Lighter color */
+	transition: color 0.2s;
+
+	svg {
+		width: 12px; /* Smaller icon */
+		height: 12px;
+	}
+
+	&:hover {
+		color: var(--f-text-primary);
+	}
+
+	&.left {
+		left: 0;
+		background: linear-gradient(
+			to right,
+			var(--f-bg-layer1) 40%,
+			rgba(255, 255, 255, 0) 100%
+		);
+	}
+
+	&.right {
+		right: 0;
+		background: linear-gradient(
+			to left,
+			var(--f-bg-layer1) 40%,
+			rgba(255, 255, 255, 0) 100%
+		);
+	}
+}
+
+/* Override active tab color for better contrast */
+:deep(.f-tab-item.active) {
+	background-color: var(
+		--f-bg-control-active
+	); /* Darker than control, clear distinction */
+	border: 1px solid var(--f-border-default); /* Add border to make it pop */
+	border-bottom: none; /* Connect to content */
 }
 
 .header-actions {

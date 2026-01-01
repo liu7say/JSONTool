@@ -6,7 +6,6 @@ import { jsonToTable, findArrayPaths } from '../features/json/table';
 import {
 	DocumentCopy,
 	ScaleToOriginal,
-	Operation,
 	Rank,
 	Grid,
 	Back,
@@ -279,32 +278,15 @@ const toggleDiffMode = () => {
 					v-if="viewMode !== 'table'"
 					class="f-button small"
 					:class="viewMode === 'diff' ? 'primary' : 'subtle'"
+					:disabled="
+						viewMode !== 'diff' && !String(doc.sourceText || '').trim()
+					"
 					@click="toggleDiffMode">
 					<component
 						:is="viewMode === 'diff' ? Back : Switch"
 						style="width: 14px" />
 					{{ viewMode === 'diff' ? '退出对比' : '对比' }}
 				</button>
-				<template v-if="viewMode === 'code' || viewMode === 'diff'">
-					<button
-						class="f-button small subtle"
-						@click="applyFormat"
-						title="Format">
-						<component :is="DocumentCopy" style="width: 14px" /> 格式化
-					</button>
-					<button
-						class="f-button small subtle"
-						@click="applyCompact"
-						title="Compact">
-						<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
-					</button>
-					<button
-						class="f-button small subtle"
-						@click="applySort"
-						title="Sort Keys">
-						<component :is="Rank" style="width: 14px" /> 排序
-					</button>
-				</template>
 
 				<button
 					v-if="viewMode === 'code' && doc.parseError"
@@ -315,9 +297,29 @@ const toggleDiffMode = () => {
 			</div>
 
 			<div class="group">
-				<button class="f-button small primary" @click="$emit('save')">
-					<component :is="Operation" style="width: 14px" /> 保存快照
-				</button>
+				<template v-if="viewMode === 'code' || viewMode === 'diff'">
+					<button
+						class="f-button small subtle"
+						:disabled="!String(doc.sourceText || '').trim()"
+						@click="applyFormat"
+						title="Format">
+						<component :is="DocumentCopy" style="width: 14px" /> 格式化
+					</button>
+					<button
+						class="f-button small subtle"
+						:disabled="!String(doc.sourceText || '').trim()"
+						@click="applyCompact"
+						title="Compact">
+						<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
+					</button>
+					<button
+						class="f-button small subtle"
+						:disabled="!String(doc.sourceText || '').trim()"
+						@click="applySort"
+						title="Sort Keys">
+						<component :is="Rank" style="width: 14px" /> 排序
+					</button>
+				</template>
 			</div>
 		</div>
 
