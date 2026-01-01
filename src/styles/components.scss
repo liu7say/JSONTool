@@ -162,12 +162,13 @@
 	padding: 6px 10px;
 	max-width: 200px;
 	height: 36px;
+	border: 1px solid transparent; /* Prevent layout shift */
 	border-radius: var(--f-radius-s);
 	color: var(--f-text-secondary);
 	font-size: 13px;
 	cursor: pointer;
-	transition: background-color var(--f-transition-fast),
-		color var(--f-transition-fast);
+	transition: background-color var(--f-transition-normal),
+		color var(--f-transition-normal), border-color var(--f-transition-normal);
 
 	/* Active Indicator (Pill at bottom for some styles, or Sidebar line) */
 	/* Here we use a subtle left indicator for vertical, or bottom for horizontal. */
