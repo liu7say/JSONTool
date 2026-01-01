@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+// CodeMirror 核心与语言包
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { json } from '@codemirror/lang-json';
@@ -9,7 +10,7 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { lintGutter, linter, nextDiagnostic } from '@codemirror/lint';
 import { search, searchKeymap } from '@codemirror/search';
 
-// Core Extensions (Splitting basicSetup)
+// 核心扩展 (拆分 basicSetup 以便定制)
 import {
 	lineNumbers,
 	highlightActiveLineGutter,
@@ -51,9 +52,15 @@ const editorContainer = ref(null);
 const themeStore = useThemeStore();
 let editorView = null;
 
+// 去除 BOM 头
 const stripBom = (text) =>
 	text && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 
+/**
+ * 尝试从错误信息中提取位置信息
+ * @param {string} errorMessage
+ * @returns {number|null}
+ */
 const getJsonErrorPosition = (errorMessage) => {
 	const match = String(errorMessage || '').match(/position\s+(\d+)/i);
 	if (!match) return null;
@@ -61,6 +68,9 @@ const getJsonErrorPosition = (errorMessage) => {
 	return Number.isFinite(pos) ? pos : null;
 };
 
+/**
+ * 向前查找非空白字符
+ */
 const findNonWhitespaceBackward = (text, start) => {
 	for (let i = Math.min(start, text.length - 1); i >= 0; i--) {
 		if (!/\s/.test(text[i])) return i;
@@ -68,6 +78,11 @@ const findNonWhitespaceBackward = (text, start) => {
 	return 0;
 };
 
+/**
+ * 构建 JSON 解析错误的 Diagnostics
+ * 准确的错误定位是提升开发者体验的关键。
+ * 我们不仅要告诉用户错了，还要尽可能精确地指出是哪里错了。
+ */
 const buildJsonDiagnostics = (sourceText, parseError) => {
 	const original = String(sourceText || '');
 	if (!original.trim()) return [];
@@ -83,10 +98,12 @@ const buildJsonDiagnostics = (sourceText, parseError) => {
 			? docLen - 1
 			: Math.min(Math.max(basePos + cleanedOffset, 0), docLen - 1);
 
+	// 定位优化：如果指向了空白，尝试向前寻找具体的符号
 	if (/\s/.test(original[pos])) {
 		pos = findNonWhitespaceBackward(original, pos);
 	}
 
+	// 特殊情况：如果报错 Unexpected string 且指向引号，可能是漏了逗号，尝试再向前找
 	if (
 		parseError &&
 		/Unexpected\s+string/i.test(parseError) &&
@@ -129,7 +146,7 @@ const jumpToNextError = () => {
 
 defineExpose({ jumpToNextError });
 
-// Localization Phrases
+// 定制搜索面板的本地化词条
 const editorPhrases = {
 	// Search & Replace
 	Find: '查找',
@@ -146,13 +163,13 @@ const editorPhrases = {
 	close: '关闭',
 };
 
-// Custom Basic Setup + Fluent Fold
+// 自定义基础配置 + Fluent Design 折叠
 const customBasicSetup = [
 	lineNumbers(),
 	highlightActiveLineGutter(),
 	highlightSpecialChars(),
 	history(),
-	fluentFoldGutter, // Custom Fold Gutter
+	fluentFoldGutter, // 自定义折叠槽
 	drawSelection(),
 	dropCursor(),
 	EditorState.allowMultipleSelections.of(true),
@@ -173,7 +190,7 @@ const customBasicSetup = [
 	]),
 ];
 
-// Paste handler: Keep cursor at start of paste
+// 粘贴处理：保持光标在粘贴内容的开始处，而不是结束处，防止页面跳动
 const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
 	if (tr.isUserEvent('input.paste')) {
 		let minFrom = Infinity;
@@ -194,23 +211,23 @@ const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
 	return tr;
 });
 
-// Fluent Theme extensions
+// 组装所有 Editor 扩展
 const getExtensions = (isDark) => {
 	const extensions = [
-		EditorState.phrases.of(editorPhrases), // Localization
-		...customBasicSetup, // Use customized setup
+		EditorState.phrases.of(editorPhrases), // 本地化
+		...customBasicSetup, // 基础配置
 		json(),
-		search({ top: true }),
+		search({ top: true }), // 搜索框在顶部
 		lintGutter(),
-		linter(jsonSyntaxLinter()),
-		pasteTransactionFilter, // Inject our paste handler
+		linter(jsonSyntaxLinter()), // JSON 语法检查
+		pasteTransactionFilter, // 粘贴行为优化
 		EditorView.updateListener.of((update) => {
 			if (update.docChanged) {
 				const newVal = update.state.doc.toString();
 				emit('update:modelValue', newVal);
 				emit('change', newVal);
 
-				// Async Auto-Format: Paste into Empty Document
+				// 自动格式化：当粘贴到空文档时，自动进行格式化
 				if (
 					update.startState.doc.length === 0 &&
 					update.transactions.some((tr) => tr.isUserEvent('input.paste'))

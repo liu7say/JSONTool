@@ -1,8 +1,8 @@
 import { EditorView } from '@codemirror/view';
 
 /**
- * Fluent 2 Theme for CodeMirror
- * Uses CSS variables defined in src/styles/fluent.scss
+ * CodeMirror 的 Fluent 2 主题
+ * 使用 src/styles/fluent.scss 中定义的 CSS 变量
  */
 export const fluentTheme = EditorView.theme({
 	// Base Editor Styles
