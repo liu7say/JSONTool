@@ -1,296 +1,572 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { formatJsonText } from '../features/json/format'
-import { sortJsonKeys } from '../features/json/sort'
-import { jsonToTable, findArrayPaths } from '../features/json/table'
-import { DocumentCopy, ScaleToOriginal, Operation, Rank, Grid, Back } from '@element-plus/icons-vue'
-import CodeEditor from './CodeEditor.vue'
+import { computed, ref, watch, nextTick } from 'vue';
+import { formatJsonText } from '../features/json/format';
+import { sortJsonKeys } from '../features/json/sort';
+import { jsonToTable, findArrayPaths } from '../features/json/table';
+import {
+	DocumentCopy,
+	ScaleToOriginal,
+	Operation,
+	Rank,
+	Grid,
+	Back,
+	Search as SearchIcon,
+} from '@element-plus/icons-vue';
+import CodeEditor from './CodeEditor.vue';
 
 const props = defineProps({
-  doc: {
-    type: Object,
-    required: true,
-  },
-  viewMode: {
-    type: String, // 'code' | 'table' | 'diff'
-    default: 'code',
-  },
-  selectedArrayPath: {
-    type: String,
-    default: '',
-  },
+	doc: {
+		type: Object,
+		required: true,
+	},
+	viewMode: {
+		type: String, // 'code' | 'table' | 'diff'
+		default: 'code',
+	},
+	selectedArrayPath: {
+		type: String,
+		default: '',
+	},
 });
 
-const emit = defineEmits(['update:doc', 'update:viewMode', 'update:selectedArrayPath', 'save']);
+const emit = defineEmits([
+	'update:doc',
+	'update:viewMode',
+	'update:selectedArrayPath',
+	'save',
+]);
 
 const inputText = computed({
-  get: () => props.doc.sourceText,
-  set: (val) => emit('update:doc', val),
+	get: () => props.doc.sourceText,
+	set: (val) => emit('update:doc', val),
 });
 
-// 计算可用的数组路径
+// --- Table Logic ---
+
+// Available paths
 const availableArrayPaths = computed(() => {
-  if (!props.doc || props.doc.parseError) return []
-  return findArrayPaths(props.doc.parsedValue)
-})
+	if (!props.doc || props.doc.parseError) return [];
+	return findArrayPaths(props.doc.parsedValue);
+});
 
-// 当前选中的路径
+// Selected Path Logic
 const selectedPath = computed({
-  get: () => props.selectedArrayPath,
-  set: (val) => emit('update:selectedArrayPath', val)
-})
+	get: () => props.selectedArrayPath,
+	set: (val) => emit('update:selectedArrayPath', val),
+});
 
-// 计算属性：表格视图数据（仅在 viewMode === 'table' 时使用）
-const tableResult = computed(() => jsonToTable(props.doc, selectedPath.value));
+// Auto-select first path if available and none selected
+watch(
+	availableArrayPaths,
+	(paths) => {
+		if (paths.length > 0 && !props.selectedArrayPath) {
+			emit('update:selectedArrayPath', paths[0]);
+		}
+	},
+	{ immediate: true }
+);
 
-const isSorting = ref(false)
-const codeEditorRef = ref(null)
+// Raw Table Data
+const rawTableData = computed(() => jsonToTable(props.doc, selectedPath.value));
+
+// State for Table Features
+const filterText = ref('');
+const sortCol = ref(null);
+const sortAsc = ref(true); // true = asc, false = desc
+const colWidths = ref({}); // { colName: widthPx }
+
+// Computed: Processed Data (Filter -> Sort)
+const processedRows = computed(() => {
+	const { rows, columns } = rawTableData.value;
+	if (!rows) return [];
+
+	let result = [...rows];
+
+	// 1. Filter
+	if (filterText.value.trim()) {
+		const lowerFilter = filterText.value.toLowerCase();
+		result = result.filter((row) => {
+			// Check all visible columns
+			return columns.some((col) =>
+				String(row[col] || '')
+					.toLowerCase()
+					.includes(lowerFilter)
+			);
+		});
+	}
+
+	// 2. Sort
+	if (sortCol.value) {
+		const key = sortCol.value;
+		const multiplier = sortAsc.value ? 1 : -1;
+
+		result.sort((a, b) => {
+			const valA = a[key] !== undefined ? a[key] : '';
+			const valB = b[key] !== undefined ? b[key] : '';
+
+			// Numeric Sort try
+			const numA = Number(valA);
+			const numB = Number(valB);
+			if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
+				return (numA - numB) * multiplier;
+			}
+
+			// String Sort
+			return String(valA).localeCompare(String(valB)) * multiplier;
+		});
+	}
+
+	return result;
+});
+
+// Actions
+const handleSort = (col) => {
+	if (sortCol.value === col) {
+		sortAsc.value = !sortAsc.value; // Toggle
+	} else {
+		sortCol.value = col;
+		sortAsc.value = true; // Default ASC
+	}
+};
+
+// Column Resizing logic
+const resizingCol = ref(null);
+const startX = ref(0);
+const startWidth = ref(0);
+
+const startResize = (e, col) => {
+	resizingCol.value = col;
+	startX.value = e.pageX;
+	const th = e.target.closest('th');
+	startWidth.value = th.getBoundingClientRect().width;
+
+	document.addEventListener('mousemove', onMouseMove);
+	document.addEventListener('mouseup', onMouseUp);
+	document.body.style.cursor = 'col-resize';
+};
+
+const onMouseMove = (e) => {
+	if (!resizingCol.value) return;
+	const diff = e.pageX - startX.value;
+	const newWidth = Math.max(50, startWidth.value + diff); // Min 50px
+	colWidths.value = { ...colWidths.value, [resizingCol.value]: newWidth };
+};
+
+const onMouseUp = () => {
+	resizingCol.value = null;
+	document.removeEventListener('mousemove', onMouseMove);
+	document.removeEventListener('mouseup', onMouseUp);
+	document.body.style.cursor = '';
+};
+
+// --- Editor Actions ---
+const isSorting = ref(false);
+const codeEditorRef = ref(null);
 
 const jumpToNextError = () => {
-  if (!codeEditorRef.value || !codeEditorRef.value.jumpToNextError) return
-  codeEditorRef.value.jumpToNextError()
-}
+	if (!codeEditorRef.value || !codeEditorRef.value.jumpToNextError) return;
+	codeEditorRef.value.jumpToNextError();
+};
 
-// 操作：原地修改
 const applyFormat = () => {
-  const { text, error } = formatJsonText(props.doc, { indent: 2 })
-  if (!error && text) {
-    emit('update:doc', text)
-  }
-}
+	const { text, error } = formatJsonText(props.doc, { indent: 2 });
+	if (!error && text) emit('update:doc', text);
+};
 
 const applyCompact = () => {
-  const { text, error } = formatJsonText(props.doc, { indent: 0 })
-  if (!error && text) {
-    emit('update:doc', text)
-  }
-}
+	const { text, error } = formatJsonText(props.doc, { indent: 0 });
+	if (!error && text) emit('update:doc', text);
+};
 
 const applySort = () => {
-  if (isSorting.value) return
-  isSorting.value = true
-
-  // 先让 loading 渲染出来，避免大 JSON 看起来“卡死”
-  setTimeout(() => {
-    try {
-      const { text, error } = sortJsonKeys(props.doc, { indent: 2 })
-      if (!error && text) {
-        emit('update:doc', text)
-      }
-    } finally {
-      isSorting.value = false
-    }
-  }, 0)
-}
+	if (isSorting.value) return;
+	isSorting.value = true;
+	setTimeout(() => {
+		try {
+			const { text, error } = sortJsonKeys(props.doc, { indent: 2 });
+			if (!error && text) emit('update:doc', text);
+		} finally {
+			isSorting.value = false;
+		}
+	}, 0);
+};
 
 const toggleTableMode = () => {
-  if (props.viewMode === 'table') {
-    emit('update:viewMode', 'code')
-  } else {
-    emit('update:viewMode', 'table')
-  }
-}
-
+	emit('update:viewMode', props.viewMode === 'table' ? 'code' : 'table');
+};
 </script>
 
 <template>
-  <div class="json-editor">
-    <!-- 工具栏 -->
-    <div class="toolbar">
-      <div class="group">
-        <!-- 核心编辑操作 (仅在代码模式可用) -->
-        <template v-if="viewMode === 'code'">
-            <el-tooltip content="格式化 (Pretty)" placement="bottom">
-                <el-button size="small" @click="applyFormat">
-                    <el-icon><DocumentCopy /></el-icon> 格式化
-                </el-button>
-            </el-tooltip>
-            
-            <el-tooltip content="压缩 (Compact)" placement="bottom">
-                <el-button size="small" @click="applyCompact">
-                    <el-icon><ScaleToOriginal /></el-icon> 压缩
-                </el-button>
-            </el-tooltip>
+	<div class="json-editor">
+		<!-- Toolbar -->
+		<div class="toolbar f-acrylic">
+			<div class="group">
+				<template v-if="viewMode === 'code'">
+					<button
+						class="f-button small subtle"
+						@click="applyFormat"
+						title="Format">
+						<component :is="DocumentCopy" style="width: 14px" /> 格式化
+					</button>
+					<button
+						class="f-button small subtle"
+						@click="applyCompact"
+						title="Compact">
+						<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
+					</button>
+					<button
+						class="f-button small subtle"
+						@click="applySort"
+						title="Sort Keys">
+						<component :is="Rank" style="width: 14px" /> 排序
+					</button>
+					<button
+						class="f-button small subtle"
+						:disabled="!doc.parseError"
+						@click="jumpToNextError">
+						跳到错误
+					</button>
+				</template>
 
-            <el-tooltip content="键排序 (Sort Keys)" placement="bottom">
-                <el-button size="small" @click="applySort">
-                    <el-icon><Rank /></el-icon> 排序
-                </el-button>
-            </el-tooltip>
+				<button
+					class="f-button small"
+					:class="viewMode === 'table' ? 'primary' : 'subtle'"
+					@click="toggleTableMode">
+					<component
+						:is="viewMode === 'table' ? Back : Grid"
+						style="width: 14px" />
+					{{ viewMode === 'table' ? '返回代码' : '表格视图' }}
+				</button>
+			</div>
 
-            <el-tooltip content="跳到错误位置" placement="bottom">
-                <el-button size="small" :disabled="!doc.parseError" @click="jumpToNextError">
-                    跳到错误
-                </el-button>
-            </el-tooltip>
-        </template>
+			<div class="group">
+				<button class="f-button small primary" @click="$emit('save')">
+					<component :is="Operation" style="width: 14px" /> 保存快照
+				</button>
+			</div>
+		</div>
 
-        <!-- 视图切换 -->
-        <el-tooltip :content="viewMode === 'table' ? '返回代码 (Code)' : '表格视图 (Table)'" placement="bottom">
-             <el-button 
-                size="small" 
-                :type="viewMode === 'table' ? 'primary' : ''" 
-                @click="toggleTableMode"
-            >
-                <el-icon v-if="viewMode === 'table'"><Back /></el-icon>
-                <el-icon v-else><Grid /></el-icon>
-                {{ viewMode === 'table' ? '返回代码' : '表格视图' }}
-            </el-button>
-        </el-tooltip>
-      </div>
-      
-      <div class="group">
-           <el-button size="small" type="success" plain @click="$emit('save')">
-             <el-icon><Operation /></el-icon> 保存快照
-           </el-button>
-      </div>
-    </div>
+		<!-- Main Area -->
+		<div class="editor-main">
+			<!-- TABLE MODE -->
+			<div v-if="viewMode === 'table'" class="table-mode">
+				<!-- Table Controls -->
+				<div class="table-controls">
+					<div class="path-select-wrapper">
+						<label>数组路径:</label>
+						<div class="f-select-container">
+							<select v-model="selectedPath" class="f-select">
+								<option
+									v-for="path in availableArrayPaths"
+									:key="path"
+									:value="path">
+									{{ path || '(顶层数组)' }}
+								</option>
+							</select>
+						</div>
+					</div>
 
-    <!-- 主编辑区 -->
-    <div class="editor-main">
-        <!-- 表格模式 -->
-        <div v-if="viewMode === 'table'" class="table-wrapper">
-             <!-- 路径选择器（始终显示） -->
-             <div v-if="availableArrayPaths.length > 0" class="path-selector">
-               <span>选择数组字段：</span>
-               <el-select v-model="selectedPath" size="small" style="width: 200px" placeholder="请选择">
-                 <el-option
-                   v-for="path in availableArrayPaths"
-                   :key="path"
-                   :label="path || '(顶层数组)'"
-                   :value="path"
-                 />
-               </el-select>
-             </div>
+					<div class="filter-wrapper">
+						<div class="f-input-wrapper search-input">
+							<component :is="SearchIcon" class="search-icon" />
+							<input
+								type="text"
+								class="f-input"
+								v-model="filterText"
+								placeholder="搜索表格内容..." />
+						</div>
+					</div>
+				</div>
 
-             <el-empty v-if="!selectedPath && availableArrayPaths.length > 0" description="请选择一个数组字段" />
-             <el-empty v-else-if="tableResult.error" :description="tableResult.error" />
-             <div v-else class="table-container">
-               <el-table :data="tableResult.rows" stripe border height="100%">
-                 <el-table-column
-                   v-for="col in tableResult.columns"
-                   :key="col"
-                   :prop="col"
-                   :label="col"
-                   min-width="150"
-                 />
-               </el-table>
-             </div>
-        </div>
-        
-        <!-- 代码模式 (CodeMirror) -->
-        <div
-          v-else
-          class="code-wrapper"
-          v-loading="isSorting"
-          element-loading-text="排序中..."
-        >
-             <CodeEditor 
-                ref="codeEditorRef"
-                v-model="inputText" 
-                @change="(val) => emit('update:doc', val)"
-             />
-             
-             <!-- 状态栏覆盖在编辑器底部 -->
-             <div class="status-bar" :class="doc.parseError ? 'error' : 'ok'">
-                <span v-if="!String(doc.sourceText || '').trim()">请输入 JSON</span>
-                <span v-else-if="doc.parseError">{{ doc.parseError }}</span>
-                <span v-else>JSON 有效 • {{ (doc.sourceText || '').length }} 字符</span>
-             </div>
-        </div>
-    </div>
-  </div>
+				<!-- Table Body -->
+				<div
+					v-if="!selectedPath && availableArrayPaths.length > 0"
+					class="empty-state">
+					请选择一个数组字段
+				</div>
+				<div v-else-if="rawTableData.error" class="empty-state">
+					{{ rawTableData.error }}
+				</div>
+				<div v-else class="f-table-container">
+					<table class="f-table">
+						<thead>
+							<tr>
+								<!-- Row Index Column -->
+								<th class="index-col">#</th>
+								<th
+									v-for="col in rawTableData.columns"
+									:key="col"
+									class="sortable"
+									:style="{
+										width: colWidths[col] ? colWidths[col] + 'px' : 'auto',
+									}"
+									@click="handleSort(col)">
+									<div class="th-content">
+										<span>{{ col }}</span>
+										<span v-if="sortCol === col" class="sort-indicator">
+											{{ sortAsc ? '↑' : '↓' }}
+										</span>
+									</div>
+									<div
+										class="resizer"
+										@click.stop
+										@mousedown.stop="(e) => startResize(e, col)"></div>
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="(row, idx) in processedRows" :key="row.__rowId">
+								<td class="index-col">{{ idx + 1 }}</td>
+								<td v-for="col in rawTableData.columns" :key="col">
+									{{ row[col] !== undefined ? row[col] : '' }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<!-- CODE MODE -->
+			<div v-else class="code-wrapper">
+				<CodeEditor
+					ref="codeEditorRef"
+					v-model="inputText"
+					@change="(val) => emit('update:doc', val)" />
+
+				<div class="status-bar" :class="{ error: doc.parseError }">
+					<span v-if="!String(doc.sourceText || '').trim()">请输入 JSON</span>
+					<span v-else-if="doc.parseError">{{ doc.parseError }}</span>
+					<span v-else
+						>JSON 有效 • {{ (doc.sourceText || '').length }} 字符</span
+					>
+				</div>
+
+				<div v-if="isSorting" class="overlay-loader">
+					<span>排序中...</span>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
 <style scoped lang="scss">
-@use '../styles/variables' as *;
-
 .json-editor {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: var(--bg-primary);
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 }
 
 .toolbar {
-  height: 40px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  background-color: var(--bg-secondary);
+	height: 48px;
+	border-bottom: 1px solid var(--f-border-subtle);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 16px;
+	background-color: var(--f-bg-layer2);
 }
 
 .group {
-    display: flex;
-    gap: 8px;
+	display: flex;
+	gap: 8px;
+	align-items: center;
 }
 
 .editor-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-  min-height: 0;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	position: relative;
+	min-height: 0;
+	background-color: var(--f-bg-base);
 }
 
-.table-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background-color: var(--bg-primary);
+/* Table Mode Styles */
+.table-mode {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 0;
 }
 
-.table-container {
-  flex: 1;
-  overflow: hidden;
+.table-controls {
+	display: flex;
+	gap: 16px;
+	padding: 12px 16px;
+	background-color: var(--f-bg-layer1);
+	border-bottom: 1px solid var(--f-border-subtle);
+	align-items: center;
 }
 
-.path-selector {
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
+.path-select-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 8px;
 
-  span {
-    font-size: 14px;
-    color: var(--text-primary);
-  }
+	label {
+		font-size: 13px;
+		color: var(--f-text-secondary);
+	}
+
+	.f-select-container {
+		width: 200px;
+	}
 }
 
+.filter-wrapper {
+	flex: 1;
+	display: flex;
+	justify-content: flex-end;
+
+	.search-input {
+		width: 240px;
+		position: relative;
+
+		.search-icon {
+			position: absolute;
+			left: 8px;
+			top: 50%;
+			transform: translateY(-50%);
+			width: 14px;
+			color: var(--f-text-tertiary);
+			pointer-events: none;
+		}
+
+		.f-input {
+			padding-left: 28px;
+		}
+	}
+}
+
+/* Data Grid Styles (Fluent 2) */
+.f-table-container {
+	flex: 1;
+	overflow: auto;
+	background-color: var(--f-bg-layer1);
+}
+
+.f-table {
+	border-collapse: separate;
+	border-spacing: 0;
+	width: 100%;
+	font-size: 13px;
+	table-layout: fixed;
+
+	th {
+		background-color: var(--f-bg-layer2);
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		font-weight: 600;
+		color: var(--f-text-secondary);
+		border-bottom: 1px solid var(--f-border-default);
+		border-right: 1px solid var(--f-border-subtle);
+		padding: 0;
+		user-select: none;
+
+		&:hover {
+			background-color: var(--f-bg-control-hover);
+		}
+
+		&.sortable {
+			cursor: pointer;
+		}
+
+		.th-content {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 8px 12px;
+			width: 100%;
+			overflow: hidden;
+		}
+
+		.resizer {
+			position: absolute;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			width: 4px;
+			cursor: col-resize;
+			opacity: 0;
+			transition: opacity 0.2s;
+			background-color: var(--f-brand-base);
+
+			&:hover {
+				opacity: 1;
+			}
+		}
+	}
+
+	td {
+		padding: 8px 12px;
+		border-bottom: 1px solid var(--f-border-subtle);
+		border-right: 1px solid var(--f-border-subtle);
+		color: var(--f-text-primary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* Zebra Striping */
+	tr:nth-child(even) td {
+		background-color: var(--f-bg-layer2);
+	}
+	tr:hover td {
+		background-color: var(--f-bg-control-hover);
+	}
+
+	.index-col {
+		width: 40px;
+		text-align: center;
+		color: var(--f-text-tertiary);
+		font-variant-numeric: tabular-nums;
+		background-color: var(--f-bg-layer2); /* Sticky left if needed */
+	}
+}
+
+.empty-state {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--f-text-secondary);
+	font-size: 14px;
+}
+
+/* Code Mode Wrappers */
 .code-wrapper {
-    flex: 1;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.code-wrapper :deep(.code-editor-wrapper) {
-    flex: 1;
-    min-height: 0;
+	flex: 1;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
 }
 
 .status-bar {
-    height: 24px;
-    padding: 0 10px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    color: white;
-    z-index: 10;
-    
-    &.error {
-        background-color: #c72e0f;
-    }
-    
-    &.ok {
-        background-color: var(--accent-color);
-    }
+	height: 24px;
+	padding: 0 12px;
+	font-size: 11px;
+	display: flex;
+	align-items: center;
+	color: white;
+	background-color: var(--f-brand-base);
+
+	&.error {
+		background-color: var(--f-color-error);
+	}
+}
+
+.overlay-loader {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.2);
+	backdrop-filter: blur(2px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	z-index: 50;
 }
 </style>

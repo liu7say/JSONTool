@@ -1,17 +1,15 @@
 {
-  "manifest_version": 3,
-  "name": "JSONTool",
-  "version": "0.1.0",
-  "description": "JSON 格式化、对比、表格化、排序、历史缓存。",
-  "action": {
-    "default_title": "JSONTool"
-  },
-  "options_page": "index.html",
-  "background": {
-    "service_worker": "src/background.js",
-    "type": "module"
-  },
-  "permissions": ["storage"]
+	"manifest_version": 3,
+	"name": "JSONTool",
+	"version": "0.1.0",
+	"description": "JSON 格式化、对比、表格化、排序、历史缓存。",
+	"action": {
+		"default_title": "JSONTool"
+	},
+	"options_page": "index.html",
+	"background": {
+		"service_worker": "src/background.js",
+		"type": "module"
+	},
+	"permissions": ["storage"]
 }
-
-

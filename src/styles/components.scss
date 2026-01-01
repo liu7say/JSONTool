@@ -1,0 +1,282 @@
+@use 'fluent';
+
+/* 
+  Fluent 2 Components 
+  Strict adherence to Microsoft Design Language
+*/
+
+/* --- Buttons --- */
+.f-button {
+	appearance: none;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	height: 32px;
+	padding: 0 12px;
+	border: 1px solid var(--f-border-default);
+	border-radius: var(--f-radius-s);
+	background-color: var(--f-bg-control);
+	color: var(--f-text-primary);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 400;
+	cursor: pointer;
+	user-select: none;
+	text-decoration: none;
+	transition: background-color var(--f-transition-fast),
+		border-color var(--f-transition-fast), color var(--f-transition-fast),
+		box-shadow var(--f-transition-fast);
+
+	/* Icon spacing */
+	.f-icon,
+	svg {
+		width: 16px;
+		height: 16px;
+		fill: currentColor;
+	}
+
+	&:hover {
+		background-color: var(--f-bg-control-hover);
+	}
+
+	&:active {
+		background-color: var(--f-bg-control-active);
+		color: var(--f-text-secondary);
+		border-color: var(--f-border-subtle);
+		transform: scale(0.98); /* Subtle Interaction */
+	}
+
+	&.primary {
+		background-color: var(--f-brand-base);
+		color: var(--f-text-on-accent);
+		border-color: transparent;
+
+		&:hover {
+			background-color: var(--f-brand-hover);
+		}
+		&:active {
+			background-color: var(--f-brand-pressed);
+			color: rgba(255, 255, 255, 0.7);
+		}
+	}
+
+	&.subtle {
+		background-color: transparent;
+		border-color: transparent;
+		color: var(--f-text-primary);
+
+		&:hover {
+			background-color: var(--f-bg-control-hover);
+		}
+		&:active {
+			background-color: var(--f-bg-control-active);
+		}
+	}
+
+	/* Size Variations */
+	&.small {
+		height: 24px;
+		padding: 0 8px;
+		font-size: 12px;
+		border-radius: var(--f-radius-s);
+
+		.f-icon,
+		svg {
+			width: 14px;
+			height: 14px;
+		}
+	}
+
+	&.icon-only {
+		width: 32px;
+		padding: 0;
+
+		&.small {
+			width: 24px;
+		}
+	}
+
+	&:disabled,
+	&.disabled {
+		background-color: var(--f-bg-control-disabled);
+		color: var(--f-text-disabled);
+		border-color: transparent;
+		pointer-events: none;
+	}
+}
+
+/* --- Inputs & Selects --- */
+.f-input-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.f-input,
+.f-select {
+	appearance: none;
+	height: 32px;
+	padding: 0 10px;
+	background-color: var(--f-bg-control-input);
+	color: var(--f-text-primary);
+	border: 1px solid var(--f-border-default);
+	border-bottom: 1px solid var(--f-border-strong); /* Stronger bottom border */
+	border-radius: var(--f-radius-s);
+	font-family: inherit;
+	font-size: 14px;
+	width: 100%;
+	outline: none;
+	transition: border-color var(--f-transition-fast),
+		background-color var(--f-transition-fast);
+
+	&::placeholder {
+		color: var(--f-text-tertiary);
+	}
+
+	&:hover {
+		background-color: var(--f-bg-control-hover);
+	}
+
+	&:focus {
+		background-color: var(--f-bg-control-input-active);
+		border-bottom-color: var(--f-brand-base);
+		border-bottom-width: 2px; /* Focus underline */
+		padding-bottom: 1px; /* Adjust layout for thicker border */
+	}
+}
+
+/* --- Tabs (Fluent 2 Style) --- */
+.f-tabs {
+	display: flex;
+	gap: 2px;
+	padding: 0 4px;
+}
+
+.f-tab-item {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	max-width: 200px;
+	height: 36px;
+	border-radius: var(--f-radius-s);
+	color: var(--f-text-secondary);
+	font-size: 13px;
+	cursor: pointer;
+	transition: background-color var(--f-transition-fast),
+		color var(--f-transition-fast);
+
+	/* Active Indicator (Pill at bottom for some styles, or Sidebar line) */
+	/* Here we use a subtle left indicator for vertical, or bottom for horizontal. */
+	/* Application seems to use horizontal tabs in titlebar. */
+
+	&:hover {
+		background-color: var(--f-bg-control-hover);
+		color: var(--f-text-primary);
+
+		.tab-close {
+			opacity: 1;
+		}
+	}
+
+	&.active {
+		background-color: var(--f-bg-layer2); /* Active Background */
+		color: var(--f-text-primary);
+		font-weight: 600;
+
+		&::after {
+			content: '';
+			position: absolute;
+			left: 12px;
+			right: 12px;
+			bottom: 0;
+			height: 3px;
+			background-color: var(--f-brand-base);
+			border-radius: 3px 3px 0 0;
+		}
+	}
+
+	.tab-text {
+		flex: 1;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.tab-close {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border-radius: var(--f-radius-s);
+		opacity: 0; /* Hidden unless hover or active */
+		transition: opacity var(--f-transition-fast),
+			background-color var(--f-transition-fast);
+
+		&:hover {
+			background-color: var(--f-bg-control-active);
+		}
+	}
+}
+
+/* --- Drawer / Flyout --- */
+.f-drawer-overlay {
+	position: fixed;
+	inset: 0;
+	background-color: rgba(0, 0, 0, 0.4); /* Dimmer */
+	z-index: 900;
+	animation: fadeIn var(--f-transition-normal);
+}
+
+.f-drawer {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 360px;
+	background-color: var(--f-bg-layer2); /* Flyout Layer */
+	border-left: 1px solid var(--f-border-subtle);
+	box-shadow: var(--f-shadow-flyout);
+	z-index: 901;
+	display: flex;
+	flex-direction: column;
+	transform: translateX(100%);
+	transition: transform var(--f-transition-normal)
+		cubic-bezier(0.1, 0.9, 0.2, 1);
+
+	&.open {
+		transform: translateX(0);
+	}
+}
+
+.f-drawer-header {
+	padding: 20px 24px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 20px;
+	font-weight: 600;
+}
+
+/* --- Cards --- */
+.f-card {
+	background-color: var(--f-bg-layer1);
+	border: 1px solid var(--f-border-default);
+	border-radius: var(--f-radius-m);
+	box-shadow: var(--f-shadow-card);
+	transition: transform var(--f-transition-fast),
+		box-shadow var(--f-transition-fast);
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
