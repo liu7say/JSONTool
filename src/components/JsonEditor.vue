@@ -36,11 +36,6 @@ const emit = defineEmits([
 	'save',
 ]);
 
-const inputText = computed({
-	get: () => props.doc.sourceText,
-	set: (val) => emit('update:doc', val),
-});
-
 // --- Table Logic ---
 
 // Available paths
@@ -220,12 +215,6 @@ const toggleTableMode = () => {
 						title="Sort Keys">
 						<component :is="Rank" style="width: 14px" /> 排序
 					</button>
-					<button
-						class="f-button small subtle"
-						:disabled="!doc.parseError"
-						@click="jumpToNextError">
-						跳到错误
-					</button>
 				</template>
 
 				<button
@@ -236,6 +225,13 @@ const toggleTableMode = () => {
 						:is="viewMode === 'table' ? Back : Grid"
 						style="width: 14px" />
 					{{ viewMode === 'table' ? '返回代码' : '表格视图' }}
+				</button>
+
+				<button
+					v-if="viewMode === 'code' && doc.parseError"
+					class="f-button small error-btn"
+					@click="jumpToNextError">
+					跳到错误
 				</button>
 			</div>
 
@@ -568,5 +564,15 @@ const toggleTableMode = () => {
 	justify-content: center;
 	color: white;
 	z-index: 50;
+}
+
+.error-btn {
+	background-color: var(--f-color-error) !important;
+	color: white !important;
+	border: none !important;
+
+	&:hover {
+		filter: brightness(0.9);
+	}
 }
 </style>

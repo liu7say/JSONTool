@@ -45,7 +45,7 @@ const props = defineProps({
 	},
 });
 
-const emit = defineEmits(['update:modelValue', 'change']);
+const emit = defineEmits(['update:modelValue', 'change', 'paste-into-empty']);
 
 const editorContainer = ref(null);
 const themeStore = useThemeStore();
@@ -176,14 +176,12 @@ const customBasicSetup = [
 // Paste handler: Keep cursor at start of paste
 const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
 	if (tr.isUserEvent('input.paste')) {
-		// Calculate where the changes happened
 		let minFrom = Infinity;
 		tr.changes.iterChanges((fromA, toA, fromB, toB) => {
 			if (fromB < minFrom) minFrom = fromB;
 		});
 
 		if (minFrom !== Infinity) {
-			// Force selection to start of paste
 			return [
 				tr,
 				{
@@ -211,6 +209,35 @@ const getExtensions = (isDark) => {
 				const newVal = update.state.doc.toString();
 				emit('update:modelValue', newVal);
 				emit('change', newVal);
+
+				// Async Auto-Format: Paste into Empty Document
+				if (
+					update.startState.doc.length === 0 &&
+					update.transactions.some((tr) => tr.isUserEvent('input.paste'))
+				) {
+					setTimeout(() => {
+						if (!editorView) return;
+						const currentDoc = editorView.state.doc.toString();
+						if (currentDoc.trim()) {
+							try {
+								const parsed = JSON.parse(currentDoc);
+								const formatted = JSON.stringify(parsed, null, 2);
+								if (formatted !== currentDoc) {
+									editorView.dispatch({
+										changes: {
+											from: 0,
+											to: editorView.state.doc.length,
+											insert: formatted,
+										},
+										selection: { anchor: 0 },
+										scrollIntoView: true,
+										userEvent: 'input.format.auto',
+									});
+								}
+							} catch (e) {}
+						}
+					}, 16);
+				}
 			}
 		}),
 		EditorState.readOnly.of(props.readonly),
