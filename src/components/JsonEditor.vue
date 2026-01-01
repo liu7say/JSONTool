@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { formatJsonText } from '../features/json/format'
 import { sortJsonKeys } from '../features/json/sort'
-import { jsonToTable } from '../features/json/table'
+import { jsonToTable, findArrayPaths } from '../features/json/table'
 import { DocumentCopy, ScaleToOriginal, Operation, Rank, Grid, Back } from '@element-plus/icons-vue'
 import CodeEditor from './CodeEditor.vue'
 
@@ -15,17 +15,33 @@ const props = defineProps({
     type: String, // 'code' | 'table' | 'diff'
     default: 'code',
   },
+  selectedArrayPath: {
+    type: String,
+    default: '',
+  },
 });
 
-const emit = defineEmits(['update:doc', 'update:viewMode', 'save']);
+const emit = defineEmits(['update:doc', 'update:viewMode', 'update:selectedArrayPath', 'save']);
 
 const inputText = computed({
   get: () => props.doc.sourceText,
   set: (val) => emit('update:doc', val),
 });
 
+// 计算可用的数组路径
+const availableArrayPaths = computed(() => {
+  if (!props.doc || props.doc.parseError) return []
+  return findArrayPaths(props.doc.parsedValue)
+})
+
+// 当前选中的路径
+const selectedPath = computed({
+  get: () => props.selectedArrayPath,
+  set: (val) => emit('update:selectedArrayPath', val)
+})
+
 // 计算属性：表格视图数据（仅在 viewMode === 'table' 时使用）
-const tableResult = computed(() => jsonToTable(props.doc));
+const tableResult = computed(() => jsonToTable(props.doc, selectedPath.value));
 
 const isSorting = ref(false)
 const codeEditorRef = ref(null)
@@ -102,9 +118,9 @@ const toggleTableMode = () => {
                 </el-button>
             </el-tooltip>
 
-            <el-tooltip content="跳到下一个错误" placement="bottom">
+            <el-tooltip content="跳到错误位置" placement="bottom">
                 <el-button size="small" :disabled="!doc.parseError" @click="jumpToNextError">
-                    下一个错误
+                    跳到错误
                 </el-button>
             </el-tooltip>
         </template>
@@ -134,15 +150,32 @@ const toggleTableMode = () => {
     <div class="editor-main">
         <!-- 表格模式 -->
         <div v-if="viewMode === 'table'" class="table-wrapper">
-             <el-empty v-if="tableResult.error" :description="tableResult.error" />
-             <el-table-v2
-                v-else
-                :columns="tableResult.columns.map(k => ({ key: k, dataKey: k, title: k, width: 150 }))"
-                :data="tableResult.rows"
-                :width="1000" 
-                :height="600"
-                fixed
-             />
+             <!-- 路径选择器（始终显示） -->
+             <div v-if="availableArrayPaths.length > 0" class="path-selector">
+               <span>选择数组字段：</span>
+               <el-select v-model="selectedPath" size="small" style="width: 200px" placeholder="请选择">
+                 <el-option
+                   v-for="path in availableArrayPaths"
+                   :key="path"
+                   :label="path || '(顶层数组)'"
+                   :value="path"
+                 />
+               </el-select>
+             </div>
+
+             <el-empty v-if="!selectedPath && availableArrayPaths.length > 0" description="请选择一个数组字段" />
+             <el-empty v-else-if="tableResult.error" :description="tableResult.error" />
+             <div v-else class="table-container">
+               <el-table :data="tableResult.rows" stripe border height="100%">
+                 <el-table-column
+                   v-for="col in tableResult.columns"
+                   :key="col"
+                   :prop="col"
+                   :label="col"
+                   min-width="150"
+                 />
+               </el-table>
+             </div>
         </div>
         
         <!-- 代码模式 (CodeMirror) -->
@@ -205,9 +238,29 @@ const toggleTableMode = () => {
 
 .table-wrapper {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     background-color: var(--bg-primary);
-    padding: 10px;
+}
+
+.table-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.path-selector {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+
+  span {
+    font-size: 14px;
+    color: var(--text-primary);
+  }
 }
 
 .code-wrapper {
