@@ -158,6 +158,11 @@ const onMouseUp = () => {
 const isSorting = ref(false);
 const codeEditorRef = ref(null);
 
+const inputText = computed({
+	get: () => props.doc.sourceText || '',
+	set: (val) => emit('update:doc', val),
+});
+
 const jumpToNextError = () => {
 	if (!codeEditorRef.value || !codeEditorRef.value.jumpToNextError) return;
 	codeEditorRef.value.jumpToNextError();
