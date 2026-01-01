@@ -5,6 +5,7 @@ import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
 import JsonEditor from './components/JsonEditor.vue';
 import GithubIcon from './components/GithubIcon.vue';
+import Logo from './components/Logo.vue';
 import {
 	Plus,
 	Close,
@@ -12,7 +13,6 @@ import {
 	Delete,
 	Moon,
 	Sunny,
-	Collection,
 	Operation,
 	ArrowLeft,
 	ArrowRight,
@@ -137,8 +137,7 @@ const loadHistoryEntry = async (entry) => {
 		<!-- 顶部 Tab 栏 (Fluent Title Bar style) -->
 		<div class="header f-acrylic">
 			<div class="brand">
-				<span class="logo-icon"><Collection /></span>
-				<span style="font-weight: 600">JSON</span>Tool
+				<Logo />
 			</div>
 
 			<div class="tabs-wrapper">
