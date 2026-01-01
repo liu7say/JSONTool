@@ -27,6 +27,10 @@ const onUpdateViewMode = (id, mode) => {
     sessionStore.updateTabViewMode(id, mode)
 }
 
+const onUpdateArrayPath = (id, path) => {
+  sessionStore.updateTabArrayPath(id, path)
+}
+
 const onSaveHistory = async (tab) => {
     try {
         await historyStore.saveEntry({
@@ -94,12 +98,14 @@ const loadHistoryEntry = async (entry) => {
 
     <!-- 主内容区 -->
     <div class="content-area">
-        <JsonEditor 
+        <JsonEditor
             v-if="sessionStore.activeTab"
             :doc="sessionStore.activeTab.doc"
             :view-mode="sessionStore.activeTab.viewMode"
+            :selected-array-path="sessionStore.activeTab.selectedArrayPath"
             @update:doc="(val) => onUpdateDoc(sessionStore.activeTab.id, val)"
             @update:view-mode="(val) => onUpdateViewMode(sessionStore.activeTab.id, val)"
+            @update:selected-array-path="(val) => onUpdateArrayPath(sessionStore.activeTab.id, val)"
             @save="onSaveHistory(sessionStore.activeTab)"
         />
         <div v-else class="empty-state">

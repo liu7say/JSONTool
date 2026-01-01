@@ -26,6 +26,7 @@ export const useSessionStore = defineStore('session', {
         // 每个 Tab 独立的视图状态
         viewMode: 'code', // 'code' | 'table'
         splitRatio: 50, // 左右分栏比例
+        selectedArrayPath: '', // 表格视图选中的数组路径
       }
       
       this.tabs.push(newTab)
@@ -74,6 +75,11 @@ export const useSessionStore = defineStore('session', {
     updateTabViewMode(id, mode) {
         const tab = this.tabs.find(t => t.id === id)
         if (tab) tab.viewMode = mode
+    },
+
+    updateTabArrayPath(id, path) {
+      const tab = this.tabs.find(t => t.id === id)
+      if (tab) tab.selectedArrayPath = path
     }
   }
 })
