@@ -73,7 +73,8 @@ body {
 }
 
 /* Text Selection */
+/* Text Selection */
 ::selection {
 	background-color: var(--f-brand-base);
-	color: white;
+	color: inherit; /* Prevent white text on light backgrounds */
 }

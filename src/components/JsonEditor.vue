@@ -10,6 +10,7 @@ import {
 	Rank,
 	Grid,
 	Back,
+	Switch,
 	Search as SearchIcon,
 } from '@element-plus/icons-vue';
 import CodeEditor from './CodeEditor.vue';
@@ -35,6 +36,9 @@ const emit = defineEmits([
 	'update:selectedArrayPath',
 	'save',
 ]);
+
+// --- Compare Logic ---
+const compareContent = ref('');
 
 // --- Table Logic ---
 
@@ -156,6 +160,7 @@ const onMouseUp = () => {
 
 // --- Editor Actions ---
 const isSorting = ref(false);
+const showLoader = ref(false);
 const codeEditorRef = ref(null);
 
 const inputText = computed({
@@ -169,23 +174,74 @@ const jumpToNextError = () => {
 };
 
 const applyFormat = () => {
+	// Format Main Doc
 	const { text, error } = formatJsonText(props.doc, { indent: 2 });
 	if (!error && text) emit('update:doc', text);
+
+	// Format Compare Doc
+	if (props.viewMode === 'diff' && compareContent.value) {
+		try {
+			const parsed = JSON.parse(compareContent.value);
+			const res = formatJsonText({ parsedValue: parsed }, { indent: 2 });
+			if (!res.error && res.text) {
+				compareContent.value = res.text;
+			}
+		} catch (e) {
+			// Ignore parse error
+		}
+	}
 };
 
 const applyCompact = () => {
+	// Compact Main Doc
 	const { text, error } = formatJsonText(props.doc, { indent: 0 });
 	if (!error && text) emit('update:doc', text);
+
+	// Compact Compare Doc
+	if (props.viewMode === 'diff' && compareContent.value) {
+		try {
+			const parsed = JSON.parse(compareContent.value);
+			const res = formatJsonText({ parsedValue: parsed }, { indent: 0 });
+			if (!res.error && res.text) {
+				compareContent.value = res.text;
+			}
+		} catch (e) {
+			// Ignore parse error
+		}
+	}
 };
 
 const applySort = () => {
 	if (isSorting.value) return;
 	isSorting.value = true;
+
+	// Only show loader if task takes longer than 100ms
+	const loaderTimer = setTimeout(() => {
+		showLoader.value = true;
+	}, 100);
+
+	// Use nextTick -> setTimeout(0) to allow UI render cycle to start before heavy task
 	setTimeout(() => {
 		try {
+			// Sort Main Doc
 			const { text, error } = sortJsonKeys(props.doc, { indent: 2 });
 			if (!error && text) emit('update:doc', text);
+
+			// Sort Compare Doc
+			if (props.viewMode === 'diff' && compareContent.value) {
+				try {
+					const parsed = JSON.parse(compareContent.value);
+					const res = sortJsonKeys({ parsedValue: parsed }, { indent: 2 });
+					if (!res.error && res.text) {
+						compareContent.value = res.text;
+					}
+				} catch (e) {
+					// Ignore parse error
+				}
+			}
 		} finally {
+			clearTimeout(loaderTimer);
+			showLoader.value = false;
 			isSorting.value = false;
 		}
 	}, 0);
@@ -194,6 +250,10 @@ const applySort = () => {
 const toggleTableMode = () => {
 	emit('update:viewMode', props.viewMode === 'table' ? 'code' : 'table');
 };
+
+const toggleDiffMode = () => {
+	emit('update:viewMode', props.viewMode === 'diff' ? 'code' : 'diff');
+};
 </script>
 
 <template>
@@ -201,7 +261,31 @@ const toggleTableMode = () => {
 		<!-- Toolbar -->
 		<div class="toolbar f-acrylic">
 			<div class="group">
-				<template v-if="viewMode === 'code'">
+				<button
+					v-if="viewMode !== 'diff'"
+					class="f-button small"
+					:class="viewMode === 'table' ? 'primary' : 'subtle'"
+					:disabled="
+						viewMode !== 'table' && !String(doc.sourceText || '').trim()
+					"
+					@click="toggleTableMode">
+					<component
+						:is="viewMode === 'table' ? Back : Grid"
+						style="width: 14px" />
+					{{ viewMode === 'table' ? '返回' : '表格视图' }}
+				</button>
+
+				<button
+					v-if="viewMode !== 'table'"
+					class="f-button small"
+					:class="viewMode === 'diff' ? 'primary' : 'subtle'"
+					@click="toggleDiffMode">
+					<component
+						:is="viewMode === 'diff' ? Back : Switch"
+						style="width: 14px" />
+					{{ viewMode === 'diff' ? '退出对比' : '对比' }}
+				</button>
+				<template v-if="viewMode === 'code' || viewMode === 'diff'">
 					<button
 						class="f-button small subtle"
 						@click="applyFormat"
@@ -221,16 +305,6 @@ const toggleTableMode = () => {
 						<component :is="Rank" style="width: 14px" /> 排序
 					</button>
 				</template>
-
-				<button
-					class="f-button small"
-					:class="viewMode === 'table' ? 'primary' : 'subtle'"
-					@click="toggleTableMode">
-					<component
-						:is="viewMode === 'table' ? Back : Grid"
-						style="width: 14px" />
-					{{ viewMode === 'table' ? '返回代码' : '表格视图' }}
-				</button>
 
 				<button
 					v-if="viewMode === 'code' && doc.parseError"
@@ -327,22 +401,40 @@ const toggleTableMode = () => {
 				</div>
 			</div>
 
-			<!-- CODE MODE -->
-			<div v-else class="code-wrapper">
-				<CodeEditor
-					ref="codeEditorRef"
-					v-model="inputText"
-					@change="(val) => emit('update:doc', val)" />
+			<!-- CODE / DIFF MODE -->
+			<div
+				v-else
+				class="code-wrapper"
+				:class="{ 'is-diff': viewMode === 'diff' }">
+				<!-- Pane A (Main) -->
+				<div class="editor-pane">
+					<CodeEditor
+						ref="codeEditorRef"
+						v-model="inputText"
+						@change="(val) => emit('update:doc', val)" />
 
-				<div class="status-bar" :class="{ error: doc.parseError }">
-					<span v-if="!String(doc.sourceText || '').trim()">请输入 JSON</span>
-					<span v-else-if="doc.parseError">{{ doc.parseError }}</span>
-					<span v-else
-						>JSON 有效 • {{ (doc.sourceText || '').length }} 字符</span
-					>
+					<div class="status-bar" :class="{ error: doc.parseError }">
+						<span v-if="!String(doc.sourceText || '').trim()">请输入 JSON</span>
+						<span v-else-if="doc.parseError">{{ doc.parseError }}</span>
+						<span v-else
+							>JSON 有效 • {{ (doc.sourceText || '').length }} 字符</span
+						>
+					</div>
 				</div>
 
-				<div v-if="isSorting" class="overlay-loader">
+				<!-- Pane B (Compare) -->
+				<div v-if="viewMode === 'diff'" class="editor-pane second-pane">
+					<CodeEditor v-model="compareContent" />
+					<div class="status-bar">
+						<span v-if="!String(compareContent || '').trim()"
+							>在此输入对比 JSON</span
+						>
+						<span v-else>{{ compareContent.length }} 字符</span>
+					</div>
+				</div>
+
+				<!-- Global Loader for Code Wrapper -->
+				<div v-if="showLoader" class="overlay-loader">
 					<span>排序中...</span>
 				</div>
 			</div>
@@ -543,6 +635,24 @@ const toggleTableMode = () => {
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
+
+	/* Diff Mode Support */
+	&.is-diff {
+		flex-direction: row;
+	}
+}
+
+.editor-pane {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+	position: relative;
+
+	&.second-pane {
+		border-left: 1px solid var(--f-border-subtle);
+	}
 }
 
 .status-bar {
