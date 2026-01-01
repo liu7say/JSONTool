@@ -32,16 +32,24 @@ export const fluentTheme = EditorView.theme({
 	},
 	// Active Line
 	'.cm-activeLine': {
-		backgroundColor: 'var(--f-bg-control)',
+		backgroundColor:
+			'color-mix(in srgb, var(--f-text-primary), transparent 96%)',
 	},
-	// Selection
-	'.cm-selectionBackground, ::selection': {
+	// Selection - CodeMirror Layer
+	'.cm-selectionBackground': {
 		backgroundColor: 'var(--f-brand-base) !important',
-		opacity: '0.25',
+		opacity: '0.3 !important',
 	},
+	// Selection - Native Layer (for simple text selection fallback)
+	'::selection': {
+		backgroundColor:
+			'color-mix(in srgb, var(--f-brand-base), transparent 70%) !important',
+		color: 'var(--f-text-primary) !important',
+	},
+	// Focused State
 	'&.cm-focused .cm-selectionBackground': {
 		backgroundColor: 'var(--f-brand-base) !important',
-		opacity: '0.25',
+		opacity: '0.3 !important',
 	},
 
 	// Fold Gutter
