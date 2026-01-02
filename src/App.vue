@@ -239,7 +239,7 @@ const statusBarInfo = computed(() => {
 			<div
 				class="brand"
 				:style="{
-					width: sessionStore.sidebarCollapsed ? '48px' : '200px',
+					width: sessionStore.sidebarCollapsed ? '48px' : '140px',
 					overflow: 'hidden',
 				}">
 				<Logo :collapsed="sessionStore.sidebarCollapsed" />

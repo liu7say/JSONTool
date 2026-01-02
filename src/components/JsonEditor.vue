@@ -5,6 +5,7 @@ import { sortJsonKeys } from '../features/json/sort';
 import { jsonToTable, findArrayPaths } from '../features/json/table';
 import { Search as SearchIcon } from '@element-plus/icons-vue';
 import CodeEditor from './CodeEditor.vue';
+import DiffEditor from './DiffEditor.vue';
 
 const props = defineProps({
 	doc: {
@@ -352,25 +353,24 @@ defineExpose({
 				</div>
 			</div>
 
-			<!-- CODE / DIFF MODE -->
-			<div
-				v-else
-				class="code-wrapper"
-				:class="{ 'is-diff': viewMode === 'diff' }">
-				<!-- Pane A (Main) -->
+			<!-- DIFF MODE -->
+			<div v-else-if="viewMode === 'diff'" class="code-wrapper">
+				<DiffEditor
+					v-model:original="inputText"
+					v-model:modified="localCompareContent" />
+				<div v-if="showLoader" class="overlay-loader">
+					<span>排序中...</span>
+				</div>
+			</div>
+
+			<!-- CODE MODE -->
+			<div v-else class="code-wrapper">
 				<div class="editor-pane">
 					<CodeEditor
 						ref="codeEditorRef"
 						v-model="inputText"
 						@change="(val) => emit('update:doc', val)" />
 				</div>
-
-				<!-- Pane B (Compare) -->
-				<div v-if="viewMode === 'diff'" class="editor-pane second-pane">
-					<CodeEditor v-model="localCompareContent" />
-				</div>
-
-				<!-- Global Loader for Code Wrapper -->
 				<div v-if="showLoader" class="overlay-loader">
 					<span>排序中...</span>
 				</div>
