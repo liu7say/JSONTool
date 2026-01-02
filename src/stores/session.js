@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { createDocument, updateDocumentText } from '../domain/document';
 import { createId } from '../utils/id';
+import { generateTabName } from '../utils/smartTabName';
 
 export const useSessionStore = defineStore('session', {
 	state: () => ({
@@ -22,12 +23,13 @@ export const useSessionStore = defineStore('session', {
 		createTab(sourceText = '') {
 			const id = createId();
 			const doc = createDocument(sourceText);
-			// 自动命名：Tab 1, Tab 2...
+			// 自动命名：优先使用智能命名，如果内容为空则回退到 "Tab N"
 			const num = this.tabs.length + 1;
+			const initialTitle = generateTabName(sourceText, `Tab ${num}`);
 
 			const newTab = {
 				id,
-				title: `Tab ${num}`,
+				title: initialTitle,
 				doc,
 				// 每个 Tab 独立的视图状态
 				viewMode: 'code', // 'code' | 'table' | 'diff'
@@ -81,6 +83,9 @@ export const useSessionStore = defineStore('session', {
 			if (!tab) return;
 
 			tab.doc = updateDocumentText(tab.doc, text);
+
+			// 更新文档内容时，同时更新标题（如果不为空）
+			tab.title = generateTabName(text, tab.title);
 		},
 
 		// 更新 Tab 标题
