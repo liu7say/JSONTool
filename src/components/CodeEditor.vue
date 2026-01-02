@@ -352,4 +352,8 @@ onBeforeUnmount(() => {
 	overflow: hidden;
 	min-height: 0;
 }
+
+:deep(.cm-gutter-lint) {
+	width: 0;
+}
 </style>

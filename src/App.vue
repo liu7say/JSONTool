@@ -861,7 +861,7 @@ const statusBarInfo = computed(() => {
 	align-items: center;
 	gap: 6px;
 	padding-right: 12px;
-	border-right: 1px solid var(--f-border-subtle);
+	border-right: 1px solid var(--f-border-default);
 
 	&:last-child {
 		border-right: none;
