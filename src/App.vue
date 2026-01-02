@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, nextTick, watch, computed } from 'vue';
+import { onMounted, onUnmounted, ref, nextTick, watch, computed } from 'vue';
 import { useSessionStore } from './stores/session';
 import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
@@ -33,11 +33,27 @@ const themeStore = useThemeStore();
 const showHistory = ref(false); // 控制历史记录抽屉的显示
 const jsonEditorRef = ref(null); // JsonEditor 实例引用
 
+// 全局快捷键处理
+const handleGlobalKeydown = (e) => {
+	// Ctrl+S (Windows) or Cmd+S (Mac)
+	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+		e.preventDefault();
+		if (sessionStore.activeTab) {
+			onSaveHistory(sessionStore.activeTab);
+		}
+	}
+};
+
 onMounted(() => {
 	if (sessionStore.tabs.length === 0) {
 		sessionStore.createTab();
 	}
 	historyStore.loadIndex();
+	window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+	window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
 /**
