@@ -3,15 +3,7 @@ import { computed, ref, watch, nextTick } from 'vue';
 import { formatJsonText } from '../features/json/format';
 import { sortJsonKeys } from '../features/json/sort';
 import { jsonToTable, findArrayPaths } from '../features/json/table';
-import {
-	DocumentCopy,
-	ScaleToOriginal,
-	Rank,
-	Grid,
-	Back,
-	Switch,
-	Search as SearchIcon,
-} from '@element-plus/icons-vue';
+import { Search as SearchIcon } from '@element-plus/icons-vue';
 import CodeEditor from './CodeEditor.vue';
 
 const props = defineProps({
@@ -27,19 +19,28 @@ const props = defineProps({
 		type: String,
 		default: '',
 	},
+	compareContent: {
+		type: String,
+		default: '',
+	},
 });
 
 const emit = defineEmits([
 	'update:doc',
 	'update:viewMode',
 	'update:selectedArrayPath',
+	'update:compareContent',
 	'save',
 ]);
 
 // --- 核心逻辑 ---
 
 // --- 比较功能逻辑 ---
-const compareContent = ref('');
+// Use computed for two-way binding with prop
+const localCompareContent = computed({
+	get: () => props.compareContent,
+	set: (val) => emit('update:compareContent', val),
+});
 
 // --- 表格视图逻辑 ---
 
@@ -180,12 +181,12 @@ const applyFormat = () => {
 	if (!error && text) emit('update:doc', text);
 
 	// 格式化对比文档
-	if (props.viewMode === 'diff' && compareContent.value) {
+	if (props.viewMode === 'diff' && localCompareContent.value) {
 		try {
-			const parsed = JSON.parse(compareContent.value);
+			const parsed = JSON.parse(localCompareContent.value);
 			const res = formatJsonText({ parsedValue: parsed }, { indent: 2 });
 			if (!res.error && res.text) {
-				compareContent.value = res.text;
+				localCompareContent.value = res.text;
 			}
 		} catch (e) {
 			// Ignore parse error
@@ -199,12 +200,12 @@ const applyCompact = () => {
 	if (!error && text) emit('update:doc', text);
 
 	// 压缩对比文档
-	if (props.viewMode === 'diff' && compareContent.value) {
+	if (props.viewMode === 'diff' && localCompareContent.value) {
 		try {
-			const parsed = JSON.parse(compareContent.value);
+			const parsed = JSON.parse(localCompareContent.value);
 			const res = formatJsonText({ parsedValue: parsed }, { indent: 0 });
 			if (!res.error && res.text) {
-				compareContent.value = res.text;
+				localCompareContent.value = res.text;
 			}
 		} catch (e) {
 			// Ignore parse error
@@ -229,12 +230,12 @@ const applySort = () => {
 			if (!error && text) emit('update:doc', text);
 
 			// 排序对比文档
-			if (props.viewMode === 'diff' && compareContent.value) {
+			if (props.viewMode === 'diff' && localCompareContent.value) {
 				try {
-					const parsed = JSON.parse(compareContent.value);
+					const parsed = JSON.parse(localCompareContent.value);
 					const res = sortJsonKeys({ parsedValue: parsed }, { indent: 2 });
 					if (!res.error && res.text) {
-						compareContent.value = res.text;
+						localCompareContent.value = res.text;
 					}
 				} catch (e) {
 					// Ignore parse error
@@ -255,76 +256,22 @@ const toggleTableMode = () => {
 const toggleDiffMode = () => {
 	emit('update:viewMode', props.viewMode === 'diff' ? 'code' : 'diff');
 };
+
+// 公开方法供父组件调用
+defineExpose({
+	applyFormat,
+	applyCompact,
+	applySort,
+	toggleTableMode,
+	toggleDiffMode,
+	jumpToNextError,
+	// 暴露一些只读状态可以帮助父组件控制按钮状态等
+	isSorting: computed(() => isSorting.value),
+});
 </script>
 
 <template>
 	<div class="json-editor">
-		<!-- Toolbar -->
-		<div class="toolbar f-acrylic">
-			<div class="group">
-				<button
-					v-if="viewMode !== 'diff'"
-					class="f-button small"
-					:class="viewMode === 'table' ? 'primary' : 'subtle'"
-					:disabled="
-						viewMode !== 'table' && !String(doc.sourceText || '').trim()
-					"
-					@click="toggleTableMode">
-					<component
-						:is="viewMode === 'table' ? Back : Grid"
-						style="width: 14px" />
-					{{ viewMode === 'table' ? '返回' : '表格视图' }}
-				</button>
-
-				<button
-					v-if="viewMode !== 'table'"
-					class="f-button small"
-					:class="viewMode === 'diff' ? 'primary' : 'subtle'"
-					:disabled="
-						viewMode !== 'diff' && !String(doc.sourceText || '').trim()
-					"
-					@click="toggleDiffMode">
-					<component
-						:is="viewMode === 'diff' ? Back : Switch"
-						style="width: 14px" />
-					{{ viewMode === 'diff' ? '退出对比' : '对比' }}
-				</button>
-
-				<button
-					v-if="viewMode === 'code' && doc.parseError"
-					class="f-button small error-btn"
-					@click="jumpToNextError">
-					跳到错误
-				</button>
-			</div>
-
-			<div class="group">
-				<template v-if="viewMode === 'code' || viewMode === 'diff'">
-					<button
-						class="f-button small subtle"
-						:disabled="!String(doc.sourceText || '').trim()"
-						@click="applyFormat"
-						title="Format">
-						<component :is="DocumentCopy" style="width: 14px" /> 格式化
-					</button>
-					<button
-						class="f-button small subtle"
-						:disabled="!String(doc.sourceText || '').trim()"
-						@click="applyCompact"
-						title="Compact">
-						<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
-					</button>
-					<button
-						class="f-button small subtle"
-						:disabled="!String(doc.sourceText || '').trim()"
-						@click="applySort"
-						title="Sort Keys">
-						<component :is="Rank" style="width: 14px" /> 排序
-					</button>
-				</template>
-			</div>
-		</div>
-
 		<!-- Main Area -->
 		<div class="editor-main">
 			<!-- TABLE MODE -->
@@ -416,25 +363,11 @@ const toggleDiffMode = () => {
 						ref="codeEditorRef"
 						v-model="inputText"
 						@change="(val) => emit('update:doc', val)" />
-
-					<div class="status-bar" :class="{ error: doc.parseError }">
-						<span v-if="!String(doc.sourceText || '').trim()">请输入 JSON</span>
-						<span v-else-if="doc.parseError">{{ doc.parseError }}</span>
-						<span v-else
-							>JSON 有效 • {{ (doc.sourceText || '').length }} 字符</span
-						>
-					</div>
 				</div>
 
 				<!-- Pane B (Compare) -->
 				<div v-if="viewMode === 'diff'" class="editor-pane second-pane">
-					<CodeEditor v-model="compareContent" />
-					<div class="status-bar">
-						<span v-if="!String(compareContent || '').trim()"
-							>在此输入对比 JSON</span
-						>
-						<span v-else>{{ compareContent.length }} 字符</span>
-					</div>
+					<CodeEditor v-model="localCompareContent" />
 				</div>
 
 				<!-- Global Loader for Code Wrapper -->
@@ -451,22 +384,6 @@ const toggleDiffMode = () => {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-}
-
-.toolbar {
-	height: 48px;
-	border-bottom: 1px solid var(--f-border-subtle);
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0 16px;
-	background-color: var(--f-bg-layer2);
-}
-
-.group {
-	display: flex;
-	gap: 8px;
-	align-items: center;
 }
 
 .editor-main {
@@ -659,20 +576,6 @@ const toggleDiffMode = () => {
 	}
 }
 
-.status-bar {
-	height: 24px;
-	padding: 0 12px;
-	font-size: 11px;
-	display: flex;
-	align-items: center;
-	color: white;
-	background-color: var(--f-brand-base);
-
-	&.error {
-		background-color: var(--f-color-error);
-	}
-}
-
 .overlay-loader {
 	position: absolute;
 	inset: 0;
@@ -683,15 +586,5 @@ const toggleDiffMode = () => {
 	justify-content: center;
 	color: white;
 	z-index: 50;
-}
-
-.error-btn {
-	background-color: var(--f-color-error) !important;
-	color: white !important;
-	border: none !important;
-
-	&:hover {
-		filter: brightness(0.9);
-	}
 }
 </style>

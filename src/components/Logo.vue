@@ -1,9 +1,18 @@
+<script setup>
+defineProps({
+	collapsed: {
+		type: Boolean,
+		default: false,
+	},
+});
+</script>
+
 <template>
 	<div class="app-logo">
 		<svg
-			width="124"
+			:width="collapsed ? 24 : 124"
 			height="24"
-			viewBox="0 0 124 24"
+			:viewBox="collapsed ? '0 0 24 24' : '0 0 124 24'"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg">
 			<!-- Icon: Stylized Curly Braces -->
@@ -21,6 +30,7 @@
 
 			<!-- Text: JSON -->
 			<text
+				v-if="!collapsed"
 				x="28"
 				y="18"
 				fill="var(--f-text-primary)"
@@ -33,6 +43,7 @@
 
 			<!-- Text: Tool -->
 			<text
+				v-if="!collapsed"
 				x="73"
 				y="18"
 				fill="var(--f-text-primary)"
