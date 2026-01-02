@@ -92,4 +92,7 @@ npm run build
 
 ---
 
-> **Note**: 本项目严格遵循 **"Never break userspace"** 原则。我们致力于提供最纯粹、最稳定的工具体验。
+## TODO
+
+- [ ] url 参数处理模式
+- [ ] 看看是否需要将"JSON Tool"(只处理 json)修改为"Dev Tool"(增加如字符串、URL 等数据的处理)
