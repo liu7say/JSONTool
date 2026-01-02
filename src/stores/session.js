@@ -7,6 +7,7 @@ export const useSessionStore = defineStore('session', {
 	state: () => ({
 		tabs: [], // 所有打开的标签页
 		activeTabId: null, // 当前激活的标签页 ID
+		sidebarCollapsed: false, // 侧边栏是否收起
 	}),
 
 	getters: {
@@ -33,6 +34,7 @@ export const useSessionStore = defineStore('session', {
 				doc,
 				// 每个 Tab 独立的视图状态
 				viewMode: 'code', // 'code' | 'table' | 'diff'
+				compareContent: '', // 独立保存对比内容
 				splitRatio: 50, // 左右分栏比例
 				selectedArrayPath: '', // 表格视图选中的数组路径
 			};
@@ -104,6 +106,17 @@ export const useSessionStore = defineStore('session', {
 		updateTabArrayPath(id, path) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (tab) tab.selectedArrayPath = path;
+		},
+
+		// 更新 Tab 对比内容
+		updateTabCompareContent(id, text) {
+			const tab = this.tabs.find((t) => t.id === id);
+			if (tab) tab.compareContent = text;
+		},
+
+		// 切换侧边栏状态
+		toggleSidebar() {
+			this.sidebarCollapsed = !this.sidebarCollapsed;
 		},
 	},
 });

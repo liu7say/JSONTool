@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, nextTick, watch, computed } from 'vue';
 import { useSessionStore } from './stores/session';
 import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
@@ -14,6 +14,12 @@ import {
 	Moon,
 	Sunny,
 	Operation,
+	DocumentCopy,
+	ScaleToOriginal,
+	Rank,
+	Grid,
+	Back,
+	Switch,
 	ArrowLeft,
 	ArrowRight,
 } from '@element-plus/icons-vue';
@@ -25,88 +31,14 @@ const themeStore = useThemeStore();
 
 // UI 状态 refs
 const showHistory = ref(false); // 控制历史记录抽屉的显示
-const tabsContainer = ref(null); // Tab 容器的 DOM 引用
-const showLeftGradient = ref(false); // 是否显示左侧滚动遮罩
-const showRightGradient = ref(false); // 是否显示右侧滚动遮罩
-
-/**
- * 检查 Tab 栏的滚动状态，决定是否显示左右的渐变遮罩
- * 这是一个纯粹的 UI 辅助函数，提升用户体验
- */
-const checkScroll = () => {
-	if (!tabsContainer.value) return;
-	const { scrollLeft, scrollWidth, clientWidth } = tabsContainer.value;
-	showLeftGradient.value = scrollLeft > 0;
-	showRightGradient.value = Math.ceil(scrollLeft + clientWidth) < scrollWidth;
-};
-
-/**
- * 手动滚动 Tab 栏
- * @param {string} direction - 滚动方向 'left' | 'right'
- */
-const scrollTabs = (direction) => {
-	if (!tabsContainer.value) return;
-	const scrollAmount = 200;
-	tabsContainer.value.scrollBy({
-		left: direction === 'left' ? -scrollAmount : scrollAmount,
-		behavior: 'smooth',
-	});
-};
+const jsonEditorRef = ref(null); // JsonEditor 实例引用
 
 onMounted(() => {
 	if (sessionStore.tabs.length === 0) {
 		sessionStore.createTab();
 	}
 	historyStore.loadIndex();
-
-	// Check scroll on mount
-	setTimeout(checkScroll, 100);
-
-	// Watch resize
-	if (tabsContainer.value) {
-		const ro = new ResizeObserver(checkScroll);
-		ro.observe(tabsContainer.value);
-	}
 });
-
-/**
- * 将当前激活的 Tab 滚动到可视区域
- * 使用 scrollIntoView 实现丝滑的定位
- */
-const scrollToActiveTab = () => {
-	if (!tabsContainer.value || !sessionStore.activeTabId) return;
-
-	const activeTabEl = tabsContainer.value.querySelector(
-		`[data-id="${sessionStore.activeTabId}"]`
-	);
-
-	if (activeTabEl) {
-		activeTabEl.scrollIntoView({
-			behavior: 'smooth',
-			block: 'nearest',
-			inline: 'center', // 保持 Tab 居中
-		});
-	}
-};
-
-// 监听当前激活 Tab 的变化，自动滚动
-watch(
-	() => sessionStore.activeTabId,
-	async () => {
-		await nextTick();
-		scrollToActiveTab();
-	}
-);
-
-// 监听 Tab 数量变化，更新滚动状态指示器
-import { watch, nextTick } from 'vue';
-watch(
-	() => sessionStore.tabs.length,
-	async () => {
-		await nextTick();
-		checkScroll();
-	}
-);
 
 /**
  * 处理文档更新事件
@@ -133,6 +65,10 @@ const onUpdateViewMode = (id, mode) => {
  */
 const onUpdateArrayPath = (id, path) => {
 	sessionStore.updateTabArrayPath(id, path);
+};
+
+const onUpdateCompareContent = (id, text) => {
+	sessionStore.updateTabCompareContent(id, text);
 };
 
 /**
@@ -167,121 +103,367 @@ const loadHistoryEntry = async (entry) => {
 		showHistory.value = false;
 	}
 };
+
+// --- 编辑器操作代理方法 ---
+const triggerFormat = () => jsonEditorRef.value?.applyFormat();
+const triggerCompact = () => jsonEditorRef.value?.applyCompact();
+const triggerSort = () => jsonEditorRef.value?.applySort();
+const triggerToggleTableRaw = () => jsonEditorRef.value?.toggleTableMode();
+const triggerToggleDiff = () => jsonEditorRef.value?.toggleDiffMode();
+const triggerNextError = () => jsonEditorRef.value?.jumpToNextError();
+
+// --- 侧边栏 Hover Popover 逻辑 ---
+const hoveredTabId = ref(null);
+const popoverStyle = ref({ top: '0px', left: '0px', width: '200px' });
+let hoverTimer = null;
+
+const getShortTitle = (title) => {
+	if (!title) return '';
+	// Return first character (handle surrogate pairs if needed, but simple index is fine for now)
+	return String(title).substring(0, 1).toUpperCase();
+};
+
+const onTabMouseEnter = (e, tabId) => {
+	if (!sessionStore.sidebarCollapsed) {
+		hoveredTabId.value = null;
+		return;
+	}
+
+	const target = e.currentTarget;
+	const rect = target.getBoundingClientRect();
+
+	// Set position: Align directly over the collapsed tab but expanded width
+	popoverStyle.value = {
+		top: rect.top + 'px',
+		left: rect.left + 'px',
+		width: '200px', // Fixed expanded width
+	};
+
+	hoveredTabId.value = tabId;
+
+	if (hoverTimer) clearTimeout(hoverTimer);
+};
+
+const onTabMouseLeave = (e) => {
+	// If moving to the popover, don't close
+	if (
+		e.relatedTarget &&
+		e.relatedTarget.closest &&
+		e.relatedTarget.closest('.tab-popover')
+	) {
+		return;
+	}
+
+	hoverTimer = setTimeout(() => {
+		hoveredTabId.value = null;
+	}, 100);
+};
+
+const onPopoverMouseEnter = () => {
+	if (hoverTimer) clearTimeout(hoverTimer);
+};
+
+const onPopoverMouseLeave = (e) => {
+	// If moving back to the sidebar tab, allow the tab's mouseenter to handle it (by clearing timer)
+	// But we still set the timer here in case we moved to nowhere
+
+	hoverTimer = setTimeout(() => {
+		hoveredTabId.value = null;
+	}, 100);
+};
+
+// 辅助计算属性
+const activeTab = computed(() => sessionStore.activeTab);
+const hoveredTab = computed(() =>
+	sessionStore.tabs.find((t) => t.id === hoveredTabId.value)
+);
+
+// 状态栏信息
+const statusBarInfo = computed(() => {
+	if (!activeTab.value) return { text: '就绪', isError: false };
+
+	const tab = activeTab.value;
+	const doc = tab.doc;
+
+	if (tab.viewMode === 'table') {
+		const path = tab.selectedArrayPath || '(顶层)';
+		return { text: `表格模式 • 路径: ${path}`, isError: false };
+	}
+
+	if (tab.viewMode === 'diff') {
+		// Diff 模式显示对比信息
+		const mainLen = (doc.sourceText || '').length;
+		const compareLen = (tab.compareContent || '').length;
+		return {
+			text: `对比模式 • 主文档: ${mainLen} 字符 • 对比文档: ${compareLen} 字符`,
+			isError: false,
+		};
+	}
+
+	// Code Mode
+	if (!String(doc.sourceText || '').trim()) {
+		return { text: '请输入 JSON', isError: false };
+	}
+
+	if (doc.parseError) {
+		return { text: doc.parseError, isError: true };
+	}
+
+	return {
+		text: `JSON 有效 • ${doc.sourceText.length} 字符`,
+		isError: false,
+	};
+});
 </script>
 
 <template>
 	<div class="app-container">
-		<!-- 顶部 Tab 栏 (Fluent Title Bar style) -->
+		<!-- 顶部统一 Header (Logo + Tools) -->
 		<div class="header f-acrylic">
-			<div class="brand">
-				<Logo />
+			<div
+				class="brand"
+				:style="{
+					width: sessionStore.sidebarCollapsed ? '48px' : '200px',
+					overflow: 'hidden',
+				}">
+				<Logo :collapsed="sessionStore.sidebarCollapsed" />
 			</div>
 
-			<div class="tabs-wrapper">
-				<div
-					class="scroll-indicator left"
-					v-if="showLeftGradient"
-					@click="scrollTabs('left')">
-					<component :is="ArrowLeft" />
+			<div class="header-content">
+				<!-- 左侧：编辑器工具组 -->
+				<div class="toolbar-group left" v-if="activeTab">
+					<!-- 视图切换 -->
+					<div class="tool-section">
+						<button
+							v-if="activeTab.viewMode !== 'diff'"
+							class="f-button small"
+							:class="activeTab.viewMode === 'table' ? 'primary' : 'subtle'"
+							:disabled="
+								activeTab.viewMode !== 'table' &&
+								!String(activeTab.doc.sourceText || '').trim()
+							"
+							@click="triggerToggleTableRaw">
+							<component
+								:is="activeTab.viewMode === 'table' ? Back : Grid"
+								style="width: 14px" />
+							{{ activeTab.viewMode === 'table' ? '返回' : '表格视图' }}
+						</button>
+
+						<button
+							v-if="activeTab.viewMode !== 'table'"
+							class="f-button small"
+							:class="activeTab.viewMode === 'diff' ? 'primary' : 'subtle'"
+							:disabled="
+								activeTab.viewMode !== 'diff' &&
+								!String(activeTab.doc.sourceText || '').trim()
+							"
+							@click="triggerToggleDiff">
+							<component
+								:is="activeTab.viewMode === 'diff' ? Back : Switch"
+								style="width: 14px" />
+							{{ activeTab.viewMode === 'diff' ? '退出对比' : '对比' }}
+						</button>
+					</div>
+
+					<!-- 错误跳转 (仅 Code 模式) -->
+					<div
+						class="tool-section"
+						v-if="activeTab.viewMode === 'code' && activeTab.doc.parseError">
+						<button class="f-button small error-btn" @click="triggerNextError">
+							跳到错误
+						</button>
+					</div>
+
+					<!-- 格式化工具 (Code/Diff 模式) -->
+					<div
+						class="tool-section"
+						v-if="
+							activeTab.viewMode === 'code' || activeTab.viewMode === 'diff'
+						">
+						<button
+							class="f-button small subtle"
+							:disabled="!String(activeTab.doc.sourceText || '').trim()"
+							@click="triggerFormat"
+							title="Format">
+							<component :is="DocumentCopy" style="width: 14px" /> 格式化
+						</button>
+						<button
+							class="f-button small subtle"
+							:disabled="!String(activeTab.doc.sourceText || '').trim()"
+							@click="triggerCompact"
+							title="Compact">
+							<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
+						</button>
+						<button
+							class="f-button small subtle"
+							:disabled="!String(activeTab.doc.sourceText || '').trim()"
+							@click="triggerSort"
+							title="Sort Keys">
+							<component :is="Rank" style="width: 14px" /> 排序
+						</button>
+					</div>
 				</div>
+				<div class="toolbar-group left" v-else></div>
+
+				<!-- 右侧：全局操作组 -->
+				<div class="toolbar-group right">
+					<button
+						v-if="activeTab"
+						class="f-button small primary"
+						@click="onSaveHistory(activeTab)">
+						<component :is="Operation" style="width: 14px" /> 保存快照
+					</button>
+
+					<button
+						class="f-button small subtle icon-only"
+						@click="themeStore.toggle"
+						:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
+						<component
+							:is="themeStore.isDark ? Moon : Sunny"
+							style="width: 16px" />
+					</button>
+
+					<button
+						class="f-button small subtle icon-only"
+						@click="showHistory = true"
+						title="历史记录">
+						<component :is="Clock" style="width: 16px" />
+					</button>
+
+					<a
+						class="f-button small subtle icon-only"
+						title="GitHub"
+						href="https://github.com/liu7say/JSONTool"
+						target="_blank"
+						style="
+							text-decoration: none;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+						">
+						<GithubIcon style="width: 16px; height: 16px" />
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<!-- 下方工作区：侧边栏 + 内容 -->
+		<div class="workspace">
+			<!-- 左侧边栏 (Vertical Tabs) -->
+			<div
+				class="sidebar f-acrylic"
+				:class="{ collapsed: sessionStore.sidebarCollapsed }">
 				<div
-					class="tabs-scroll f-tabs"
-					ref="tabsContainer"
-					@scroll="checkScroll">
+					class="toggle-btn"
+					@click="sessionStore.toggleSidebar"
+					:title="sessionStore.sidebarCollapsed ? '展开' : '收起'">
+					<component
+						:is="sessionStore.sidebarCollapsed ? ArrowRight : ArrowLeft"
+						style="width: 12px" />
+				</div>
+
+				<div class="tabs-list f-tabs vertical">
 					<div
 						v-for="tab in sessionStore.tabs"
 						:key="tab.id"
-						class="f-tab-item"
+						class="f-tab-item vertical"
 						:class="{ active: sessionStore.activeTabId === tab.id }"
 						:data-id="tab.id"
 						@click="sessionStore.setActive(tab.id)"
-						@mousedown.middle.prevent="sessionStore.closeTab(tab.id)">
-						<span class="tab-text">{{ tab.title }}</span>
-						<span class="tab-close" @click.stop="sessionStore.closeTab(tab.id)">
+						@mousedown.middle.prevent="sessionStore.closeTab(tab.id)"
+						@mouseenter="(e) => onTabMouseEnter(e, tab.id)"
+						@mouseleave="onTabMouseLeave">
+						<div class="tab-content">
+							<span class="tab-text" :title="tab.title">
+								{{
+									sessionStore.sidebarCollapsed
+										? getShortTitle(tab.title)
+										: tab.title
+								}}
+							</span>
+						</div>
+						<span
+							class="tab-close"
+							@click.stop="sessionStore.closeTab(tab.id)"
+							title="关闭">
 							<component :is="Close" style="width: 12px; height: 12px" />
 						</span>
 					</div>
 
-					<button
-						class="f-button small subtle icon-only"
-						@click="sessionStore.createTab()"
-						title="新建标签页">
-						<component :is="Plus" style="width: 16px" />
-					</button>
-				</div>
-				<div
-					class="scroll-indicator right"
-					v-if="showRightGradient"
-					@click="scrollTabs('right')">
-					<component :is="ArrowRight" />
+					<!-- New Tab Button (Inline) -->
+					<div class="new-tab-wrapper">
+						<button
+							class="f-button subtle icon-only new-tab-btn"
+							@click="sessionStore.createTab()"
+							title="新建标签页">
+							<component :is="Plus" style="width: 16px" />
+						</button>
+					</div>
 				</div>
 			</div>
 
-			<div class="header-actions">
-				<!-- 保存快照 -->
-				<button
-					v-if="sessionStore.activeTab"
-					class="f-button small primary"
-					@click="onSaveHistory(sessionStore.activeTab)">
-					<component :is="Operation" style="width: 14px" /> 保存快照
-				</button>
-
-				<!-- 主题切换 -->
-				<button
-					class="f-button small subtle icon-only"
-					@click="themeStore.toggle"
-					:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
-					<component
-						:is="themeStore.isDark ? Moon : Sunny"
-						style="width: 16px" />
-				</button>
-
-				<button
-					class="f-button small subtle icon-only"
-					@click="showHistory = true"
-					title="历史记录">
-					<component :is="Clock" style="width: 16px" />
-				</button>
-
-				<a
-					class="f-button small subtle icon-only"
-					title="GitHub"
-					href="https://github.com/liu7say/JSONTool"
-					target="_blank"
-					style="
-						text-decoration: none;
-						display: flex;
-						align-items: center;
-						justify-content: center;
-					">
-					<GithubIcon style="width: 16px; height: 16px" />
-				</a>
+			<!-- 主内容区 -->
+			<div class="content-area">
+				<JsonEditor
+					v-if="activeTab"
+					ref="jsonEditorRef"
+					:doc="activeTab.doc"
+					:view-mode="activeTab.viewMode"
+					:selected-array-path="activeTab.selectedArrayPath"
+					:compare-content="activeTab.compareContent"
+					@update:doc="(val) => onUpdateDoc(activeTab.id, val)"
+					@update:view-mode="(val) => onUpdateViewMode(activeTab.id, val)"
+					@update:selected-array-path="
+						(val) => onUpdateArrayPath(activeTab.id, val)
+					"
+					@update:compare-content="
+						(val) => onUpdateCompareContent(activeTab.id, val)
+					"
+					@save="onSaveHistory(activeTab)" />
+				<div v-else class="empty-state">
+					<div class="empty-content">
+						<h3>没有打开的文件</h3>
+						<button class="f-button primary" @click="sessionStore.createTab()">
+							新建 JSON
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
-		<!-- 主内容区 -->
-		<div class="content-area">
-			<JsonEditor
-				v-if="sessionStore.activeTab"
-				:doc="sessionStore.activeTab.doc"
-				:view-mode="sessionStore.activeTab.viewMode"
-				:selected-array-path="sessionStore.activeTab.selectedArrayPath"
-				@update:doc="(val) => onUpdateDoc(sessionStore.activeTab.id, val)"
-				@update:view-mode="
-					(val) => onUpdateViewMode(sessionStore.activeTab.id, val)
-				"
-				@update:selected-array-path="
-					(val) => onUpdateArrayPath(sessionStore.activeTab.id, val)
-				"
-				@save="onSaveHistory(sessionStore.activeTab)" />
-			<div v-else class="empty-state">
-				<div class="empty-content">
-					<h3>没有打开的文件</h3>
-					<button class="f-button primary" @click="sessionStore.createTab()">
-						新建 JSON
-					</button>
-				</div>
+		<!-- Hover Popover for Collapsed Tabs -->
+		<div
+			v-if="sessionStore.sidebarCollapsed && hoveredTab"
+			class="tab-popover f-tab-item vertical active"
+			:style="popoverStyle"
+			@mouseenter="onPopoverMouseEnter"
+			@mouseleave="onPopoverMouseLeave"
+			@click="
+				sessionStore.setActive(hoveredTab.id);
+				hoveredTabId = null;
+			"
+			@mousedown.middle.prevent="sessionStore.closeTab(hoveredTab.id)">
+			<div class="tab-content">
+				<span class="tab-text" :title="hoveredTab.title">{{
+					hoveredTab.title
+				}}</span>
 			</div>
+			<span
+				class="tab-close"
+				@click.stop="sessionStore.closeTab(hoveredTab.id)"
+				title="关闭">
+				<component :is="Close" style="width: 12px; height: 12px" />
+			</span>
+
+			<!-- Replicate Active Indicator styles if this is the active tab -->
+			<div
+				v-if="sessionStore.activeTabId === hoveredTab.id"
+				class="popover-indicator"></div>
+		</div>
+
+		<!-- Global Footer Status Bar -->
+		<div class="footer status-bar" :class="{ error: statusBarInfo.isError }">
+			<span>{{ statusBarInfo.text }}</span>
 		</div>
 
 		<!-- 历史记录抽屉 (Custom Fluent Drawer) -->
@@ -338,19 +520,20 @@ const loadHistoryEntry = async (entry) => {
 <style scoped lang="scss">
 .app-container {
 	display: flex;
-	flex-direction: column;
+	flex-direction: column; /* Back to column, as Header is top, Workspace is bottom */
 	height: 100vh;
-	/* Background managed by body/globals */
+	overflow: hidden;
 }
 
 .header {
-	height: 48px; /* Classic Windows Titlebar height approx */
+	height: 48px;
 	display: flex;
 	align-items: center;
 	padding: 0 16px;
 	border-bottom: 1px solid var(--f-border-subtle);
 	background-color: var(--f-bg-layer1);
 	z-index: 100;
+	flex-shrink: 0;
 }
 
 .brand {
@@ -358,98 +541,337 @@ const loadHistoryEntry = async (entry) => {
 	align-items: center;
 	gap: 8px;
 	font-size: 16px;
-	margin-right: 24px;
+	margin-right: 0; /* Removing margin-right to let padding handle spacing */
+	width: 200px; /* Match sidebar width */
+	flex-shrink: 0;
 	color: var(--f-brand-base);
+	transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
-	.logo-icon {
-		display: flex;
-		font-size: 20px;
-	}
+	/* Separate logo from sidebar border visually */
+	padding-right: 16px;
+	border-right: 1px solid var(--f-border-subtle);
 }
 
-.tabs-wrapper {
+.header-content {
 	flex: 1;
-	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-width: 0;
+}
+
+.workspace {
+	flex: 1;
+	display: flex;
+	flex-direction: row;
+	overflow: hidden;
+}
+
+/* Sidebar Styles */
+.sidebar {
+	width: 150px; /* Expanded Width */
+	display: flex;
+	flex-direction: column;
+	border-right: 1px solid var(--f-border-default);
+	background-color: var(--f-bg-layer2);
+	z-index: 50;
+	flex-shrink: 0;
 	position: relative;
-	display: flex;
-	align-items: center;
-	min-width: 0; /* Prevent flex item from overflowing */
-}
+	transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
-.tabs-scroll {
-	flex: 1;
-	height: 100%;
-	display: flex;
-	align-items: center;
-	overflow-x: auto;
-	/* Hide scrollbar */
-	scrollbar-width: none;
-	&::-webkit-scrollbar {
-		display: none;
+	&.collapsed {
+		width: 48px; /* Collapsed Width: showing icon/initials */
+
+		.f-tab-item.vertical {
+			padding: 6px 4px; /* Tighter padding */
+			justify-content: center;
+
+			.tab-content {
+				margin: 0;
+				text-align: center;
+			}
+
+			.tab-close {
+				display: none; /* Hide close button in collapsed mode */
+			}
+
+			/* Collapsed mode active state: Show Left Indicator (::before) */
+			&.active {
+				&::before {
+					opacity: 1;
+				}
+				&::after {
+					opacity: 0;
+				}
+			}
+		}
+
+		.new-tab-btn {
+			/* Icon only, centered */
+		}
+
+		/* Toggle button centered in collapsed mode */
+		.toggle-btn {
+			justify-content: center;
+			padding: 8px 0;
+			border-radius: 0;
+			border-bottom: 1px solid var(--f-border-subtle);
+			margin-bottom: 4px;
+			background-color: transparent;
+
+			&:hover {
+				background-color: var(--f-bg-control-hover);
+			}
+		}
 	}
 }
 
-.scroll-indicator {
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	width: 24px; /* Narrower touch target */
+.toggle-btn {
+	/* Static position at top */
+	width: 100%;
+	height: 32px;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	z-index: 10;
+	justify-content: flex-end; /* Align right in expanded mode */
+	padding: 0 8px;
 	cursor: pointer;
-	color: var(--f-text-tertiary); /* Lighter color */
-	transition: color 0.2s;
-
-	svg {
-		width: 12px; /* Smaller icon */
-		height: 12px;
-	}
+	color: var(--f-text-secondary);
+	border-bottom: 1px solid var(--f-border-subtle);
+	margin-bottom: 4px;
+	transition: background-color 0.2s, color 0.2s;
 
 	&:hover {
+		background-color: var(--f-bg-control-hover);
 		color: var(--f-text-primary);
 	}
+}
+
+.tabs-list {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	display: flex;
+	flex-direction: column;
+	padding: 8px 4px; /* Reduced padding */
+	transition: opacity 0.2s;
+	user-select: none;
+
+	&::-webkit-scrollbar {
+		width: 4px;
+	}
+	&::-webkit-scrollbar-thumb {
+		background-color: var(--f-border-default);
+		border-radius: 4px;
+	}
+}
+
+.f-tab-item.vertical {
+	display: flex;
+	align-items: center;
+	padding: 6px 8px; /* Compact padding */
+	margin: 0 0 2px 0; /* Minimal spacing */
+	border-radius: 4px;
+	cursor: pointer;
+	position: relative;
+	transition: background-color 0.2s;
+	border: 1px solid transparent;
+	min-height: 32px; /* Reduced height */
+
+	&:hover {
+		background-color: var(--f-bg-control-hover);
+	}
+
+	&.active {
+		background-color: var(--f-bg-control-active);
+		border: 1px solid var(--f-border-default);
+
+		/* Indicator Base Styles */
+		&::before,
+		&::after {
+			content: '';
+			position: absolute;
+			background-color: var(--f-brand-base);
+			border-radius: 2px;
+			display: block;
+			transition: opacity 0.2s ease;
+			pointer-events: none;
+		}
+
+		/* Collapsed State Indicator: Left Vertical Bar */
+		&::before {
+			left: 0;
+			top: 8px;
+			bottom: 8px;
+			width: 3px;
+			opacity: 0; /* Hidden by default (Expanded mode uses ::after) */
+		}
+
+		/* Expanded State Indicator: Bottom Horizontal Line */
+		&::after {
+			left: 0;
+			right: 0;
+			bottom: 0;
+			height: 3px;
+			width: auto;
+			opacity: 1; /* Visible by default */
+		}
+	}
+
+	&.active .popover-indicator {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 3px;
+		width: auto;
+		background-color: var(--f-brand-base);
+		border-radius: 2px;
+	}
+
+	.tab-content {
+		flex: 1;
+		min-width: 0;
+		margin-right: 4px;
+		margin-left: 6px;
+	}
+
+	.tab-text {
+		display: block;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: 13px;
+	}
+
+	.tab-close {
+		opacity: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		border-radius: 4px;
+		color: var(--f-text-secondary);
+
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.1);
+			color: var(--f-text-primary);
+		}
+	}
+
+	&:hover .tab-close,
+	&.active .tab-close {
+		opacity: 1;
+	}
+}
+
+.tab-popover {
+	position: fixed;
+	z-index: 1000;
+	background-color: var(--f-bg-layer2);
+	border: 1px solid var(--f-border-default);
+	border-radius: 6px;
+	box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
+	align-items: center;
+	padding: 6px 8px;
+	cursor: pointer;
+	display: flex;
+
+	.tab-content {
+		flex: 1;
+		min-width: 0;
+		margin-right: 4px;
+		margin-left: 6px;
+	}
+
+	.tab-text {
+		display: block;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: 13px;
+	}
+
+	.tab-close {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		border-radius: 4px;
+		color: var(--f-text-secondary);
+
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.1);
+			color: var(--f-text-primary);
+		}
+	}
+
+	/* Styles for active indicator inside popover */
+	.popover-indicator {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 3px;
+		width: auto;
+		background-color: var(--f-brand-base);
+		border-radius: 2px;
+	}
+}
+
+.new-tab-wrapper {
+	padding: 4px 0;
+	display: flex;
+	justify-content: center;
+}
+
+.new-tab-btn {
+	width: 100%;
+	height: 32px;
+	border-radius: 4px;
+	background-color: transparent;
+	border: 1px dashed var(--f-border-default);
+	color: var(--f-text-secondary);
+	&:hover {
+		background-color: var(--f-bg-control-hover);
+		border-color: var(--f-text-secondary);
+		color: var(--f-text-primary);
+	}
+}
+
+.toolbar-group {
+	display: flex;
+	align-items: center;
+	gap: 12px;
 
 	&.left {
-		left: 0;
-		background: linear-gradient(
-			to right,
-			var(--f-bg-layer1) 40%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		flex: 1;
+		justify-content: flex-start;
+		overflow: hidden;
 	}
 
 	&.right {
-		right: 0;
-		background: linear-gradient(
-			to left,
-			var(--f-bg-layer1) 40%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		flex-shrink: 0;
 	}
 }
 
-/* Override active tab color for better contrast */
-:deep(.f-tab-item.active) {
-	background-color: var(
-		--f-bg-control-active
-	); /* Darker than control, clear distinction */
-	border: 1px solid var(--f-border-default); /* Add border to make it pop */
-	border-bottom: none; /* Connect to content */
-}
-
-.header-actions {
+.tool-section {
 	display: flex;
-	gap: 8px;
-	margin-left: 12px;
+	align-items: center;
+	gap: 6px;
+	padding-right: 12px;
+	border-right: 1px solid var(--f-border-subtle);
+
+	&:last-child {
+		border-right: none;
+	}
 }
 
 .content-area {
 	flex: 1;
 	overflow: hidden;
 	position: relative;
-	background-color: var(--f-bg-base);
 }
 
 .empty-state {
@@ -469,14 +891,30 @@ const loadHistoryEntry = async (entry) => {
 	}
 }
 
-/* History List Styles */
+.footer {
+	flex-shrink: 0;
+	height: 24px;
+	padding: 0 16px;
+	display: flex;
+	align-items: center;
+	background-color: var(--f-brand-base);
+	color: white;
+	font-size: 11px;
+	z-index: 100;
+	user-select: none;
+
+	&.error {
+		background-color: var(--f-color-error);
+	}
+}
+/* History List Styles (Same as before) */
 .history-list {
 	flex: 1;
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	padding-right: 4px; /* Space for scrollbar */
+	padding-right: 4px;
 }
 
 .history-entry {
@@ -521,5 +959,15 @@ const loadHistoryEntry = async (entry) => {
 	text-align: center;
 	color: var(--f-text-secondary);
 	padding: 40px 0;
+}
+
+.error-btn {
+	background-color: var(--f-color-error) !important;
+	color: white !important;
+	border: none !important;
+
+	&:hover {
+		filter: brightness(0.9);
+	}
 }
 </style>
