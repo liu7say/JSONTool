@@ -94,5 +94,6 @@ npm run build
 
 ## TODO
 
+- [ ] 添加展开和收缩按钮
 - [ ] url 参数处理模式
 - [ ] 看看是否需要将"JSON Tool"(只处理 json)修改为"Dev Tool"(增加如字符串、URL 等数据的处理)
