@@ -2,6 +2,10 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg)
 
+> 本扩展纯 AI 开发,个人自用,有问题请提交 issue,我也不一定会看 😂
+
+> 感谢谷歌大善人
+
 JSONTool 是一款专为开发者打造的**本地化** JSON 调试利器。它拒绝花原本能，忠实遵循微软 **Fluent 2 设计语言**，为您提供原生 Windows 11 般的流畅体验。
 
 > **我们信仰 "Privacy First"**：所有数据处理均在本地 (`chrome.storage.local`) 完成，绝无任何网络上传，安全是我们的底线。
