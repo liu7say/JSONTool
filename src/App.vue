@@ -22,6 +22,8 @@ import {
 	Switch,
 	ArrowLeft,
 	ArrowRight,
+	ArrowDown,
+	Check,
 } from '@element-plus/icons-vue';
 
 // 状态管理 stores
@@ -32,6 +34,25 @@ const themeStore = useThemeStore();
 // UI 状态 refs
 const showHistory = ref(false); // 控制历史记录抽屉的显示
 const jsonEditorRef = ref(null); // JsonEditor 实例引用
+
+// 排序功能状态
+const sortStructureAtEnd = ref(false);
+const showSortMenu = ref(false);
+const sortButtonRef = ref(null);
+const sortMenuRef = ref(null);
+
+// 点击外部关闭排序菜单
+const handleClickOutsideSort = (e) => {
+	if (
+		showSortMenu.value &&
+		sortButtonRef.value &&
+		!sortButtonRef.value.contains(e.target) &&
+		sortMenuRef.value &&
+		!sortMenuRef.value.contains(e.target)
+	) {
+		showSortMenu.value = false;
+	}
+};
 
 // 全局快捷键处理
 const handleGlobalKeydown = (e) => {
@@ -45,6 +66,7 @@ const handleGlobalKeydown = (e) => {
 };
 
 onMounted(() => {
+	window.addEventListener('click', handleClickOutsideSort);
 	if (sessionStore.tabs.length === 0) {
 		sessionStore.createTab();
 	}
@@ -53,6 +75,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+	window.removeEventListener('click', handleClickOutsideSort);
 	window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
@@ -123,7 +146,16 @@ const loadHistoryEntry = async (entry) => {
 // --- 编辑器操作代理方法 ---
 const triggerFormat = () => jsonEditorRef.value?.applyFormat();
 const triggerCompact = () => jsonEditorRef.value?.applyCompact();
-const triggerSort = () => jsonEditorRef.value?.applySort();
+
+const triggerSort = () => {
+	jsonEditorRef.value?.applySort({ structureAtEnd: sortStructureAtEnd.value });
+	showSortMenu.value = false;
+};
+
+const toggleSortStructureAtEnd = () => {
+	sortStructureAtEnd.value = !sortStructureAtEnd.value;
+	triggerSort();
+};
 const triggerToggleTableRaw = () => jsonEditorRef.value?.toggleTableMode();
 const triggerToggleDiff = () => jsonEditorRef.value?.toggleDiffMode();
 const triggerNextError = () => jsonEditorRef.value?.jumpToNextError();
@@ -310,13 +342,41 @@ const statusBarInfo = computed(() => {
 							title="Compact">
 							<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
 						</button>
-						<button
-							class="f-button small subtle"
-							:disabled="!String(activeTab.doc.sourceText || '').trim()"
-							@click="triggerSort"
-							title="Sort Keys">
-							<component :is="Rank" style="width: 14px" /> 排序
-						</button>
+						<!-- Sort Button Group with Dropdown -->
+						<div class="f-button-group" ref="sortButtonRef">
+							<button
+								class="f-button small subtle group-left"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerSort"
+								title="按 Keys 排序">
+								<component :is="Rank" style="width: 14px" /> 排序
+							</button>
+							<button
+								class="f-button small subtle group-right icon-only"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click.stop="showSortMenu = !showSortMenu"
+								title="排序选项">
+								<component :is="ArrowDown" style="width: 12px; height: 12px" />
+							</button>
+
+							<!-- Dropdown Menu -->
+							<transition name="fade-scale">
+								<div
+									v-if="showSortMenu"
+									class="f-popover-menu"
+									ref="sortMenuRef">
+									<div class="menu-item" @click="toggleSortStructureAtEnd">
+										<span>结构类型在后</span>
+										<div class="check-box">
+											<component
+												v-if="sortStructureAtEnd"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+								</div>
+							</transition>
+						</div>
 					</div>
 				</div>
 				<div class="toolbar-group left" v-else></div>
@@ -581,6 +641,98 @@ const statusBarInfo = computed(() => {
 	display: flex;
 	flex-direction: row;
 	overflow: hidden;
+}
+
+/* Button Group Styles */
+.f-button-group {
+	display: flex;
+	align-items: center;
+	position: relative;
+
+	.f-button {
+		border-radius: 4px;
+
+		&.group-left {
+			border-top-right-radius: 0;
+			border-bottom-right-radius: 0;
+			margin-right: -1px; /* Merge borders */
+			z-index: 1;
+
+			&:hover,
+			&:focus {
+				z-index: 2;
+			}
+		}
+
+		&.group-right {
+			border-top-left-radius: 0;
+			border-bottom-left-radius: 0;
+			padding: 0; /* Remove padding to trust flex centering */
+			width: 24px; /* Slightly wider */
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 1;
+
+			&:hover,
+			&:focus {
+				z-index: 2;
+			}
+		}
+	}
+}
+
+.f-popover-menu {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	margin-top: 4px;
+	background-color: var(--f-bg-layer2);
+	border: 1px solid var(--f-border-default);
+	border-radius: 6px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	padding: 4px;
+	min-width: 130px;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+
+	.menu-item {
+		display: flex;
+		align-items: center;
+		padding: 6px 8px;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 13px;
+		color: var(--f-text-primary);
+		gap: 8px;
+		user-select: none;
+
+		&:hover {
+			background-color: var(--f-bg-control-hover);
+		}
+
+		.check-box {
+			width: 16px;
+			height: 16px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--f-brand-base);
+		}
+	}
+}
+
+/* Transition for menu */
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+	opacity: 0;
+	transform: scale(0.95) translateY(-4px);
 }
 
 /* Sidebar Styles */
@@ -864,7 +1016,7 @@ const statusBarInfo = computed(() => {
 	&.left {
 		flex: 1;
 		justify-content: flex-start;
-		overflow: hidden;
+		/* overflow: hidden; Removed to allow dropdowns */
 	}
 
 	&.right {

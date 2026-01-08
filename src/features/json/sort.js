@@ -47,16 +47,43 @@ const compareJsonObjectKeys = (a, b) => {
  * 排序应该是稳定的。
  * 当你重新排序一个文件时，不应该因为算法的不稳定性导致无关的行发生变化。
  */
-const sortObjectKeysDeep = (value) => {
+const sortObjectKeysDeep = (value, options = {}) => {
 	if (!value || typeof value !== 'object') return value;
-	if (Array.isArray(value)) return value.map(sortObjectKeysDeep);
+	if (Array.isArray(value))
+		return value.map((item) => sortObjectKeysDeep(item, options));
 
 	const out = {};
-	Object.keys(value)
-		.sort(compareJsonObjectKeys)
-		.forEach((k) => {
-			out[k] = sortObjectKeysDeep(value[k]);
+	let keys = Object.keys(value);
+
+	// 如果开启"结构类型在后"
+	if (options.structureAtEnd) {
+		const primitives = [];
+		const structures = [];
+
+		keys.forEach((key) => {
+			const v = value[key];
+			// null is object in JS but we consider it primitive here?
+			// Requirement: "{"b":{"c":1},"a":1,"d":[2,1]} -> {"a":1,"b":{"c":1},"d":[1,2]}"
+			// a:1 is primitive. d:[] is array (structure). b:{} is object (structure).
+			// null is primitive effectively for this logic? Usually yes.
+			if (v !== null && typeof v === 'object') {
+				structures.push(key);
+			} else {
+				primitives.push(key);
+			}
 		});
+
+		primitives.sort(compareJsonObjectKeys);
+		structures.sort(compareJsonObjectKeys);
+		keys = [...primitives, ...structures];
+	} else {
+		// 默认排序
+		keys.sort(compareJsonObjectKeys);
+	}
+
+	keys.forEach((k) => {
+		out[k] = sortObjectKeysDeep(value[k], options);
+	});
 	return out;
 };
 
@@ -66,11 +93,14 @@ const sortObjectKeysDeep = (value) => {
  * @param {Object} options
  * @returns {Object} { text, error }
  */
-export const sortJsonKeys = (doc, { indent = 2 } = {}) => {
+export const sortJsonKeys = (
+	doc,
+	{ indent = 2, structureAtEnd = false } = {}
+) => {
 	if (!doc || doc.parseError) {
 		return { text: null, error: doc?.parseError || 'JSON 解析失败' };
 	}
 
-	const sorted = sortObjectKeysDeep(doc.parsedValue);
+	const sorted = sortObjectKeysDeep(doc.parsedValue, { structureAtEnd });
 	return { text: stringifyJson({ value: sorted, indent }), error: null };
 };
