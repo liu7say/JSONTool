@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref, nextTick, watch, computed } from 'vue';
 import { useSessionStore } from './stores/session';
 import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
+import { useSettingsStore } from './stores/settings';
 import JsonEditor from './components/JsonEditor.vue';
 import GithubIcon from './components/GithubIcon.vue';
 import Logo from './components/Logo.vue';
@@ -30,13 +31,11 @@ import {
 const sessionStore = useSessionStore();
 const historyStore = useHistoryStore();
 const themeStore = useThemeStore();
+const settingsStore = useSettingsStore();
 
 // UI 状态 refs
 const showHistory = ref(false); // 控制历史记录抽屉的显示
 const jsonEditorRef = ref(null); // JsonEditor 实例引用
-
-// 排序功能状态
-const sortStructureAtEnd = ref(false);
 const showSortMenu = ref(false);
 const sortButtonRef = ref(null);
 const sortMenuRef = ref(null);
@@ -67,6 +66,8 @@ const handleGlobalKeydown = (e) => {
 
 onMounted(() => {
 	window.addEventListener('click', handleClickOutsideSort);
+	settingsStore.loadSettings();
+
 	if (sessionStore.tabs.length === 0) {
 		sessionStore.createTab();
 	}
@@ -148,12 +149,14 @@ const triggerFormat = () => jsonEditorRef.value?.applyFormat();
 const triggerCompact = () => jsonEditorRef.value?.applyCompact();
 
 const triggerSort = () => {
-	jsonEditorRef.value?.applySort({ structureAtEnd: sortStructureAtEnd.value });
+	jsonEditorRef.value?.applySort({
+		structureAtEnd: settingsStore.sortStructureAtEnd,
+	});
 	showSortMenu.value = false;
 };
 
 const toggleSortStructureAtEnd = () => {
-	sortStructureAtEnd.value = !sortStructureAtEnd.value;
+	settingsStore.sortStructureAtEnd = !settingsStore.sortStructureAtEnd;
 	triggerSort();
 };
 const triggerToggleTableRaw = () => jsonEditorRef.value?.toggleTableMode();
@@ -369,7 +372,7 @@ const statusBarInfo = computed(() => {
 										<span>结构类型在后</span>
 										<div class="check-box">
 											<component
-												v-if="sortStructureAtEnd"
+												v-if="settingsStore.sortStructureAtEnd"
 												:is="Check"
 												style="width: 12px" />
 										</div>
