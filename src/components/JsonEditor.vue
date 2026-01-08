@@ -214,7 +214,7 @@ const applyCompact = () => {
 	}
 };
 
-const applySort = () => {
+const applySort = (options = {}) => {
 	if (isSorting.value) return;
 	isSorting.value = true;
 
@@ -227,14 +227,20 @@ const applySort = () => {
 	setTimeout(() => {
 		try {
 			// 排序主文档
-			const { text, error } = sortJsonKeys(props.doc, { indent: 2 });
+			const { text, error } = sortJsonKeys(props.doc, {
+				indent: 2,
+				...options,
+			});
 			if (!error && text) emit('update:doc', text);
 
 			// 排序对比文档
 			if (props.viewMode === 'diff' && localCompareContent.value) {
 				try {
 					const parsed = JSON.parse(localCompareContent.value);
-					const res = sortJsonKeys({ parsedValue: parsed }, { indent: 2 });
+					const res = sortJsonKeys(
+						{ parsedValue: parsed },
+						{ indent: 2, ...options }
+					);
 					if (!res.error && res.text) {
 						localCompareContent.value = res.text;
 					}
