@@ -46,7 +46,7 @@ const formatMenuRef = ref(null);
 
 // 点击外部关闭菜单
 const handleClickOutside = (e) => {
-	// Sort Menu
+	// 排序菜单
 	if (
 		showSortMenu.value &&
 		sortButtonRef.value &&
@@ -56,7 +56,7 @@ const handleClickOutside = (e) => {
 	) {
 		showSortMenu.value = false;
 	}
-	// Format Menu
+	// 格式化菜单
 	if (
 		showFormatMenu.value &&
 		formatButtonRef.value &&
@@ -70,7 +70,7 @@ const handleClickOutside = (e) => {
 
 // 全局快捷键处理
 const handleGlobalKeydown = (e) => {
-	// Ctrl+S (Windows) or Cmd+S (Mac)
+	// Ctrl+S (Windows) 或 Cmd+S (Mac)
 	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
 		e.preventDefault();
 		if (sessionStore.activeTab) {
@@ -198,7 +198,7 @@ let hoverTimer = null;
 
 const getShortTitle = (title) => {
 	if (!title) return '';
-	// Return first character (handle surrogate pairs if needed, but simple index is fine for now)
+	// 返回第一个字符（如果需要处理代理对，但简单的索引目前就够了）
 	return String(title).substring(0, 1).toUpperCase();
 };
 
@@ -211,11 +211,11 @@ const onTabMouseEnter = (e, tabId) => {
 	const target = e.currentTarget;
 	const rect = target.getBoundingClientRect();
 
-	// Set position: Align directly over the collapsed tab but expanded width
+	// 设置位置：直接对齐折叠的标签页，但宽度展开
 	popoverStyle.value = {
 		top: rect.top + 'px',
 		left: rect.left + 'px',
-		width: '200px', // Fixed expanded width
+		width: '200px', // 固定展开宽度
 	};
 
 	hoveredTabId.value = tabId;
@@ -224,7 +224,7 @@ const onTabMouseEnter = (e, tabId) => {
 };
 
 const onTabMouseLeave = (e) => {
-	// If moving to the popover, don't close
+	// 如果移动到弹出框，不关闭
 	if (
 		e.relatedTarget &&
 		e.relatedTarget.closest &&
@@ -243,8 +243,8 @@ const onPopoverMouseEnter = () => {
 };
 
 const onPopoverMouseLeave = (e) => {
-	// If moving back to the sidebar tab, allow the tab's mouseenter to handle it (by clearing timer)
-	// But we still set the timer here in case we moved to nowhere
+	// 如果移回侧边栏标签页，允许标签页的 mouseenter 处理它（通过清除定时器）
+	// 但我们仍然在这里设置定时器，以防我们移动到空白处
 
 	hoverTimer = setTimeout(() => {
 		hoveredTabId.value = null;
@@ -279,7 +279,7 @@ const statusBarInfo = computed(() => {
 		};
 	}
 
-	// Code Mode
+	// 代码模式
 	if (!String(doc.sourceText || '').trim()) {
 		return { text: '请输入 JSON', isError: false };
 	}
@@ -295,32 +295,32 @@ const statusBarInfo = computed(() => {
 });
 
 /**
- * Handle Theme Toggle with View Transition (Ripple Effect)
+ * 处理带有视图转换（波纹效果）的主题切换
  */
 const handleThemeToggle = (event) => {
-	// Fallback for browsers that don't support View Transitions
+	// 针对不支持 View Transitions 的浏览器的回退
 	if (!document.startViewTransition) {
 		themeStore.toggle();
 		return;
 	}
 
-	// Get position of the click
+	// 获取点击位置
 	const x = event.clientX;
 	const y = event.clientY;
 
-	// Calculate the radius to the furthest corner
+	// 计算到最远角落的半径
 	const endRadius = Math.hypot(
 		Math.max(x, innerWidth - x),
 		Math.max(y, innerHeight - y)
 	);
 
-	// Start the view transition
+	// 开始视图转换
 	const transition = document.startViewTransition(async () => {
 		await themeStore.toggle();
-		await nextTick(); // Ensure DOM updates
+		await nextTick(); // 确保 DOM 更新
 	});
 
-	// Animate the clip-path
+	// 动画 clip-path
 	transition.ready.then(() => {
 		const clipPath = [
 			`circle(0px at ${x}px ${y}px)`,
@@ -726,7 +726,7 @@ const handleThemeToggle = (event) => {
 <style scoped lang="scss">
 .app-container {
 	display: flex;
-	flex-direction: column; /* Back to column, as Header is top, Workspace is bottom */
+	flex-direction: column; /* 回到列布局，因为 Header 在顶部，Workspace 在底部 */
 	height: 100vh;
 	overflow: hidden;
 }
@@ -748,13 +748,13 @@ const handleThemeToggle = (event) => {
 	// justify-content: center;
 	gap: 8px;
 	font-size: 16px;
-	margin-right: 0; /* Removing margin-right to let padding handle spacing */
-	width: 200px; /* Match sidebar width */
+	margin-right: 0; /* 移除 margin-right，让 padding 处理间距 */
+	width: 200px; /* 匹配侧边栏宽度 */
 	flex-shrink: 0;
 	color: var(--f-brand-base);
 	transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
-	/* Separate logo from sidebar border visually */
+	/* 视觉上将 logo 与侧边栏边框分开 */
 	padding-right: 16px;
 	border-right: 1px solid var(--f-border-subtle);
 }
@@ -786,7 +786,7 @@ const handleThemeToggle = (event) => {
 		&.group-left {
 			border-top-right-radius: 0;
 			border-bottom-right-radius: 0;
-			margin-right: -1px; /* Merge borders */
+			margin-right: -1px; /* 合并边框 */
 			z-index: 1;
 
 			&:hover,
@@ -798,8 +798,8 @@ const handleThemeToggle = (event) => {
 		&.group-right {
 			border-top-left-radius: 0;
 			border-bottom-left-radius: 0;
-			padding: 0; /* Remove padding to trust flex centering */
-			width: 24px; /* Slightly wider */
+			padding: 0; /* 移除 padding 以信任 flex 居中 */
+			width: 24px; /* 稍微宽一点 */
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -854,7 +854,7 @@ const handleThemeToggle = (event) => {
 	}
 }
 
-/* Transition for menu */
+/* 菜单过渡 */
 .fade-scale-enter-active,
 .fade-scale-leave-active {
 	transition: opacity 0.15s ease, transform 0.15s ease;
@@ -866,9 +866,9 @@ const handleThemeToggle = (event) => {
 	transform: scale(0.95) translateY(-4px);
 }
 
-/* Sidebar Styles */
+/* 侧边栏样式 */
 .sidebar {
-	width: 150px; /* Expanded Width */
+	width: 150px; /* 展开宽度 */
 	display: flex;
 	flex-direction: column;
 	border-right: 1px solid var(--f-border-default);
@@ -879,10 +879,10 @@ const handleThemeToggle = (event) => {
 	transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
 	&.collapsed {
-		width: 48px; /* Collapsed Width: showing icon/initials */
+		width: 48px; /* 折叠宽度：显示图标/首字母 */
 
 		.f-tab-item.vertical {
-			padding: 6px 4px; /* Tighter padding */
+			padding: 6px 4px; /* 更紧凑的 padding */
 			justify-content: center;
 
 			.tab-content {
@@ -891,10 +891,10 @@ const handleThemeToggle = (event) => {
 			}
 
 			.tab-close {
-				display: none; /* Hide close button in collapsed mode */
+				display: none; /* 折叠模式下隐藏关闭按钮 */
 			}
 
-			/* Collapsed mode active state: Show Left Indicator (::before) */
+			/* 折叠模式激活状态：显示左侧指示器 (::before) */
 			&.active {
 				&::before {
 					opacity: 1;
@@ -906,10 +906,10 @@ const handleThemeToggle = (event) => {
 		}
 
 		.new-tab-btn {
-			/* Icon only, centered */
+			/* 仅图标，居中 */
 		}
 
-		/* Toggle button centered in collapsed mode */
+		/* 折叠模式下切换按钮居中 */
 		.toggle-btn {
 			justify-content: center;
 			padding: 8px 0;
@@ -926,12 +926,12 @@ const handleThemeToggle = (event) => {
 }
 
 .toggle-btn {
-	/* Static position at top */
+	/* 顶部静态位置 */
 	width: 100%;
 	height: 32px;
 	display: flex;
 	align-items: center;
-	justify-content: flex-end; /* Align right in expanded mode */
+	justify-content: flex-end; /* 展开模式下右对齐 */
 	padding: 0 8px;
 	cursor: pointer;
 	color: var(--f-text-secondary);
@@ -951,7 +951,7 @@ const handleThemeToggle = (event) => {
 	overflow-x: hidden;
 	display: flex;
 	flex-direction: column;
-	padding: 8px 4px; /* Reduced padding */
+	padding: 8px 4px; /* 减少 padding */
 	transition: opacity 0.2s;
 	user-select: none;
 
@@ -967,14 +967,14 @@ const handleThemeToggle = (event) => {
 .f-tab-item.vertical {
 	display: flex;
 	align-items: center;
-	padding: 6px 8px; /* Compact padding */
-	margin: 0 0 2px 0; /* Minimal spacing */
+	padding: 6px 8px; /* 紧凑 padding */
+	margin: 0 0 2px 0; /* 最小间距 */
 	border-radius: 4px;
 	cursor: pointer;
 	position: relative;
 	transition: background-color 0.2s;
 	border: 1px solid transparent;
-	min-height: 32px; /* Reduced height */
+	min-height: 32px; /* 减少高度 */
 
 	&:hover {
 		background-color: var(--f-bg-control-hover);
@@ -984,7 +984,7 @@ const handleThemeToggle = (event) => {
 		background-color: var(--f-bg-control-active);
 		border: 1px solid var(--f-border-default);
 
-		/* Indicator Base Styles */
+		/* 指示器基础样式 */
 		&::before,
 		&::after {
 			content: '';
@@ -996,23 +996,23 @@ const handleThemeToggle = (event) => {
 			pointer-events: none;
 		}
 
-		/* Collapsed State Indicator: Left Vertical Bar */
+		/* 折叠状态指示器：左侧垂直条 */
 		&::before {
 			left: 0;
 			top: 8px;
 			bottom: 8px;
 			width: 3px;
-			opacity: 0; /* Hidden by default (Expanded mode uses ::after) */
+			opacity: 0; /* 默认隐藏（展开模式使用 ::after） */
 		}
 
-		/* Expanded State Indicator: Bottom Horizontal Line */
+		/* 展开状态指示器：底部水平线 */
 		&::after {
 			left: 0;
 			right: 0;
 			bottom: 0;
 			height: 3px;
 			width: auto;
-			opacity: 1; /* Visible by default */
+			opacity: 1; /* 默认可见 */
 		}
 	}
 
@@ -1106,7 +1106,7 @@ const handleThemeToggle = (event) => {
 		}
 	}
 
-	/* Styles for active indicator inside popover */
+	/* 弹出框内激活指示器样式 */
 	.popover-indicator {
 		position: absolute;
 		left: 0;
@@ -1147,7 +1147,7 @@ const handleThemeToggle = (event) => {
 	&.left {
 		flex: 1;
 		justify-content: flex-start;
-		/* overflow: hidden; Removed to allow dropdowns */
+		/* overflow: hidden; 移除以允许下拉菜单 */
 	}
 
 	&.right {
@@ -1206,7 +1206,7 @@ const handleThemeToggle = (event) => {
 		background-color: var(--f-color-error);
 	}
 }
-/* History List Styles (Same as before) */
+/* 历史记录列表样式（同前） */
 .history-list {
 	flex: 1;
 	overflow-y: auto;

@@ -39,7 +39,7 @@ defineProps({
 .app-logo {
 	display: flex;
 	align-items: center;
-	/* Ensure SVG colors update with theme variables */
+	/* 确保 SVG 颜色随主题变量更新 */
 	gap: 8px;
 	.logo-text {
 		line-height: 24px;

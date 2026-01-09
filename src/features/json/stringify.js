@@ -18,7 +18,7 @@ const stringifyJsObject = (value, indentLevel, currentIndent) => {
 	if (typeof value === 'undefined') return 'undefined';
 	if (typeof value === 'boolean' || typeof value === 'number')
 		return String(value);
-	if (typeof value === 'string') return JSON.stringify(value); // Keep strings quoted
+	if (typeof value === 'string') return JSON.stringify(value); // 保持字符串的引号
 
 	if (Array.isArray(value)) {
 		if (value.length === 0) return '[]';
@@ -32,11 +32,11 @@ const stringifyJsObject = (value, indentLevel, currentIndent) => {
 		const keys = Object.keys(value);
 		if (keys.length === 0) return '{}';
 
-		// Sort keys if needed (can be added later, currently handled by pre-sort or option)
-		// For now we trust the order or let the previous logic handle it,
-		// but since we are re-implementing, we should respect the sort option if passed.
-		// However, the current function signature is weird.
-		// Let's keep it simple: We iterate keys.
+		// 如果需要，对键进行排序（稍后添加，当前通过预排序或选项处理）
+		// 目前我们相信顺序或让之前的逻辑处理它，
+		// 但既然我们在重新实现，如果传递了排序选项，我们应该尊重它。
+		// 但是，当前的函数签名很奇怪。
+		// 让我们保持简单：我们只遍历键。
 
 		const props = keys
 			.map((key) => {
@@ -57,11 +57,11 @@ export const stringifyJson = ({
 	sortKeys = false,
 	format = 'json',
 } = {}) => {
-	// Pre-sort keys using the replacer trick requires JSON.stringify,
-	// checking if we need to sort BEFORE custom stringify.
+	// 使用 replacer 技巧重新排序键需要 JSON.stringify，
+	// 检查我们是否需要在自定义 stringify 之前进行排序。
 	let obj = value;
 	if (sortKeys && typeof value === 'object' && value !== null) {
-		// Deep sort helper
+		// 深度排序助手
 		const deepSort = (item) => {
 			if (Array.isArray(item)) return item.map(deepSort);
 			if (item && typeof item === 'object') {
@@ -83,7 +83,7 @@ export const stringifyJson = ({
 		return stringifyJsObject(obj, indentSize, '');
 	}
 
-	// Standard JSON
+	// 标准 JSON
 	const space =
 		typeof indent === 'string'
 			? indent

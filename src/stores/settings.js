@@ -2,31 +2,31 @@ import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 
 /**
- * Settings Store
- * Persists user configuration to chrome.storage.sync (with localStorage fallback)
+ * 设置仓库
+ * 将用户配置持久化到 chrome.storage.sync（带有 localStorage 回退）
  */
 export const useSettingsStore = defineStore('settings', () => {
-	// --- State ---
+	// --- 状态 ---
 	const sortStructureAtEnd = ref(false);
 	const indent = ref(2);
 
-	// --- Helper: Universal Storage Access ---
+	// --- 助手：通用存储访问 ---
 	const storage = {
 		get: (defaults) =>
 			new Promise((resolve) => {
-				// Chrome Extension Environment
+				// Chrome 扩展环境
 				if (
 					typeof chrome !== 'undefined' &&
 					chrome.storage &&
 					chrome.storage.sync
 				) {
 					chrome.storage.sync.get(defaults, (items) => {
-						// chrome.storage.sync returns the complete object with defaults if not found?
-						// actually get(defaults) returns found items merged with defaults.
+						// chrome.storage.sync 如果未找到会返回带有默认值的完整对象吗？
+						// 实际上 get(defaults) 返回找到的项目与默认值的合并。
 						resolve(items);
 					});
 				} else {
-					// Web Environment (Dev)
+					// Web 环境 (开发)
 					const result = { ...defaults };
 					Object.keys(defaults).forEach((key) => {
 						const val = localStorage.getItem('settings.' + key);
@@ -58,7 +58,7 @@ export const useSettingsStore = defineStore('settings', () => {
 			}),
 	};
 
-	// --- Actions ---
+	// --- 动作 ---
 	const loadSettings = async () => {
 		const defaults = {
 			sortStructureAtEnd: false,
@@ -70,7 +70,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		indent.value = data.indent;
 	};
 
-	// --- Watchers ---
+	// --- 监听器 ---
 	watch(sortStructureAtEnd, (newVal) => {
 		storage.set({ sortStructureAtEnd: newVal });
 	});
