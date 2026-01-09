@@ -1,11 +1,7 @@
 # 个人偏好
 
-- 预设语言：**简体中文**（请以**简体中文**回应自然语言与文件内容），包含回复(Reply)、思考(Thought Process)、任务清单(Task List)、分析(Analysis)、建议(Suggestion)、代码注释等，都使用简体中文和自己交谈
-- 文件（README、CLAUDE.md、commit message 等）预设使用简体中文
-- 代码本体保留原始语言，但注解、说明与 docstring 请使用简体中文
-- 若需要输出英文，请显式回复「请用英文」
-- 自动产生 git commit messages/comments 时，一律使用简体中文进行输出
-- Agent 产生的 implementation.plan,task.md,walkthrought.md，全部用简体中文进行输出
+- 语言要求：所有回复、思考过程及任务清单，均须使用中文。
+- 固定指令：`Implementation Plan, Task List and Thought in Chinese`
 
 ## 角色定义
 
