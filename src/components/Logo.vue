@@ -47,6 +47,7 @@ defineProps({
 		font-weight: 500;
 		color: var(--f-text-primary);
 		white-space: nowrap;
+		user-select: none;
 	}
 }
 
