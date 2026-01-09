@@ -62,10 +62,10 @@ const sortObjectKeysDeep = (value, options = {}) => {
 
 		keys.forEach((key) => {
 			const v = value[key];
-			// null is object in JS but we consider it primitive here?
-			// Requirement: "{"b":{"c":1},"a":1,"d":[2,1]} -> {"a":1,"b":{"c":1},"d":[1,2]}"
-			// a:1 is primitive. d:[] is array (structure). b:{} is object (structure).
-			// null is primitive effectively for this logic? Usually yes.
+			// null 在 JS 中是 object，但在这里我们将其视为基础类型？
+			// 需求： "{"b":{"c":1},"a":1,"d":[2,1]} -> {"a":1,"b":{"c":1},"d":[1,2]}"
+			// a:1 是基础类型。d:[] 是数组（结构）。b:{} 是对象（结构）。
+			// 对于此逻辑，null 实际上是基础类型？通常是的。
 			if (v !== null && typeof v === 'object') {
 				structures.push(key);
 			} else {

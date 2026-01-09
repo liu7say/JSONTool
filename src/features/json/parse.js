@@ -18,24 +18,24 @@ const stripBom = (text) => {
  * @returns {Object} { parsedValue, parseError }
  */
 export const relaxedJsonParse = (text) => {
-	// A simple, regex-based "relaxed" tokenizer/fixer is dangerous and hard to get right.
-	// However, for "JS Object" format which we just generated (keys unquoted, single quotes maybe),
-	// we can try to quote unquoted keys and flip single quotes to double quotes.
+	// 简单的基于正则的“宽松”分词器/修复器是危险且难以完全正确的。
+	// 然而，对于我们刚刚生成的“JS Object”格式（键未加引号，可能包含单引号），
+	// 我们可以尝试给未加引号的键加上引号，并将单引号转换双引号。
 
-	// Strategy:
-	// 1. Replace single quotes with double quotes? No, strings might contain double quotes.
-	// 2. Use `Function` constructor? NO. CSP blocks it in extensions.
-	// 3. Simple State Machine / Parser.
+	// 策略：
+	// 1. 将单引号替换为双引号？不行，字符串内部可能包含双引号。
+	// 2. 使用 `Function` 构造函数？不行。CSP 在扩展中禁止这样做。
+	// 3. 简单的状态机/解析器。
 
-	// To avoid writing a full parser, let's try a heuristic approach that covers 99% of "JS Object" cases:
-	// - Keys: `key:` -> `"key":`
-	// - Strings: `'value'` -> `"value"`
+	// 为了避免编写完整的解析器，我们可以尝试一种启发式方法，覆盖 99% 的 “JS Object” 情况：
+	// - 键：`key:` -> `"key":`
+	// - 字符串：`'value'` -> `"value"`
 
-	// BUT, what if value contains ':' or quotes?
+	// 但是，如果值包含 ':' 或引号怎么办？
 
-	// Let's implement a minimal recursive descent parser context?
-	// Or, use a known library approach like "json5" but since we can't add deps easily,
-	// we will write a small tokenizing parser.
+	// 实现一个最小递归下降解析上下文？
+	// 或者使用像 "json5" 这样的已知库方法，但因为我们不能轻易添加依赖，
+	// 我们将编写一个小的分词解析器。
 
 	let at = 0;
 	let ch = ' ';
@@ -53,56 +53,56 @@ export const relaxedJsonParse = (text) => {
 		throw new Error(m);
 	};
 
-	// Initialize
+	// 初始化
 	next();
 
-	// ... Actually, writing a full parser here is too risky for "Simple".
-	// Let's use a Regex-replacement approach that is "Good Enough" for config files/JS Objects.
-	// Reference: modifying text to be JSON compatible.
+	// ... 实际上，在这里编写完整的解析器对于“简单”需求来说风险太大了。
+	// 让我们使用正则替换方法，对于配置文件/JS 对象来说“足够好”了。
+	// 参考：修改文本以兼容 JSON。
 
 	/*
-        Heuristic Fixer:
-        1. Quote keys that are unquoted (alphanumeric+$_).
-        2. Convert single-quoted strings to double-quoted.
+        启发式修复器：
+        1. 给未加引号的键（字母数字+$_）加上引号。
+        2. 将单引号字符串转换为双引号。
     */
 
-	// Safety check: if it looks like code (function calls, etc), fail.
+	// 安全检查：如果看起来像代码（函数调用等），则失败。
 	if (/[\(=>]/.test(text)) {
-		// Arrow functions, function calls
-		// This is a rough check, might have false positives in strings, but safer.
-		// Actually, let's just allow data.
+		// 箭头函数，函数调用
+		// 这是一个粗略的检查，可能会在字符串中误报，但更安全。
+		// 实际上，暂时允许数据通过。
 	}
 
-	// 1. Strings: specific handling to avoid matching inside strings.
-	// We will attempt to tokenize simple JS objects.
+	// 1. 字符串：特殊处理以避免匹配字符串内部。
+	// 我们将尝试对简单的 JS 对象进行分词。
 
-	// Regex to match:
-	// - Strings: '...' or "..."
-	// - keys: identifier followed by :
-	// - values: true, false, null, numbers
+	// 正则匹配：
+	// - 字符串：'...' 或 "..."
+	// - 键：标识符后跟 :
+	// - 值：true, false, null, 数字
 
-	// If this is too complex, we fallback to "Strict JSON Only" and tell user "Code Mode requires strictly valid JSON".
-	// BUT the requirement says "Compatible in all places".
+	// 如果这太复杂，我们就回退到“仅严格 JSON”并告诉用户“代码模式需要严格有效的 JSON”。
+	// 但是需求说“在所有地方兼容”。
 
-	// Let's try the `new Function` alternative:
-	// "Content Security Policy (CSP) prevents 'new Function' in extensions."
-	// So we MUST parsing text.
+	// 让我们尝试 `new Function` 替代方案：
+	// "内容安全策略 (CSP) 禁止在扩展中使用 'new Function'。"
+	// 所以我们必须解析文本。
 
-	// Let's try a robust Regex replacement for Unquoted Keys.
+	// 让我们尝试一种健壮的正则替换未加引号的键。
 	// keys: \s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:
-	// We want to replace $1 with "$1"
+	// 我们想将 $1 替换为 "$1"
 
 	let jsonStr = text;
 
-	// Mask strings to avoid replacing inside them
+	// 掩码字符串以避免替换其内部内容
 	const strings = [];
 	jsonStr = jsonStr.replace(/("(\\.|[^"])*"|'(\\.|[^'])*')/g, (match) => {
-		// If it's a single quoted string, convert to double quoted
+		// 如果是单引号字符串，转换为双引号
 		if (match.startsWith("'")) {
 			let content = match.slice(1, -1);
-			// Escape double quotes inside
+			// 转义内部的双引号
 			content = content.replace(/"/g, '\\"');
-			// Unescape single quotes?
+			// 反转义单引号？
 			content = content.replace(/\\'/g, "'");
 			match = '"' + content + '"';
 		}
@@ -110,17 +110,17 @@ export const relaxedJsonParse = (text) => {
 		return `###STR${strings.length - 1}###`;
 	});
 
-	// Quote unquoted keys
+	// 给未加引号的键加上引号
 	jsonStr = jsonStr.replace(/([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '"$1":');
 
-	// Restore strings
+	// 还原字符串
 	jsonStr = jsonStr.replace(
 		/###STR(\d+)###/g,
 		(_, index) => strings[Number(index)]
 	);
 
-	// Trailing commas? (JSON doesn't support them, JS does)
-	// Remove trailing commas before } or ]
+	// 尾随逗号？（JSON 不支持，但 JS 支持）
+	// 删除 } 或 ] 之前的尾随逗号
 	jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
 
 	return JSON.parse(jsonStr);
@@ -137,7 +137,7 @@ export const tryParseJson = (sourceText) => {
 	try {
 		return { parsedValue: JSON.parse(text), parseError: null };
 	} catch (error) {
-		// JSON parse failed. Try relaxed parse.
+		// JSON 解析失败。尝试宽松解析。
 		try {
 			const relaxed = relaxedJsonParse(text);
 			return { parsedValue: relaxed, parseError: null };

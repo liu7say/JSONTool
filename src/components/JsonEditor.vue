@@ -37,7 +37,7 @@ const emit = defineEmits([
 // --- 核心逻辑 ---
 
 // --- 比较功能逻辑 ---
-// Use computed for two-way binding with prop
+// 使用 computed 进行属性的双向绑定
 const localCompareContent = computed({
 	get: () => props.compareContent,
 	set: (val) => emit('update:compareContent', val),
@@ -74,7 +74,7 @@ const rawTableData = computed(() => jsonToTable(props.doc, selectedPath.value));
 // 表格功能状态
 const filterText = ref('');
 const sortCol = ref(null);
-const sortAsc = ref(true); // true = asc, false = desc
+const sortAsc = ref(true); // true = 升序, false = 降序
 const colWidths = ref({}); // { colName: widthPx }
 
 // 计算属性：处理后的数据（先过滤 -> 再排序）
@@ -88,7 +88,7 @@ const processedRows = computed(() => {
 	if (filterText.value.trim()) {
 		const lowerFilter = filterText.value.toLowerCase();
 		result = result.filter((row) => {
-			// Check all visible columns
+			// 检查所有可见列
 			return columns.some((col) =>
 				String(row[col] || '')
 					.toLowerCase()
@@ -106,14 +106,14 @@ const processedRows = computed(() => {
 			const valA = a[key] !== undefined ? a[key] : '';
 			const valB = b[key] !== undefined ? b[key] : '';
 
-			// Numeric Sort try
+			// 尝试数值排序
 			const numA = Number(valA);
 			const numB = Number(valB);
 			if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
 				return (numA - numB) * multiplier;
 			}
 
-			// String Sort
+			// 字符串排序
 			return String(valA).localeCompare(String(valB)) * multiplier;
 		});
 	}
@@ -121,13 +121,13 @@ const processedRows = computed(() => {
 	return result;
 });
 
-// Actions
+// 动作
 const handleSort = (col) => {
 	if (sortCol.value === col) {
-		sortAsc.value = !sortAsc.value; // Toggle
+		sortAsc.value = !sortAsc.value; // 切换
 	} else {
 		sortCol.value = col;
-		sortAsc.value = true; // Default ASC
+		sortAsc.value = true; // 默认升序
 	}
 };
 
@@ -150,7 +150,7 @@ const startResize = (e, col) => {
 const onMouseMove = (e) => {
 	if (!resizingCol.value) return;
 	const diff = e.pageX - startX.value;
-	const newWidth = Math.max(50, startWidth.value + diff); // Min 50px
+	const newWidth = Math.max(50, startWidth.value + diff); // 最小 50px
 	colWidths.value = { ...colWidths.value, [resizingCol.value]: newWidth };
 };
 
@@ -190,7 +190,7 @@ const applyFormat = (options = {}) => {
 				localCompareContent.value = res.text;
 			}
 		} catch (e) {
-			// Ignore parse error
+			// 忽略解析错误
 		}
 	}
 };
@@ -209,7 +209,7 @@ const applyCompact = () => {
 				localCompareContent.value = res.text;
 			}
 		} catch (e) {
-			// Ignore parse error
+			// 忽略解析错误
 		}
 	}
 };
@@ -218,7 +218,7 @@ const applySort = (options = {}) => {
 	if (isSorting.value) return;
 	isSorting.value = true;
 
-	// Only show loader if task takes longer than 100ms
+	// 如果任务超过 100ms，仅显示加载器
 	const loaderTimer = setTimeout(() => {
 		showLoader.value = true;
 	}, 100);
@@ -245,7 +245,7 @@ const applySort = (options = {}) => {
 						localCompareContent.value = res.text;
 					}
 				} catch (e) {
-					// Ignore parse error
+					// 忽略解析错误
 				}
 			}
 		} finally {
@@ -402,7 +402,7 @@ defineExpose({
 	background-color: var(--f-bg-base);
 }
 
-/* Table Mode Styles */
+/* 表格模式样式 */
 .table-mode {
 	display: flex;
 	flex-direction: column;
@@ -459,7 +459,7 @@ defineExpose({
 	}
 }
 
-/* Data Grid Styles (Fluent 2) */
+/* 数据网格样式 (Fluent 2) */
 .f-table-container {
 	flex: 1;
 	overflow: auto;
@@ -529,7 +529,7 @@ defineExpose({
 		text-overflow: ellipsis;
 	}
 
-	/* Zebra Striping */
+	/* 斑马纹 */
 	tr:nth-child(even) td {
 		background-color: var(--f-bg-layer2);
 	}
@@ -542,7 +542,7 @@ defineExpose({
 		text-align: center;
 		color: var(--f-text-tertiary);
 		font-variant-numeric: tabular-nums;
-		background-color: var(--f-bg-layer2); /* Sticky left if needed */
+		background-color: var(--f-bg-layer2); /* 如果需要，左侧固定 */
 	}
 }
 
@@ -555,7 +555,7 @@ defineExpose({
 	font-size: 14px;
 }
 
-/* Code Mode Wrappers */
+/* 代码模式包装器 */
 .code-wrapper {
 	flex: 1;
 	position: relative;
@@ -563,7 +563,7 @@ defineExpose({
 	flex-direction: column;
 	min-height: 0;
 
-	/* Diff Mode Support */
+	/* 对比模式支持 */
 	&.is-diff {
 		flex-direction: row;
 	}
