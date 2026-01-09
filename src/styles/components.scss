@@ -37,11 +37,11 @@
 		fill: currentColor;
 	}
 
-	&:hover {
+	&:hover:not(:disabled):not(.disabled) {
 		background-color: var(--f-bg-control-hover);
 	}
 
-	&:active {
+	&:active:not(:disabled):not(.disabled) {
 		background-color: var(--f-bg-control-active);
 		color: var(--f-text-secondary);
 		border-color: var(--f-border-subtle);
@@ -56,7 +56,7 @@
 		&:hover {
 			background-color: var(--f-brand-hover);
 		}
-		&:active {
+		&:active:not(:disabled):not(.disabled) {
 			background-color: var(--f-brand-pressed);
 			color: rgba(255, 255, 255, 0.7);
 		}
@@ -70,7 +70,7 @@
 		&:hover {
 			background-color: var(--f-bg-control-hover);
 		}
-		&:active {
+		&:active:not(:disabled):not(.disabled) {
 			background-color: var(--f-bg-control-active);
 		}
 	}
@@ -103,7 +103,7 @@
 		background-color: var(--f-bg-control-disabled);
 		color: var(--f-text-disabled);
 		border-color: transparent;
-		pointer-events: none;
+		cursor: not-allowed;
 	}
 }
 

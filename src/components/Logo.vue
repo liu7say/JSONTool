@@ -1,4 +1,5 @@
 <script setup>
+import logoIcon from '@/assets/icon24.svg';
 defineProps({
 	collapsed: {
 		type: Boolean,
@@ -9,13 +10,16 @@ defineProps({
 
 <template>
 	<div class="app-logo">
-		<svg
-			:width="collapsed ? 24 : 124"
+		<img :src="logoIcon" alt="Logo" />
+		<Transition name="fade">
+			<span class="logo-text" v-show="!collapsed">JSON Tool</span>
+		</Transition>
+		<!-- <svg
+			:width="collapsed ? 24 : 24"
 			height="24"
-			:viewBox="collapsed ? '0 0 24 24' : '0 0 124 24'"
+			:viewBox="collapsed ? '0 0 24 24' : '0 0 24 24'"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg">
-			<!-- Icon: Stylized Curly Braces -->
 			<path
 				d="M6.5 4C6.5 2.89543 7.39543 2 8.5 2H10C11.1046 2 12 2.89543 12 4V9C12 10.1046 11.1046 11 10 11H8C6.89543 11 6 11.8954 6 13V20C6 21.1046 6.89543 22 8 22H10C11.1046 22 12 21.1046 12 20"
 				stroke="var(--f-brand-base)"
@@ -27,32 +31,7 @@ defineProps({
 				stroke-width="2.5"
 				stroke-linecap="round"
 				transform="rotate(180 15 12)" />
-
-			<!-- Text: JSON -->
-			<text
-				v-if="!collapsed"
-				x="28"
-				y="18"
-				fill="var(--f-text-primary)"
-				font-size="16"
-				font-family="'Segoe UI', sans-serif"
-				font-weight="700"
-				letter-spacing="-0.5">
-				JSON
-			</text>
-
-			<!-- Text: Tool -->
-			<text
-				v-if="!collapsed"
-				x="73"
-				y="18"
-				fill="var(--f-text-primary)"
-				font-size="16"
-				font-family="'Segoe UI', sans-serif"
-				font-weight="400">
-				Tool
-			</text>
-		</svg>
+		</svg> -->
 	</div>
 </template>
 
@@ -61,5 +40,24 @@ defineProps({
 	display: flex;
 	align-items: center;
 	/* Ensure SVG colors update with theme variables */
+	gap: 8px;
+	.logo-text {
+		line-height: 24px;
+		font-size: 16px;
+		font-weight: 500;
+		color: var(--f-text-primary);
+		white-space: nowrap;
+	}
+}
+
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+	opacity: 0;
+	transform: translateX(-10px);
 }
 </style>

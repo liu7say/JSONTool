@@ -653,7 +653,7 @@ const handleThemeToggle = (event) => {
 	height: 48px;
 	display: flex;
 	align-items: center;
-	padding: 0 16px;
+	padding: 0 16px 0 13px;
 	border-bottom: 1px solid var(--f-border-subtle);
 	background-color: var(--f-bg-layer1);
 	z-index: 100;
@@ -663,6 +663,7 @@ const handleThemeToggle = (event) => {
 .brand {
 	display: flex;
 	align-items: center;
+	// justify-content: center;
 	gap: 8px;
 	font-size: 16px;
 	margin-right: 0; /* Removing margin-right to let padding handle spacing */
