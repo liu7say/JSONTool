@@ -6,8 +6,8 @@ import { ref, watch } from 'vue';
  * 负责切换亮色/暗色模式，并持久化到 localStorage
  */
 export const useThemeStore = defineStore('theme', () => {
-	// 默认暗色，读取 localStorage
-	const isDark = ref(localStorage.getItem('theme') !== 'light');
+	// 默认亮色，读取 localStorage
+	const isDark = ref(localStorage.getItem('theme') === 'dark');
 
 	const toggle = () => {
 		isDark.value = !isDark.value;
