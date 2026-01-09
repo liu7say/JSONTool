@@ -265,6 +265,51 @@ const statusBarInfo = computed(() => {
 		isError: false,
 	};
 });
+
+/**
+ * Handle Theme Toggle with View Transition (Ripple Effect)
+ */
+const handleThemeToggle = (event) => {
+	// Fallback for browsers that don't support View Transitions
+	if (!document.startViewTransition) {
+		themeStore.toggle();
+		return;
+	}
+
+	// Get position of the click
+	const x = event.clientX;
+	const y = event.clientY;
+
+	// Calculate the radius to the furthest corner
+	const endRadius = Math.hypot(
+		Math.max(x, innerWidth - x),
+		Math.max(y, innerHeight - y)
+	);
+
+	// Start the view transition
+	const transition = document.startViewTransition(async () => {
+		await themeStore.toggle();
+		await nextTick(); // Ensure DOM updates
+	});
+
+	// Animate the clip-path
+	transition.ready.then(() => {
+		const clipPath = [
+			`circle(0px at ${x}px ${y}px)`,
+			`circle(${endRadius}px at ${x}px ${y}px)`,
+		];
+		document.documentElement.animate(
+			{
+				clipPath: clipPath,
+			},
+			{
+				duration: 800,
+				easing: 'ease-in-out',
+				pseudoElement: '::view-transition-new(root)',
+			}
+		);
+	});
+};
 </script>
 
 <template>
@@ -395,7 +440,7 @@ const statusBarInfo = computed(() => {
 
 					<button
 						class="f-button small subtle icon-only"
-						@click="themeStore.toggle"
+						@click="handleThemeToggle"
 						:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
 						<component
 							:is="themeStore.isDark ? Moon : Sunny"
