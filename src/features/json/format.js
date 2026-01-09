@@ -10,13 +10,15 @@ import { stringifyJson } from './stringify';
  * @param {number|string} options.indent - 缩进量
  * @returns {Object} { text, error }
  */
-export const formatJsonText = (doc, { indent = 2 } = {}) => {
+export const formatJsonText = (doc, options = {}) => {
 	if (!doc || doc.parseError) {
 		return { text: null, error: doc?.parseError || 'JSON 解析失败' };
 	}
 
+	const { indent = 2 } = options;
+
 	return {
-		text: stringifyJson({ value: doc.parsedValue, indent }),
+		text: stringifyJson({ value: doc.parsedValue, indent, ...options }),
 		error: null,
 	};
 };

@@ -8,6 +8,7 @@ import { ref, watch } from 'vue';
 export const useSettingsStore = defineStore('settings', () => {
 	// --- State ---
 	const sortStructureAtEnd = ref(false);
+	const indent = ref(2);
 
 	// --- Helper: Universal Storage Access ---
 	const storage = {
@@ -61,19 +62,25 @@ export const useSettingsStore = defineStore('settings', () => {
 	const loadSettings = async () => {
 		const defaults = {
 			sortStructureAtEnd: false,
+			indent: 2,
 		};
 		const data = await storage.get(defaults);
 
 		sortStructureAtEnd.value = !!data.sortStructureAtEnd;
+		indent.value = data.indent;
 	};
 
 	// --- Watchers ---
 	watch(sortStructureAtEnd, (newVal) => {
 		storage.set({ sortStructureAtEnd: newVal });
 	});
+	watch(indent, (newVal) => {
+		storage.set({ indent: newVal });
+	});
 
 	return {
 		sortStructureAtEnd,
+		indent,
 		loadSettings,
 	};
 });

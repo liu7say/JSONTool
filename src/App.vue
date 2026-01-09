@@ -40,8 +40,13 @@ const showSortMenu = ref(false);
 const sortButtonRef = ref(null);
 const sortMenuRef = ref(null);
 
-// 点击外部关闭排序菜单
-const handleClickOutsideSort = (e) => {
+const showFormatMenu = ref(false);
+const formatButtonRef = ref(null);
+const formatMenuRef = ref(null);
+
+// 点击外部关闭菜单
+const handleClickOutside = (e) => {
+	// Sort Menu
 	if (
 		showSortMenu.value &&
 		sortButtonRef.value &&
@@ -50,6 +55,16 @@ const handleClickOutsideSort = (e) => {
 		!sortMenuRef.value.contains(e.target)
 	) {
 		showSortMenu.value = false;
+	}
+	// Format Menu
+	if (
+		showFormatMenu.value &&
+		formatButtonRef.value &&
+		!formatButtonRef.value.contains(e.target) &&
+		formatMenuRef.value &&
+		!formatMenuRef.value.contains(e.target)
+	) {
+		showFormatMenu.value = false;
 	}
 };
 
@@ -65,7 +80,7 @@ const handleGlobalKeydown = (e) => {
 };
 
 onMounted(() => {
-	window.addEventListener('click', handleClickOutsideSort);
+	window.addEventListener('click', handleClickOutside);
 	settingsStore.loadSettings();
 
 	if (sessionStore.tabs.length === 0) {
@@ -76,7 +91,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-	window.removeEventListener('click', handleClickOutsideSort);
+	window.removeEventListener('click', handleClickOutside);
 	window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
@@ -145,7 +160,20 @@ const loadHistoryEntry = async (entry) => {
 };
 
 // --- 编辑器操作代理方法 ---
-const triggerFormat = () => jsonEditorRef.value?.applyFormat();
+const triggerFormat = () => {
+	const currentIndent = settingsStore.indent;
+	if (currentIndent === 'jsObj') {
+		jsonEditorRef.value?.applyFormat({ indent: 2, format: 'jsObj' });
+	} else {
+		jsonEditorRef.value?.applyFormat({ indent: currentIndent, format: 'json' });
+	}
+};
+
+const setFormatIndent = (indent) => {
+	settingsStore.indent = indent;
+	triggerFormat();
+	showFormatMenu.value = false;
+};
 const triggerCompact = () => jsonEditorRef.value?.applyCompact();
 
 const triggerSort = () => {
@@ -376,13 +404,67 @@ const handleThemeToggle = (event) => {
 						v-if="
 							activeTab.viewMode === 'code' || activeTab.viewMode === 'diff'
 						">
-						<button
-							class="f-button small subtle"
-							:disabled="!String(activeTab.doc.sourceText || '').trim()"
-							@click="triggerFormat"
-							title="Format">
-							<component :is="DocumentCopy" style="width: 14px" /> 格式化
-						</button>
+						<div class="f-button-group" ref="formatButtonRef">
+							<button
+								class="f-button small subtle group-left"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerFormat"
+								title="Format">
+								<component :is="DocumentCopy" style="width: 14px" /> 格式化
+							</button>
+							<button
+								class="f-button small subtle group-right icon-only"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click.stop="showFormatMenu = !showFormatMenu"
+								title="格式化选项">
+								<component :is="ArrowDown" style="width: 12px; height: 12px" />
+							</button>
+
+							<!-- Dropdown Menu -->
+							<transition name="fade-scale">
+								<div
+									v-if="showFormatMenu"
+									class="f-popover-menu"
+									ref="formatMenuRef">
+									<div class="menu-item" @click="setFormatIndent(2)">
+										<span>2 空格</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === 2"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+									<div class="menu-item" @click="setFormatIndent(4)">
+										<span>4 空格</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === 4"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+									<div class="menu-item" @click="setFormatIndent('\t')">
+										<span>Tab 缩进</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === '\t'"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+									<div class="menu-item" @click="setFormatIndent('jsObj')">
+										<span>JS Object</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === 'jsObj'"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+								</div>
+							</transition>
+						</div>
 						<button
 							class="f-button small subtle"
 							:disabled="!String(activeTab.doc.sourceText || '').trim()"
