@@ -34,6 +34,7 @@ import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
 import { useThemeStore } from '../stores/theme';
 import { fluentTheme } from '../features/codemirror/fluent-theme';
 import { fluentFoldGutter } from '../features/codemirror/fluent-fold';
+import { relaxedJsonParse } from '../features/json/parse';
 
 const props = defineProps({
 	modelValue: {
@@ -133,8 +134,14 @@ const jsonSyntaxLinter = () => (view) => {
 		JSON.parse(cleaned);
 		return [];
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		return buildJsonDiagnostics(original, message);
+		// Try relaxed parse (JS Object)
+		try {
+			relaxedJsonParse(cleaned);
+			return []; // Valid JS Object, suppress error
+		} catch (e) {
+			const message = error instanceof Error ? error.message : String(error);
+			return buildJsonDiagnostics(original, message);
+		}
 	}
 };
 

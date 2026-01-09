@@ -1,6 +1,6 @@
 # 个人偏好
 
-- 语言要求：所有回复、思考过程及任务清单，均须使用中文。
+- 语言要求：所有代码注释、回复、思考过程及任务清单，均须使用中文。
 - 固定指令：`Implementation Plan, Task List and Thought in Chinese`
 
 ## 角色定义

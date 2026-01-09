@@ -176,9 +176,9 @@ const jumpToNextError = () => {
 	codeEditorRef.value.jumpToNextError();
 };
 
-const applyFormat = () => {
+const applyFormat = (options = {}) => {
 	// 格式化主文档
-	const { text, error } = formatJsonText(props.doc, { indent: 2 });
+	const { text, error } = formatJsonText(props.doc, { indent: 2, ...options });
 	if (!error && text) emit('update:doc', text);
 
 	// 格式化对比文档
