@@ -313,7 +313,10 @@ defineExpose({
 
 				<!-- Table Body -->
 				<div
-					v-if="!selectedPath && availableArrayPaths.length > 0"
+					v-if="
+						!availableArrayPaths.includes(selectedPath) &&
+						availableArrayPaths.length > 0
+					"
 					class="empty-state">
 					请选择一个数组字段
 				</div>
