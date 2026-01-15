@@ -358,35 +358,37 @@ const handleThemeToggle = (event) => {
 				<div class="toolbar-group left" v-if="activeTab">
 					<!-- 视图切换 -->
 					<div class="tool-section">
-						<button
-							v-if="activeTab.viewMode !== 'diff'"
-							class="f-button small"
-							:class="activeTab.viewMode === 'table' ? 'primary' : 'subtle'"
-							:disabled="
-								activeTab.viewMode !== 'table' &&
-								!String(activeTab.doc.sourceText || '').trim()
-							"
-							@click="triggerToggleTableRaw">
-							<component
-								:is="activeTab.viewMode === 'table' ? Back : Grid"
-								style="width: 14px" />
-							{{ activeTab.viewMode === 'table' ? '返回' : '表格视图' }}
-						</button>
+						<div class="f-button-group">
+							<button
+								v-if="activeTab.viewMode !== 'diff'"
+								class="f-button small"
+								:class="activeTab.viewMode === 'table' ? 'primary' : 'subtle'"
+								:disabled="
+									activeTab.viewMode !== 'table' &&
+									!String(activeTab.doc.sourceText || '').trim()
+								"
+								@click="triggerToggleTableRaw">
+								<component
+									:is="activeTab.viewMode === 'table' ? Back : Grid"
+									style="width: 14px" />
+								{{ activeTab.viewMode === 'table' ? '返回' : '表格视图' }}
+							</button>
 
-						<button
-							v-if="activeTab.viewMode !== 'table'"
-							class="f-button small"
-							:class="activeTab.viewMode === 'diff' ? 'primary' : 'subtle'"
-							:disabled="
-								activeTab.viewMode !== 'diff' &&
-								!String(activeTab.doc.sourceText || '').trim()
-							"
-							@click="triggerToggleDiff">
-							<component
-								:is="activeTab.viewMode === 'diff' ? Back : Switch"
-								style="width: 14px" />
-							{{ activeTab.viewMode === 'diff' ? '退出对比' : '对比' }}
-						</button>
+							<button
+								v-if="activeTab.viewMode !== 'table'"
+								class="f-button small"
+								:class="activeTab.viewMode === 'diff' ? 'primary' : 'subtle'"
+								:disabled="
+									activeTab.viewMode !== 'diff' &&
+									!String(activeTab.doc.sourceText || '').trim()
+								"
+								@click="triggerToggleDiff">
+								<component
+									:is="activeTab.viewMode === 'diff' ? Back : Switch"
+									style="width: 14px" />
+								{{ activeTab.viewMode === 'diff' ? '退出对比' : '对比' }}
+							</button>
+						</div>
 					</div>
 
 					<!-- 错误跳转 (仅 Code 模式) -->
@@ -465,13 +467,15 @@ const handleThemeToggle = (event) => {
 								</div>
 							</transition>
 						</div>
-						<button
-							class="f-button small subtle"
-							:disabled="!String(activeTab.doc.sourceText || '').trim()"
-							@click="triggerCompact"
-							title="Compact">
-							<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
-						</button>
+						<div class="f-button-group">
+							<button
+								class="f-button small subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerCompact"
+								title="Compact">
+								<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
+							</button>
+						</div>
 						<!-- Sort Button Group with Dropdown -->
 						<div class="f-button-group" ref="sortButtonRef">
 							<button
@@ -779,35 +783,113 @@ const handleThemeToggle = (event) => {
 	display: flex;
 	align-items: center;
 	position: relative;
+	/* Fluent 2 Unified Group Style */
+	border: 1px solid var(--f-border-default);
+	border-radius: 4px;
+	background-color: transparent; /* Or layer1 if needed, but transparent works well on acrylic */
+	/* overflow: hidden;  REMOVED to allow dropdowns to show */
+	transition: border-color 0.2s, box-shadow 0.2s;
+
+	/* Subtle shadow for depth */
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+	&:hover {
+		/* Soften hover effect: less dark border, rely more on shadow */
+		/* border-color: var(--f-border-hover);  Too dark */
+		border-color: var(--f-text-disabled); /* Softer change */
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+	}
 
 	.f-button {
-		border-radius: 4px;
+		border-radius: 0;
+		border: none;
+		box-shadow: none !important; /* Remove individual button shadows */
+		margin: 0;
+		height: 24px;
+		background-color: transparent;
+		color: var(--f-text-primary);
+		position: relative;
+		padding: 0 8px; /* Default unified padding */
+
+		/* Flex alignment for Icon + Text */
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+
+		&:hover,
+		&:focus {
+			background-color: var(--f-bg-control-hover);
+			z-index: 2;
+		}
+
+		&:active {
+			background-color: var(--f-bg-control-active);
+		}
+
+		/* Fix Corners since overflow is visible */
+		&:first-child {
+			border-top-left-radius: 3px;
+			border-bottom-left-radius: 3px;
+		}
+		&:last-child {
+			border-top-right-radius: 3px;
+			border-bottom-right-radius: 3px;
+		}
+
+		/* Generic Separator: Apply to all except the last one */
+		&:not(:last-child) {
+			border-right: 1px solid var(--f-border-subtle);
+		}
 
 		&.group-left {
-			border-top-right-radius: 0;
-			border-bottom-right-radius: 0;
-			margin-right: -1px; /* 合并边框 */
-			z-index: 1;
-
-			&:hover,
-			&:focus {
-				z-index: 2;
-			}
+			/* Already handled by generic rule, but ensure padding */
+			padding: 0 8px;
 		}
 
 		&.group-right {
-			border-top-left-radius: 0;
-			border-bottom-left-radius: 0;
-			padding: 0; /* 移除 padding 以信任 flex 居中 */
-			width: 24px; /* 稍微宽一点 */
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			z-index: 1;
+			padding: 0; /* Icon only override */
+			width: 20px; /* Slightly narrower */
+			/* display: flex; already set globally above */
+		}
 
-			&:hover,
-			&:focus {
-				z-index: 2;
+		/* Restore Primary Button Style priority */
+		&.primary {
+			background-color: var(--f-brand-base);
+			color: white; /* Always white on primary */
+
+			&:hover {
+				background-color: var(--f-brand-hover);
+			}
+
+			&:active {
+				background-color: var(--f-brand-pressed);
+			}
+
+			/* Remove separator for primary buttons if desired, or keep it light? 
+			   Usually primary buttons don't have borders, but if they are next to something, 
+			   the group border is enough. Inside, maybe a darker blue separator? 
+			   For now let's leave the subtle separator or hide it? 
+			   Let's hide the right border for primary buttons to make them look cleaner 
+			   unless they are not the last one. 
+			   Actually, let's keep the separator but make it compatible with the blue bg. 
+			   rgba(255,255,255, 0.2) 
+			*/
+			&:not(:last-child) {
+				border-right: 1px solid rgba(255, 255, 255, 0.2);
+			}
+
+			/* Fix shadow for primary */
+			box-shadow: none; /* Group handles shadow */
+		}
+
+		/* Disable state handling */
+		&:disabled {
+			background-color: transparent;
+			color: var(--f-text-disabled);
+			cursor: not-allowed;
+			&:hover {
+				background-color: transparent;
 			}
 		}
 	}
