@@ -54,7 +54,7 @@
 		color: var(--f-text-on-accent);
 		border-color: transparent;
 
-		&:hover {
+		&:hover:not(:disabled):not(.disabled) {
 			background-color: var(--f-brand-hover);
 		}
 		&:active:not(:disabled):not(.disabled) {
