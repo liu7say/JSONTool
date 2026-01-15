@@ -6,6 +6,7 @@ import { useThemeStore } from './stores/theme';
 import { useSettingsStore } from './stores/settings';
 import JsonEditor from './components/JsonEditor.vue';
 import GithubIcon from './components/GithubIcon.vue';
+import FButton from './components/FButton.vue';
 import Logo from './components/Logo.vue';
 import {
 	Plus,
@@ -359,10 +360,10 @@ const handleThemeToggle = (event) => {
 					<!-- 视图切换 -->
 					<div class="tool-section">
 						<div class="f-button-group">
-							<button
+							<FButton
 								v-if="activeTab.viewMode !== 'diff'"
-								class="f-button small"
-								:class="activeTab.viewMode === 'table' ? 'primary' : 'subtle'"
+								size="small"
+								:type="activeTab.viewMode === 'table' ? 'primary' : 'subtle'"
 								:disabled="
 									activeTab.viewMode !== 'table' &&
 									!String(activeTab.doc.sourceText || '').trim()
@@ -372,12 +373,12 @@ const handleThemeToggle = (event) => {
 									:is="activeTab.viewMode === 'table' ? Back : Grid"
 									style="width: 14px" />
 								{{ activeTab.viewMode === 'table' ? '返回' : '表格视图' }}
-							</button>
+							</FButton>
 
-							<button
+							<FButton
 								v-if="activeTab.viewMode !== 'table'"
-								class="f-button small"
-								:class="activeTab.viewMode === 'diff' ? 'primary' : 'subtle'"
+								size="small"
+								:type="activeTab.viewMode === 'diff' ? 'primary' : 'subtle'"
 								:disabled="
 									activeTab.viewMode !== 'diff' &&
 									!String(activeTab.doc.sourceText || '').trim()
@@ -387,7 +388,7 @@ const handleThemeToggle = (event) => {
 									:is="activeTab.viewMode === 'diff' ? Back : Switch"
 									style="width: 14px" />
 								{{ activeTab.viewMode === 'diff' ? '退出对比' : '对比' }}
-							</button>
+							</FButton>
 						</div>
 					</div>
 
@@ -395,9 +396,9 @@ const handleThemeToggle = (event) => {
 					<div
 						class="tool-section"
 						v-if="activeTab.viewMode === 'code' && activeTab.doc.parseError">
-						<button class="f-button small error-btn" @click="triggerNextError">
+						<FButton size="small" class="error-btn" @click="triggerNextError">
 							跳到错误
-						</button>
+						</FButton>
 					</div>
 
 					<!-- 格式化工具 (Code/Diff 模式) -->
@@ -407,20 +408,25 @@ const handleThemeToggle = (event) => {
 							activeTab.viewMode === 'code' || activeTab.viewMode === 'diff'
 						">
 						<div class="f-button-group" ref="formatButtonRef">
-							<button
-								class="f-button small subtle group-left"
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-left"
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerFormat"
 								title="Format">
 								<component :is="DocumentCopy" style="width: 14px" /> 格式化
-							</button>
-							<button
-								class="f-button small subtle group-right icon-only"
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-right"
+								icon-only
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click.stop="showFormatMenu = !showFormatMenu"
 								title="格式化选项">
 								<component :is="ArrowDown" style="width: 12px; height: 12px" />
-							</button>
+							</FButton>
 
 							<!-- Dropdown Menu -->
 							<transition name="fade-scale">
@@ -468,30 +474,36 @@ const handleThemeToggle = (event) => {
 							</transition>
 						</div>
 						<div class="f-button-group">
-							<button
-								class="f-button small subtle"
+							<FButton
+								size="small"
+								type="subtle"
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerCompact"
 								title="Compact">
 								<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
-							</button>
+							</FButton>
 						</div>
 						<!-- Sort Button Group with Dropdown -->
 						<div class="f-button-group" ref="sortButtonRef">
-							<button
-								class="f-button small subtle group-left"
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-left"
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerSort"
 								title="按 Keys 排序">
 								<component :is="Rank" style="width: 14px" /> 排序
-							</button>
-							<button
-								class="f-button small subtle group-right icon-only"
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-right"
+								icon-only
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click.stop="showSortMenu = !showSortMenu"
 								title="排序选项">
 								<component :is="ArrowDown" style="width: 12px; height: 12px" />
-							</button>
+							</FButton>
 
 							<!-- Dropdown Menu -->
 							<transition name="fade-scale">
@@ -517,28 +529,33 @@ const handleThemeToggle = (event) => {
 
 				<!-- 右侧：全局操作组 -->
 				<div class="toolbar-group right">
-					<button
+					<FButton
 						v-if="activeTab"
-						class="f-button small primary"
+						size="small"
+						type="primary"
 						@click="onSaveHistory(activeTab)">
 						<component :is="Operation" style="width: 14px" /> 保存快照
-					</button>
+					</FButton>
 
-					<button
-						class="f-button small subtle icon-only"
+					<FButton
+						size="small"
+						type="subtle"
+						icon-only
 						@click="handleThemeToggle"
 						:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
 						<component
 							:is="themeStore.isDark ? Moon : Sunny"
 							style="width: 16px" />
-					</button>
+					</FButton>
 
-					<button
-						class="f-button small subtle icon-only"
+					<FButton
+						size="small"
+						type="subtle"
+						icon-only
 						@click="showHistory = true"
 						title="历史记录">
 						<component :is="Clock" style="width: 16px" />
-					</button>
+					</FButton>
 
 					<a
 						class="f-button small subtle icon-only"
@@ -602,12 +619,14 @@ const handleThemeToggle = (event) => {
 
 					<!-- New Tab Button (Inline) -->
 					<div class="new-tab-wrapper">
-						<button
-							class="f-button subtle icon-only new-tab-btn"
+						<FButton
+							type="subtle"
+							icon-only
+							class="new-tab-btn"
 							@click="sessionStore.createTab()"
 							title="新建标签页">
 							<component :is="Plus" style="width: 16px" />
-						</button>
+						</FButton>
 					</div>
 				</div>
 			</div>
@@ -633,9 +652,9 @@ const handleThemeToggle = (event) => {
 				<div v-else class="empty-state">
 					<div class="empty-content">
 						<h3>没有打开的文件</h3>
-						<button class="f-button primary" @click="sessionStore.createTab()">
+						<FButton type="primary" @click="sessionStore.createTab()">
 							新建 JSON
-						</button>
+						</FButton>
 					</div>
 				</div>
 			</div>
@@ -684,9 +703,9 @@ const handleThemeToggle = (event) => {
 		<div class="f-drawer" :class="{ open: showHistory }">
 			<div class="f-drawer-header">
 				<span>历史记录</span>
-				<button class="f-button subtle icon-only" @click="showHistory = false">
+				<FButton type="subtle" icon-only @click="showHistory = false">
 					<component :is="Close" style="width: 18px" />
-				</button>
+				</FButton>
 			</div>
 
 			<div class="history-list">
@@ -704,23 +723,25 @@ const handleThemeToggle = (event) => {
 							{{ new Date(item.createdAt).toLocaleString() }}
 						</div>
 					</div>
-					<button
-						class="f-button subtle icon-only entry-del"
+					<FButton
+						type="subtle"
+						icon-only
+						class="entry-del"
 						@click.stop="historyStore.removeEntry(item.id)"
 						title="删除">
 						<component
 							:is="Delete"
 							style="width: 14px; color: var(--f-color-error)" />
-					</button>
+					</FButton>
 				</div>
 
 				<div v-if="historyStore.index.length" class="history-footer">
-					<button
-						class="f-button subtle"
+					<FButton
+						type="subtle"
 						style="color: var(--f-color-error)"
 						@click="historyStore.clearAll">
 						清空全部
-					</button>
+					</FButton>
 				</div>
 			</div>
 		</div>
