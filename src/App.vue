@@ -533,7 +533,8 @@ const handleThemeToggle = (event) => {
 						v-if="activeTab"
 						size="small"
 						type="primary"
-						@click="onSaveHistory(activeTab)">
+						@click="onSaveHistory(activeTab)"
+						title="只会保存当前标签页的快照">
 						<component :is="Operation" style="width: 14px" /> 保存快照
 					</FButton>
 
