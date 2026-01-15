@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick } from 'vue';
 import { formatJsonText } from '../features/json/format';
 import { sortJsonKeys } from '../features/json/sort';
 import { jsonToTable, findArrayPaths } from '../features/json/table';
+import { tryParseJson } from '../features/json/parse';
 import { Search as SearchIcon } from '@element-plus/icons-vue';
 import CodeEditor from './CodeEditor.vue';
 import DiffEditor from './DiffEditor.vue';
@@ -183,14 +184,15 @@ const applyFormat = (options = {}) => {
 
 	// 格式化对比文档
 	if (props.viewMode === 'diff' && localCompareContent.value) {
-		try {
-			const parsed = JSON.parse(localCompareContent.value);
-			const res = formatJsonText({ parsedValue: parsed }, { indent: 2 });
+		const { parsedValue } = tryParseJson(localCompareContent.value);
+		if (parsedValue) {
+			const res = formatJsonText(
+				{ parsedValue: parsedValue },
+				{ indent: 2, ...options }
+			);
 			if (!res.error && res.text) {
 				localCompareContent.value = res.text;
 			}
-		} catch (e) {
-			// 忽略解析错误
 		}
 	}
 };
@@ -202,14 +204,12 @@ const applyCompact = () => {
 
 	// 压缩对比文档
 	if (props.viewMode === 'diff' && localCompareContent.value) {
-		try {
-			const parsed = JSON.parse(localCompareContent.value);
-			const res = formatJsonText({ parsedValue: parsed }, { indent: 0 });
+		const { parsedValue } = tryParseJson(localCompareContent.value);
+		if (parsedValue) {
+			const res = formatJsonText({ parsedValue }, { indent: 0 });
 			if (!res.error && res.text) {
 				localCompareContent.value = res.text;
 			}
-		} catch (e) {
-			// 忽略解析错误
 		}
 	}
 };
@@ -235,17 +235,12 @@ const applySort = (options = {}) => {
 
 			// 排序对比文档
 			if (props.viewMode === 'diff' && localCompareContent.value) {
-				try {
-					const parsed = JSON.parse(localCompareContent.value);
-					const res = sortJsonKeys(
-						{ parsedValue: parsed },
-						{ indent: 2, ...options }
-					);
+				const { parsedValue } = tryParseJson(localCompareContent.value);
+				if (parsedValue) {
+					const res = sortJsonKeys({ parsedValue }, { indent: 2, ...options });
 					if (!res.error && res.text) {
 						localCompareContent.value = res.text;
 					}
-				} catch (e) {
-					// 忽略解析错误
 				}
 			}
 		} finally {

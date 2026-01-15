@@ -444,7 +444,7 @@ const handleThemeToggle = (event) => {
 												style="width: 12px" />
 										</div>
 									</div>
-									<div class="menu-item" @click="setFormatIndent('\t')">
+									<!-- <div class="menu-item" @click="setFormatIndent('\t')">
 										<span>Tab 缩进</span>
 										<div class="check-box">
 											<component
@@ -452,7 +452,7 @@ const handleThemeToggle = (event) => {
 												:is="Check"
 												style="width: 12px" />
 										</div>
-									</div>
+									</div> -->
 									<div class="menu-item" @click="setFormatIndent('jsObj')">
 										<span>JS Object</span>
 										<div class="check-box">
