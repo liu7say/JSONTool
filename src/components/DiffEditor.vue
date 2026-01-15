@@ -48,8 +48,26 @@ const containerRef = ref(null);
 const themeStore = useThemeStore();
 let mergeView = null;
 
+// 定制搜索面板的本地化词条
+const editorPhrases = {
+	// Search & Replace
+	Find: '查找',
+	Replace: '替换',
+	next: '下一个',
+	previous: '上一个',
+	all: '全部',
+	'match case': '区分大小写',
+	'by word': '全字匹配',
+	'case sensitive': '区分大小写',
+	regexp: '正则',
+	replace: '替换',
+	'replace all': '替换全部',
+	close: '关闭',
+};
+
 // 复用 CodeEditor 的基础配置
 const commonExtensions = [
+	EditorState.phrases.of(editorPhrases), // 本地化
 	lineNumbers(),
 	highlightActiveLineGutter(),
 	highlightSpecialChars(),
@@ -235,6 +253,27 @@ onBeforeUnmount(() => {
 	/* 自定义一些连线颜色适配 Fluent 主题 */
 	:deep(.cm-merge-gutter) {
 		background-color: var(--f-bg-layer1);
+	}
+
+	/* 强制覆盖搜索框样式，使其在 Merge View 中也能正确浮动 */
+	:deep(.cm-panels),
+	:deep(.cm-panels-bottom) {
+		position: absolute !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		bottom: auto !important;
+		background: transparent !important;
+		border: none !important;
+		pointer-events: none !important; /* 避免遮挡编辑器点击 */
+		z-index: 200 !important;
+	}
+
+	:deep(.cm-editor .cm-search) {
+		position: absolute !important;
+		top: 12px !important;
+		right: 24px !important;
+		pointer-events: auto !important; /* 恢复搜索框交互 */
 	}
 }
 </style>
