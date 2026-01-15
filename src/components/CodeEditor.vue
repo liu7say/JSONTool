@@ -27,6 +27,9 @@ import {
 	indentOnInput,
 	bracketMatching,
 	foldKeymap,
+	foldAll,
+	unfoldAll,
+	ensureSyntaxTree,
 } from '@codemirror/language';
 import { highlightSelectionMatches } from '@codemirror/search';
 import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
@@ -151,7 +154,22 @@ const jumpToNextError = () => {
 	editorView.focus();
 };
 
-defineExpose({ jumpToNextError });
+const expandAll = () => {
+	if (editorView) unfoldAll(editorView);
+};
+
+const collapseAll = () => {
+	if (editorView) {
+		// 1. 强制解析完整语法树，确保所有节点都可以被折叠
+		ensureSyntaxTree(editorView.state, editorView.state.doc.length, 5000);
+
+		// 2. 使用 foldAll 递归折叠所有层级
+		// foldAll 会正确处理嵌套结构，当展开外层时内层仍保持折叠状态
+		foldAll(editorView);
+	}
+};
+
+defineExpose({ jumpToNextError, expandAll, collapseAll });
 
 // 定制搜索面板的本地化词条
 const editorPhrases = {

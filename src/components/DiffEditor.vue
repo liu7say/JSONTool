@@ -22,7 +22,13 @@ import {
 	indentOnInput,
 	bracketMatching,
 	foldKeymap,
+	foldAll,
+	unfoldAll,
+	ensureSyntaxTree,
+	syntaxTree,
+	foldCode,
 } from '@codemirror/language';
+import { EditorSelection } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
@@ -220,6 +226,27 @@ onBeforeUnmount(() => {
 		mergeView.destroy();
 	}
 });
+
+const expandAll = () => {
+	if (mergeView) {
+		unfoldAll(mergeView.a);
+		unfoldAll(mergeView.b);
+	}
+};
+
+const collapseAll = () => {
+	if (mergeView) {
+		// 左侧
+		ensureSyntaxTree(mergeView.a.state, mergeView.a.state.doc.length, 5000);
+		foldAll(mergeView.a);
+
+		// 右侧
+		ensureSyntaxTree(mergeView.b.state, mergeView.b.state.doc.length, 5000);
+		foldAll(mergeView.b);
+	}
+};
+
+defineExpose({ expandAll, collapseAll });
 </script>
 
 <template>
