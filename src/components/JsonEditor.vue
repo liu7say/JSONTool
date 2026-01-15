@@ -166,6 +166,23 @@ const onMouseUp = () => {
 const isSorting = ref(false);
 const showLoader = ref(false);
 const codeEditorRef = ref(null);
+const diffEditorRef = ref(null);
+
+const expandAll = () => {
+	if (props.viewMode === 'diff') {
+		diffEditorRef.value?.expandAll();
+	} else if (props.viewMode === 'code') {
+		codeEditorRef.value?.expandAll();
+	}
+};
+
+const collapseAll = () => {
+	if (props.viewMode === 'diff') {
+		diffEditorRef.value?.collapseAll();
+	} else if (props.viewMode === 'code') {
+		codeEditorRef.value?.collapseAll();
+	}
+};
 
 const inputText = computed({
 	get: () => props.doc.sourceText || '',
@@ -267,6 +284,8 @@ defineExpose({
 	toggleTableMode,
 	toggleDiffMode,
 	jumpToNextError,
+	expandAll,
+	collapseAll,
 	// 暴露一些只读状态可以帮助父组件控制按钮状态等
 	isSorting: computed(() => isSorting.value),
 });
@@ -360,6 +379,7 @@ defineExpose({
 			<!-- DIFF MODE -->
 			<div v-else-if="viewMode === 'diff'" class="code-wrapper">
 				<DiffEditor
+					ref="diffEditorRef"
 					v-model:original="inputText"
 					v-model:modified="localCompareContent" />
 				<div v-if="showLoader" class="overlay-loader">

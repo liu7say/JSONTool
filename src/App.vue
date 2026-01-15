@@ -26,6 +26,8 @@ import {
 	ArrowRight,
 	ArrowDown,
 	Check,
+	Expand,
+	Fold,
 } from '@element-plus/icons-vue';
 
 // 状态管理 stores
@@ -191,6 +193,8 @@ const toggleSortStructureAtEnd = () => {
 const triggerToggleTableRaw = () => jsonEditorRef.value?.toggleTableMode();
 const triggerToggleDiff = () => jsonEditorRef.value?.toggleDiffMode();
 const triggerNextError = () => jsonEditorRef.value?.jumpToNextError();
+const triggerExpandAll = () => jsonEditorRef.value?.expandAll();
+const triggerCollapseAll = () => jsonEditorRef.value?.collapseAll();
 
 // --- 侧边栏 Hover Popover 逻辑 ---
 const hoveredTabId = ref(null);
@@ -522,6 +526,25 @@ const handleThemeToggle = (event) => {
 									</div>
 								</div>
 							</transition>
+						</div>
+
+						<div class="f-button-group">
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerExpandAll"
+								title="全部展开">
+								<component :is="Expand" style="width: 14px" />
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerCollapseAll"
+								title="全部收起">
+								<component :is="Fold" style="width: 14px" />
+							</FButton>
 						</div>
 					</div>
 				</div>
