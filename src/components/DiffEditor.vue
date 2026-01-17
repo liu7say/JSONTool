@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch, toRefs } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, toRefs, computed } from 'vue';
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { MergeView } from '@codemirror/merge';
@@ -55,6 +55,7 @@ const themeStore = useThemeStore();
 let mergeView = null;
 const lastEmittedOriginal = ref(null);
 const lastEmittedModified = ref(null);
+const diffCount = ref(0);
 
 // 定制搜索面板的本地化词条
 const editorPhrases = {
@@ -151,6 +152,10 @@ const initMergeView = () => {
 						lastEmittedOriginal.value = val;
 						emit('update:original', val);
 					}
+					// 每次更新都检查差异数量
+					if (mergeView && mergeView.chunks) {
+						diffCount.value = mergeView.chunks.length;
+					}
 				}),
 			],
 		},
@@ -164,6 +169,10 @@ const initMergeView = () => {
 						lastEmittedModified.value = val;
 						emit('update:modified', val);
 					}
+					// 每次更新都检查差异数量
+					if (mergeView && mergeView.chunks) {
+						diffCount.value = mergeView.chunks.length;
+					}
 				}),
 			],
 		},
@@ -172,6 +181,11 @@ const initMergeView = () => {
 		highlightChanges: true,
 		collapseContent: false,
 	});
+
+	// 初始化时也检查一次
+	if (mergeView && mergeView.chunks) {
+		diffCount.value = mergeView.chunks.length;
+	}
 };
 
 // 监听 props 变化同步到编辑器
@@ -243,7 +257,45 @@ const collapseAll = () => {
 	}
 };
 
-defineExpose({ expandAll, collapseAll });
+const nextDiff = () => {
+	if (!mergeView) return;
+
+	// 尝试获取差异块
+	// CodeMirror MergeView 实例通常维护 chunks，或是可以通过 API 获取
+	// 这里假设 mergeView.chunks 可用，或者是核心 API 的一部分
+	let chunks = mergeView.chunks;
+
+	// 如果 API 有变动拿不到 chunks，这里可以做一个简单的回退（虽然不完美）
+	// 但通常 mergeView.chunks 是存在的（数组包含 { fromA, toA, fromB, toB }）
+	if (!chunks) return;
+
+	const currentPos = mergeView.a.state.selection.main.head;
+
+	// 找到当前光标之后的第一个差异块
+	let nextChunk = chunks.find((c) => c.fromA > currentPos);
+
+	// 如果后面没有了，并且确实有差异，可以循环回到第一个（可选，为了体验通常会回滚到开头）
+	if (!nextChunk && chunks.length > 0) {
+		nextChunk = chunks[0];
+	}
+
+	if (nextChunk) {
+		// 移动光标并滚动
+		mergeView.a.dispatch({
+			selection: { anchor: nextChunk.fromA },
+			scrollIntoView: true,
+			effects: EditorView.scrollIntoView(nextChunk.fromA, { y: 'center' }), // 居中显示
+		});
+		mergeView.a.focus();
+	}
+};
+
+defineExpose({
+	expandAll,
+	collapseAll,
+	nextDiff,
+	diffCount: computed(() => diffCount.value),
+});
 </script>
 
 <template>
@@ -298,6 +350,27 @@ defineExpose({ expandAll, collapseAll });
 		top: 12px !important;
 		right: 24px !important;
 		pointer-events: auto !important; /* 恢复搜索框交互 */
+	}
+
+	/* 自定义差异颜色覆盖 */
+	/* 左侧 (Original/Deleted/Changed) */
+	:deep(.cm-merge-a .cm-changedLine),
+	:deep(.cm-merge-a .cm-deletedChunk) {
+		background-color: #a0646436 !important;
+	}
+	:deep(.cm-merge-a .cm-changedLineGutter),
+	:deep(.cm-merge-a .cm-deletedLineGutter) {
+		background-color: #a0646436 !important;
+	}
+
+	/* 右侧 (Modified/Inserted/Changed) */
+	:deep(.cm-merge-b .cm-changedLine),
+	:deep(.cm-merge-b .cm-insertedChunk) {
+		background-color: #55ab7d38 !important;
+	}
+	:deep(.cm-merge-b .cm-changedLineGutter),
+	:deep(.cm-merge-b .cm-insertedLineGutter) {
+		background-color: #55ab7d38 !important;
 	}
 }
 </style>

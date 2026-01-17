@@ -66,7 +66,7 @@ watch(
 			emit('update:selectedArrayPath', paths[0]);
 		}
 	},
-	{ immediate: true }
+	{ immediate: true },
 );
 
 // 原始表格数据
@@ -93,7 +93,7 @@ const processedRows = computed(() => {
 			return columns.some((col) =>
 				String(row[col] || '')
 					.toLowerCase()
-					.includes(lowerFilter)
+					.includes(lowerFilter),
 			);
 		});
 	}
@@ -205,7 +205,7 @@ const applyFormat = (options = {}) => {
 		if (parsedValue) {
 			const res = formatJsonText(
 				{ parsedValue: parsedValue },
-				{ indent: 2, ...options }
+				{ indent: 2, ...options },
 			);
 			if (!res.error && res.text) {
 				localCompareContent.value = res.text;
@@ -277,6 +277,12 @@ const toggleDiffMode = () => {
 };
 
 // 公开方法供父组件调用
+const nextDiff = () => {
+	if (props.viewMode === 'diff') {
+		diffEditorRef.value?.nextDiff();
+	}
+};
+
 defineExpose({
 	applyFormat,
 	applyCompact,
@@ -286,8 +292,10 @@ defineExpose({
 	jumpToNextError,
 	expandAll,
 	collapseAll,
+	nextDiff,
 	// 暴露一些只读状态可以帮助父组件控制按钮状态等
 	isSorting: computed(() => isSorting.value),
+	diffCount: computed(() => diffEditorRef.value?.diffCount || 0),
 });
 </script>
 
