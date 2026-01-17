@@ -14,6 +14,7 @@ import {
 	indentWithTab,
 } from '@codemirror/commands';
 import { searchKeymap } from '@codemirror/search';
+import { searchWithMatchCount } from './search-panel';
 import {
 	lineNumbers,
 	highlightActiveLineGutter,
@@ -116,6 +117,7 @@ export const baseEditorExtensions = [
 	json(), // JSON 语言支持
 	fluentTheme, // Fluent 主题
 	...bracketScopeLines, // JSON 括号范围线
+	...searchWithMatchCount, // 带匹配计数的搜索面板
 	pasteTransactionFilter, // 粘贴行为控制
 ];
 

@@ -87,7 +87,7 @@ export const fluentTheme = EditorView.theme({
 		position: 'absolute !important',
 		top: '12px !important',
 		right: '24px !important',
-		padding: '16px 16px 0 !important',
+		padding: '16px !important',
 		backgroundColor: 'var(--f-bg-layer2) !important',
 		color: 'var(--f-text-primary) !important',
 		border: '1px solid var(--f-border-subtle) !important',
