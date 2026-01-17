@@ -214,14 +214,21 @@ defineExpose({
 		.cm-mergeViewEditors {
 			display: flex;
 			align-items: stretch;
+			height: 100% !important;
 		}
 
 		.cm-editor {
-			height: 100%;
+			height: 100% !important;
 		}
 
+		/* 确保滚动容器占满高度，空内容时编辑器也能占满可视区域 */
 		.cm-scroller {
 			overflow: auto;
+			height: 100% !important;
+		}
+
+		.cm-content {
+			min-height: 100% !important;
 		}
 	}
 
