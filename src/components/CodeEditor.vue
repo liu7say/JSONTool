@@ -1,42 +1,14 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-// CodeMirror 核心与语言包
+// CodeMirror 核心
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
-import { json } from '@codemirror/lang-json';
-import { oneDark } from '@codemirror/theme-one-dark';
-import { keymap } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { lintGutter, linter, nextDiagnostic } from '@codemirror/lint';
-import { search, searchKeymap } from '@codemirror/search';
-
-// 核心扩展 (拆分 basicSetup 以便定制)
-import {
-	lineNumbers,
-	highlightActiveLineGutter,
-	highlightSpecialChars,
-	drawSelection,
-	dropCursor,
-	rectangularSelection,
-	crosshairCursor,
-	highlightActiveLine,
-} from '@codemirror/view';
-import {
-	defaultHighlightStyle,
-	syntaxHighlighting,
-	indentOnInput,
-	bracketMatching,
-	foldKeymap,
-	foldAll,
-	unfoldAll,
-	ensureSyntaxTree,
-} from '@codemirror/language';
-import { highlightSelectionMatches } from '@codemirror/search';
-import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
+import { search } from '@codemirror/search';
+import { foldAll, unfoldAll, ensureSyntaxTree } from '@codemirror/language';
 
 import { useThemeStore } from '../stores/theme';
-import { fluentTheme } from '../features/codemirror/fluent-theme';
-import { fluentFoldGutter } from '../features/codemirror/fluent-fold';
+import { getEditorExtensions } from '../features/codemirror/editor-config';
 import { relaxedJsonParse } from '../features/json/parse';
 
 const props = defineProps({
@@ -171,126 +143,53 @@ const collapseAll = () => {
 
 defineExpose({ jumpToNextError, expandAll, collapseAll });
 
-// 定制搜索面板的本地化词条
-const editorPhrases = {
-	// Search & Replace
-	Find: '查找',
-	Replace: '替换',
-	next: '下一个',
-	previous: '上一个',
-	all: '全部',
-	'match case': '区分大小写',
-	'by word': '全字匹配',
-	'case sensitive': '区分大小写',
-	regexp: '正则',
-	replace: '替换',
-	'replace all': '替换全部',
-	close: '关闭',
-};
+// CodeEditor 特有的扩展配置（Lint、搜索、自动格式化）
+const getCodeEditorExtensions = () => [
+	search({ top: true }), // 搜索框在顶部
+	lintGutter(),
+	linter(jsonSyntaxLinter()), // JSON 语法检查
+	EditorView.updateListener.of((update) => {
+		if (update.docChanged) {
+			const newVal = update.state.doc.toString();
+			emit('update:modelValue', newVal);
+			emit('change', newVal);
 
-// 自定义基础配置 + Fluent Design 折叠
-const customBasicSetup = [
-	lineNumbers(),
-	highlightActiveLineGutter(),
-	highlightSpecialChars(),
-	history(),
-	fluentFoldGutter, // 自定义折叠槽
-	drawSelection(),
-	dropCursor(),
-	EditorState.allowMultipleSelections.of(true),
-	indentOnInput(),
-	syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-	bracketMatching(),
-	closeBrackets(),
-	autocompletion(),
-	rectangularSelection(),
-	crosshairCursor(),
-	highlightActiveLine(),
-	highlightSelectionMatches(),
-	keymap.of([
-		...defaultKeymap,
-		...historyKeymap,
-		...searchKeymap,
-		...foldKeymap,
-	]),
+			// 自动格式化：当粘贴到空文档时，自动进行格式化
+			if (
+				update.startState.doc.length === 0 &&
+				update.transactions.some((tr) => tr.isUserEvent('input.paste'))
+			) {
+				setTimeout(() => {
+					if (!editorView) return;
+					const currentDoc = editorView.state.doc.toString();
+					if (currentDoc.trim()) {
+						try {
+							const parsed = JSON.parse(currentDoc);
+							const formatted = JSON.stringify(parsed, null, 2);
+							if (formatted !== currentDoc) {
+								editorView.dispatch({
+									changes: {
+										from: 0,
+										to: editorView.state.doc.length,
+										insert: formatted,
+									},
+									selection: { anchor: 0 },
+									scrollIntoView: true,
+									userEvent: 'input.format.auto',
+								});
+							}
+						} catch (e) {}
+					}
+				}, 16);
+			}
+		}
+	}),
+	EditorState.readOnly.of(props.readonly),
 ];
 
-// 粘贴处理：保持光标在粘贴内容的开始处，而不是结束处，防止页面跳动
-const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
-	if (tr.isUserEvent('input.paste')) {
-		let minFrom = Infinity;
-		tr.changes.iterChanges((fromA, toA, fromB, toB) => {
-			if (fromB < minFrom) minFrom = fromB;
-		});
-
-		if (minFrom !== Infinity) {
-			return [
-				tr,
-				{
-					selection: { anchor: minFrom },
-					scrollIntoView: true,
-				},
-			];
-		}
-	}
-	return tr;
-});
-
-// 组装所有 Editor 扩展
+// 组装所有 Editor 扩展（使用共享配置 + CodeEditor 特有配置）
 const getExtensions = (isDark) => {
-	const extensions = [
-		EditorState.phrases.of(editorPhrases), // 本地化
-		...customBasicSetup, // 基础配置
-		json(),
-		search({ top: true }), // 搜索框在顶部
-		lintGutter(),
-		linter(jsonSyntaxLinter()), // JSON 语法检查
-		pasteTransactionFilter, // 粘贴行为优化
-		EditorView.updateListener.of((update) => {
-			if (update.docChanged) {
-				const newVal = update.state.doc.toString();
-				emit('update:modelValue', newVal);
-				emit('change', newVal);
-
-				// 自动格式化：当粘贴到空文档时，自动进行格式化
-				if (
-					update.startState.doc.length === 0 &&
-					update.transactions.some((tr) => tr.isUserEvent('input.paste'))
-				) {
-					setTimeout(() => {
-						if (!editorView) return;
-						const currentDoc = editorView.state.doc.toString();
-						if (currentDoc.trim()) {
-							try {
-								const parsed = JSON.parse(currentDoc);
-								const formatted = JSON.stringify(parsed, null, 2);
-								if (formatted !== currentDoc) {
-									editorView.dispatch({
-										changes: {
-											from: 0,
-											to: editorView.state.doc.length,
-											insert: formatted,
-										},
-										selection: { anchor: 0 },
-										scrollIntoView: true,
-										userEvent: 'input.format.auto',
-									});
-								}
-							} catch (e) {}
-						}
-					}, 16);
-				}
-			}
-		}),
-		EditorState.readOnly.of(props.readonly),
-		fluentTheme,
-	];
-
-	if (isDark) {
-		extensions.push(oneDark);
-	}
-
-	return extensions;
+	return getEditorExtensions(isDark, getCodeEditorExtensions());
 };
 
 const initEditor = () => {
@@ -315,7 +214,7 @@ watch(
 				changes: { from: 0, to: editorView.state.doc.length, insert: newVal },
 			});
 		}
-	}
+	},
 );
 
 watch(
@@ -338,7 +237,7 @@ watch(
 			state,
 			parent: editorContainer.value,
 		});
-	}
+	},
 );
 
 watch(
@@ -352,7 +251,7 @@ watch(
 			extensions: getExtensions(themeStore.isDark),
 		});
 		editorView = new EditorView({ state, parent: editorContainer.value });
-	}
+	},
 );
 
 onMounted(() => {
