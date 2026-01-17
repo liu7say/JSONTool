@@ -5,7 +5,7 @@ import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
 import { useSettingsStore } from './stores/settings';
 import JsonEditor from './components/JsonEditor.vue';
-import GithubIcon from './components/GithubIcon.vue';
+import GithubIconUrl from './assets/github.svg';
 import FButton from './components/FButton.vue';
 import Logo from './components/Logo.vue';
 import {
@@ -632,7 +632,10 @@ const handleThemeToggle = (event) => {
 							align-items: center;
 							justify-content: center;
 						">
-						<GithubIcon style="width: 16px; height: 16px" />
+						<img
+							:src="GithubIconUrl"
+							alt="GitHub"
+							style="width: 16px; height: 16px" />
 					</a>
 				</div>
 			</div>
