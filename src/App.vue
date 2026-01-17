@@ -47,6 +47,12 @@ const showFormatMenu = ref(false);
 const formatButtonRef = ref(null);
 const formatMenuRef = ref(null);
 
+// 动画和提示状态
+const historyButtonAnimate = ref(false);
+const toastVisible = ref(false);
+const toastMessage = ref('');
+let toastTimer = null;
+
 // 点击外部关闭菜单
 const handleClickOutside = (e) => {
 	// 排序菜单
@@ -140,6 +146,20 @@ const onSaveHistory = async (tab) => {
 			toolState: { viewMode: tab.viewMode },
 			title: tab.title || '未命名快照',
 		});
+
+		// 触发按钮动画
+		historyButtonAnimate.value = true;
+		setTimeout(() => {
+			historyButtonAnimate.value = false;
+		}, 300);
+
+		// 显示提示
+		if (toastTimer) clearTimeout(toastTimer);
+		toastMessage.value = '已保存当前标签页快照';
+		toastVisible.value = true;
+		toastTimer = setTimeout(() => {
+			toastVisible.value = false;
+		}, 2000);
 	} catch (e) {
 		console.error(e);
 	}
@@ -584,20 +604,21 @@ const handleThemeToggle = (event) => {
 						size="small"
 						type="subtle"
 						icon-only
-						@click="handleThemeToggle"
-						:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
-						<component
-							:is="themeStore.isDark ? Moon : Sunny"
-							style="width: 16px" />
+						@click="showHistory = true"
+						:class="{ 'bump-animation': historyButtonAnimate }"
+						title="历史记录">
+						<component :is="Clock" style="width: 16px" />
 					</FButton>
 
 					<FButton
 						size="small"
 						type="subtle"
 						icon-only
-						@click="showHistory = true"
-						title="历史记录">
-						<component :is="Clock" style="width: 16px" />
+						@click="handleThemeToggle"
+						:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
+						<component
+							:is="themeStore.isDark ? Moon : Sunny"
+							style="width: 16px" />
 					</FButton>
 
 					<a
@@ -788,6 +809,16 @@ const handleThemeToggle = (event) => {
 				</div>
 			</div>
 		</div>
+
+		<!-- Toast Notification -->
+		<transition name="toast-fade">
+			<div v-if="toastVisible" class="toast-notification f-acrylic">
+				<component
+					:is="Check"
+					style="width: 16px; color: var(--f-brand-base)" />
+				<span>{{ toastMessage }}</span>
+			</div>
+		</transition>
 	</div>
 </template>
 
@@ -1432,5 +1463,55 @@ const handleThemeToggle = (event) => {
 	text-align: center;
 	color: var(--f-text-secondary);
 	padding: 40px 0;
+}
+
+/* Toast 样式 */
+.toast-notification {
+	position: fixed;
+	bottom: 40px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	border-radius: 20px;
+	background-color: var(--f-bg-layer2);
+	border: 1px solid var(--f-border-default);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	z-index: 2000;
+	font-size: 13px;
+	color: var(--f-text-primary);
+	user-select: none;
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+	transition:
+		opacity 0.2s,
+		transform 0.2s;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+	opacity: 0;
+	transform: translate(-50%, 10px);
+}
+
+/* 按钮弹跳动画 */
+.bump-animation {
+	animation: bump 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes bump {
+	0% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.2);
+	}
+	100% {
+		transform: scale(1);
+	}
 }
 </style>
