@@ -7,7 +7,12 @@ import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import {
+	defaultKeymap,
+	history,
+	historyKeymap,
+	indentWithTab,
+} from '@codemirror/commands';
 import { searchKeymap } from '@codemirror/search';
 import {
 	lineNumbers,
@@ -28,6 +33,8 @@ import {
 } from '@codemirror/language';
 import { highlightSelectionMatches } from '@codemirror/search';
 import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
+
+import { bracketScopeLines } from './bracket-scope-lines';
 
 import { fluentTheme } from './fluent-theme';
 import { fluentFoldGutter } from './fluent-fold';
@@ -104,9 +111,11 @@ export const baseEditorExtensions = [
 		...historyKeymap,
 		...searchKeymap,
 		...foldKeymap,
+		indentWithTab, // Tab 键缩进支持
 	]),
 	json(), // JSON 语言支持
 	fluentTheme, // Fluent 主题
+	...bracketScopeLines, // JSON 括号范围线
 	pasteTransactionFilter, // 粘贴行为控制
 ];
 
