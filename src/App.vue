@@ -471,7 +471,7 @@ const handleThemeToggle = (event) => {
 								<component :is="ArrowDown" style="width: 12px; height: 12px" />
 							</FButton>
 
-							<!-- Dropdown Menu -->
+							<!-- 下拉菜单 -->
 							<transition name="fade-scale">
 								<div
 									v-if="showFormatMenu"
@@ -526,7 +526,7 @@ const handleThemeToggle = (event) => {
 								<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
 							</FButton>
 						</div>
-						<!-- Sort Button Group with Dropdown -->
+						<!-- 排序按钮组 (带下拉) -->
 						<div class="f-button-group" ref="sortButtonRef">
 							<FButton
 								size="small"
@@ -548,7 +548,7 @@ const handleThemeToggle = (event) => {
 								<component :is="ArrowDown" style="width: 12px; height: 12px" />
 							</FButton>
 
-							<!-- Dropdown Menu -->
+							<!-- 下拉菜单 -->
 							<transition name="fade-scale">
 								<div
 									v-if="showSortMenu"
@@ -684,7 +684,7 @@ const handleThemeToggle = (event) => {
 						</span>
 					</div>
 
-					<!-- New Tab Button (Inline) -->
+					<!-- 新建标签页按钮 (行内) -->
 					<div class="new-tab-wrapper">
 						<FButton
 							type="subtle"
@@ -727,7 +727,7 @@ const handleThemeToggle = (event) => {
 			</div>
 		</div>
 
-		<!-- Hover Popover for Collapsed Tabs -->
+		<!-- 折叠标签页的悬浮弹出框 -->
 		<div
 			v-if="sessionStore.sidebarCollapsed && hoveredTab"
 			class="tab-popover f-tab-item vertical active"
@@ -751,13 +751,13 @@ const handleThemeToggle = (event) => {
 				<component :is="Close" style="width: 12px; height: 12px" />
 			</span>
 
-			<!-- Replicate Active Indicator styles if this is the active tab -->
+			<!-- 如果这是当前激活的标签页，复制激活指示器样式 -->
 			<div
 				v-if="sessionStore.activeTabId === hoveredTab.id"
 				class="popover-indicator"></div>
 		</div>
 
-		<!-- Global Footer Status Bar -->
+		<!-- 全局底部状态栏 -->
 		<div class="footer status-bar" :class="{ error: statusBarInfo.isError }">
 			<span>{{ statusBarInfo.text }}</span>
 		</div>
