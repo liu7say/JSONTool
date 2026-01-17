@@ -401,7 +401,9 @@ const handleThemeToggle = (event) => {
 							v-if="
 								activeTab.viewMode === 'diff' &&
 								jsonEditorRef &&
-								jsonEditorRef.diffCount > 0
+								jsonEditorRef.diffCount > 0 &&
+								String(activeTab.doc.sourceText || '').trim() &&
+								String(activeTab.compareContent || '').trim()
 							">
 							<FButton
 								size="small"
