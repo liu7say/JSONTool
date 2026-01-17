@@ -21,6 +21,7 @@ export default defineConfig({
 		cors: true,
 	},
 	build: {
+		manifest: false,
 		chunkSizeWarningLimit: 1000,
 		rollupOptions: {
 			output: {
