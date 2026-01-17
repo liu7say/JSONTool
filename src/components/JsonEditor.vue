@@ -301,11 +301,11 @@ defineExpose({
 
 <template>
 	<div class="json-editor">
-		<!-- Main Area -->
+		<!-- 主区域 -->
 		<div class="editor-main">
-			<!-- TABLE MODE -->
+			<!-- 表格模式 -->
 			<div v-if="viewMode === 'table'" class="table-mode">
-				<!-- Table Controls -->
+				<!-- 表格控件 -->
 				<div class="table-controls">
 					<div class="path-select-wrapper">
 						<label>数组路径:</label>
@@ -333,7 +333,7 @@ defineExpose({
 					</div>
 				</div>
 
-				<!-- Table Body -->
+				<!-- 表格主体 -->
 				<div
 					v-if="
 						!availableArrayPaths.includes(selectedPath) &&
@@ -349,7 +349,7 @@ defineExpose({
 					<table class="f-table">
 						<thead>
 							<tr>
-								<!-- Row Index Column -->
+								<!-- 行索引列 -->
 								<th class="index-col">#</th>
 								<th
 									v-for="col in rawTableData.columns"
@@ -384,7 +384,7 @@ defineExpose({
 				</div>
 			</div>
 
-			<!-- DIFF MODE -->
+			<!-- 差异模式 -->
 			<div v-else-if="viewMode === 'diff'" class="code-wrapper">
 				<DiffEditor
 					ref="diffEditorRef"
@@ -395,7 +395,7 @@ defineExpose({
 				</div>
 			</div>
 
-			<!-- CODE MODE -->
+			<!-- 代码模式 -->
 			<div v-else class="code-wrapper">
 				<div class="editor-pane">
 					<CodeEditor
