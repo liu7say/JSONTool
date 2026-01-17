@@ -847,35 +847,31 @@ const handleThemeToggle = (event) => {
 	display: flex;
 	align-items: center;
 	position: relative;
-	/* Fluent 2 Unified Group Style */
-	border: 1px solid var(--f-border-default);
-	border-radius: 4px;
-	background-color: transparent; /* Or layer1 if needed, but transparent works well on acrylic */
-	/* overflow: hidden;  REMOVED to allow dropdowns to show */
-	transition:
-		border-color 0.2s,
-		box-shadow 0.2s;
-
-	/* Subtle shadow for depth */
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	/* 移除容器边框，改为按钮各自持有边框以支持独立缩放 */
+	border: none;
+	background-color: transparent;
+	/* 移除容器阴影，由按钮自身处理或移除 */
+	box-shadow: none;
 
 	&:hover {
-		/* Soften hover effect: less dark border, rely more on shadow */
-		/* border-color: var(--f-border-hover);  Too dark */
-		border-color: var(--f-text-disabled); /* Softer change */
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+		/* 移除容器 hover 效果 */
+		border-color: transparent;
+		box-shadow: none;
 	}
 
 	.f-button {
 		border-radius: 0;
-		border: none;
-		box-shadow: none !important; /* Remove individual button shadows */
+		/* 恢复边框 */
+		border: 1px solid var(--f-border-default);
+		box-shadow: none !important;
 		margin: 0;
+		/* 处理边框重叠 */
+		margin-left: -1px;
 		height: 24px;
 		background-color: transparent;
 		color: var(--f-text-primary);
 		position: relative;
-		padding: 0 8px; /* Default unified padding */
+		padding: 0 8px;
 
 		/* Flex alignment for Icon + Text */
 		display: flex;
@@ -886,21 +882,27 @@ const handleThemeToggle = (event) => {
 		&:hover,
 		&:focus {
 			background-color: var(--f-bg-control-hover);
-			z-index: 2;
+			/* 确保 hover 时浮起在相邻按钮之上 */
+			z-index: 5;
+			border-color: var(--f-text-secondary); /* Hover 时稍微加深边框 */
 		}
 
 		&:active {
 			background-color: var(--f-bg-control-active);
+			/* 恢复缩放动画 */
+			transform: scale(0.96);
+			z-index: 5;
 		}
 
-		/* Fix Corners since overflow is visible */
+		/* Fix Corners */
 		&:first-child {
-			border-top-left-radius: 3px;
-			border-bottom-left-radius: 3px;
+			border-top-left-radius: 4px;
+			border-bottom-left-radius: 4px;
+			margin-left: 0;
 		}
 		&:last-child {
-			border-top-right-radius: 3px;
-			border-bottom-right-radius: 3px;
+			border-top-right-radius: 4px;
+			border-bottom-right-radius: 4px;
 		}
 
 		/* Generic Separator: Apply to all except the last one */
