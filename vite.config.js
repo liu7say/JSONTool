@@ -4,9 +4,24 @@ import { crx } from '@crxjs/vite-plugin';
 import manifest from './src/manifest.json';
 import { fileURLToPath, URL } from 'node:url';
 
+import fs from 'fs';
+import path from 'path';
+
 // https://vite.dev/config/
 export default defineConfig({
-	plugins: [vue(), crx({ manifest })],
+	plugins: [
+		vue(),
+		crx({ manifest }),
+		{
+			name: 'remove-vite-manifest',
+			closeBundle() {
+				const manifestPath = path.resolve(__dirname, 'dist/.vite');
+				if (fs.existsSync(manifestPath)) {
+					fs.rmSync(manifestPath, { recursive: true, force: true });
+				}
+			},
+		},
+	],
 	resolve: {
 		alias: {
 			'@': fileURLToPath(new URL('./src', import.meta.url)),
