@@ -53,6 +53,8 @@ const emit = defineEmits(['update:original', 'update:modified']);
 const containerRef = ref(null);
 const themeStore = useThemeStore();
 let mergeView = null;
+const lastEmittedOriginal = ref(null);
+const lastEmittedModified = ref(null);
 
 // 定制搜索面板的本地化词条
 const editorPhrases = {
@@ -70,6 +72,26 @@ const editorPhrases = {
 	'replace all': '替换全部',
 	close: '关闭',
 };
+
+const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
+	if (tr.isUserEvent('input.paste')) {
+		let minFrom = Infinity;
+		tr.changes.iterChanges((fromA, toA, fromB, toB) => {
+			if (fromB < minFrom) minFrom = fromB; // 记录粘贴开始的位置
+		});
+
+		if (minFrom !== Infinity) {
+			return [
+				tr,
+				{
+					selection: { anchor: minFrom }, // 强制光标停留在粘贴开始处
+					scrollIntoView: true,
+				},
+			];
+		}
+	}
+	return tr;
+});
 
 // 复用 CodeEditor 的基础配置
 const commonExtensions = [
@@ -99,6 +121,7 @@ const commonExtensions = [
 	]),
 	json(),
 	fluentTheme,
+	pasteTransactionFilter, // 核心修复：添加粘贴行为控制
 ];
 
 const getExtensions = (isDark) => {
@@ -120,43 +143,13 @@ const initMergeView = () => {
 	mergeView = new MergeView({
 		a: {
 			doc: props.original,
-			extensions: getExtensions(themeStore.isDark),
-		},
-		b: {
-			doc: props.modified,
 			extensions: [
 				...getExtensions(themeStore.isDark),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
-						emit('update:modified', update.state.doc.toString());
-					}
-				}),
-			],
-		},
-		parent: containerRef.value,
-		gutter: true,
-		highlightChanges: true,
-		collapseContent: false, // 保持展开以便查看
-	});
-
-	// 监听左侧(a)的变化也同步回去 (如果允许双向编辑)
-	// 目前 CodeMirror MergeView 的 'a' 文档更新需要单独处理
-	// 我们可以给 'a' 也加上 updateListener
-	const leftDispatch = mergeView.a.dispatch;
-	// 这是一个 hack 方式，或者重新配置 extensions
-	// 更好的方式是在初始化时就加上
-	// 上面的配置里 a 的 extensions 是静态的，重新构建一下:
-
-	// Re-init with correct listeners
-	mergeView.destroy();
-	mergeView = new MergeView({
-		a: {
-			doc: props.original,
-			extensions: [
-				...getExtensions(themeStore.isDark),
-				EditorView.updateListener.of((update) => {
-					if (update.docChanged) {
-						emit('update:original', update.state.doc.toString());
+						const val = update.state.doc.toString();
+						lastEmittedOriginal.value = val;
+						emit('update:original', val);
 					}
 				}),
 			],
@@ -167,7 +160,9 @@ const initMergeView = () => {
 				...getExtensions(themeStore.isDark),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
-						emit('update:modified', update.state.doc.toString());
+						const val = update.state.doc.toString();
+						lastEmittedModified.value = val;
+						emit('update:modified', val);
 					}
 				}),
 			],
@@ -184,6 +179,7 @@ watch(
 	() => props.original,
 	(newVal) => {
 		if (mergeView) {
+			if (newVal === lastEmittedOriginal.value) return;
 			const current = mergeView.a.state.doc.toString();
 			if (newVal !== current) {
 				mergeView.a.dispatch({
@@ -191,13 +187,14 @@ watch(
 				});
 			}
 		}
-	}
+	},
 );
 
 watch(
 	() => props.modified,
 	(newVal) => {
 		if (mergeView) {
+			if (newVal === lastEmittedModified.value) return;
 			const current = mergeView.b.state.doc.toString();
 			if (newVal !== current) {
 				mergeView.b.dispatch({
@@ -205,7 +202,7 @@ watch(
 				});
 			}
 		}
-	}
+	},
 );
 
 // 监听主题变化
@@ -214,7 +211,7 @@ watch(
 	() => {
 		// MergeView 比较复杂，通常建议重建
 		initMergeView();
-	}
+	},
 );
 
 onMounted(() => {
