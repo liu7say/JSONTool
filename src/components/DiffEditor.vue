@@ -1,41 +1,11 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch, toRefs, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { EditorView } from 'codemirror';
-import { EditorState } from '@codemirror/state';
 import { MergeView } from '@codemirror/merge';
-import { json } from '@codemirror/lang-json';
-import { oneDark } from '@codemirror/theme-one-dark';
-import {
-	lineNumbers,
-	highlightActiveLineGutter,
-	highlightSpecialChars,
-	drawSelection,
-	dropCursor,
-	rectangularSelection,
-	crosshairCursor,
-	highlightActiveLine,
-	keymap,
-} from '@codemirror/view';
-import {
-	defaultHighlightStyle,
-	syntaxHighlighting,
-	indentOnInput,
-	bracketMatching,
-	foldKeymap,
-	foldAll,
-	unfoldAll,
-	ensureSyntaxTree,
-	syntaxTree,
-	foldCode,
-} from '@codemirror/language';
-import { EditorSelection } from '@codemirror/state';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
-import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
+import { foldAll, unfoldAll, ensureSyntaxTree } from '@codemirror/language';
 
 import { useThemeStore } from '../stores/theme';
-import { fluentTheme } from '../features/codemirror/fluent-theme';
-import { fluentFoldGutter } from '../features/codemirror/fluent-fold';
+import { getEditorExtensions } from '../features/codemirror/editor-config';
 
 const props = defineProps({
 	original: {
@@ -57,80 +27,9 @@ const lastEmittedOriginal = ref(null);
 const lastEmittedModified = ref(null);
 const diffCount = ref(0);
 
-// 定制搜索面板的本地化词条
-const editorPhrases = {
-	// Search & Replace
-	Find: '查找',
-	Replace: '替换',
-	next: '下一个',
-	previous: '上一个',
-	all: '全部',
-	'match case': '区分大小写',
-	'by word': '全字匹配',
-	'case sensitive': '区分大小写',
-	regexp: '正则',
-	replace: '替换',
-	'replace all': '替换全部',
-	close: '关闭',
-};
-
-const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
-	if (tr.isUserEvent('input.paste')) {
-		let minFrom = Infinity;
-		tr.changes.iterChanges((fromA, toA, fromB, toB) => {
-			if (fromB < minFrom) minFrom = fromB; // 记录粘贴开始的位置
-		});
-
-		if (minFrom !== Infinity) {
-			return [
-				tr,
-				{
-					selection: { anchor: minFrom }, // 强制光标停留在粘贴开始处
-					scrollIntoView: true,
-				},
-			];
-		}
-	}
-	return tr;
-});
-
-// 复用 CodeEditor 的基础配置
-const commonExtensions = [
-	EditorState.phrases.of(editorPhrases), // 本地化
-	lineNumbers(),
-	highlightActiveLineGutter(),
-	highlightSpecialChars(),
-	history(),
-	fluentFoldGutter,
-	drawSelection(),
-	dropCursor(),
-	EditorState.allowMultipleSelections.of(true),
-	indentOnInput(),
-	syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-	bracketMatching(),
-	closeBrackets(),
-	autocompletion(),
-	rectangularSelection(),
-	crosshairCursor(),
-	highlightActiveLine(),
-	highlightSelectionMatches(),
-	keymap.of([
-		...defaultKeymap,
-		...historyKeymap,
-		...searchKeymap,
-		...foldKeymap,
-	]),
-	json(),
-	fluentTheme,
-	pasteTransactionFilter, // 核心修复：添加粘贴行为控制
-];
-
-const getExtensions = (isDark) => {
-	const extensions = [...commonExtensions];
-	if (isDark) {
-		extensions.push(oneDark);
-	}
-	return extensions;
+// DiffEditor 特有的扩展配置生成器
+const getDiffEditorExtensions = (isDark) => {
+	return getEditorExtensions(isDark);
 };
 
 const initMergeView = () => {
@@ -145,7 +44,7 @@ const initMergeView = () => {
 		a: {
 			doc: props.original,
 			extensions: [
-				...getExtensions(themeStore.isDark),
+				...getDiffEditorExtensions(themeStore.isDark),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
 						const val = update.state.doc.toString();
@@ -162,7 +61,7 @@ const initMergeView = () => {
 		b: {
 			doc: props.modified,
 			extensions: [
-				...getExtensions(themeStore.isDark),
+				...getDiffEditorExtensions(themeStore.isDark),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
 						const val = update.state.doc.toString();
