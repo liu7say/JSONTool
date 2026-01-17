@@ -26,8 +26,10 @@
 	cursor: pointer;
 	user-select: none;
 	text-decoration: none;
-	transition: background-color var(--f-transition-fast),
-		border-color var(--f-transition-fast), color var(--f-transition-fast),
+	transition:
+		background-color var(--f-transition-fast),
+		border-color var(--f-transition-fast),
+		color var(--f-transition-fast),
 		box-shadow var(--f-transition-fast);
 
 	/* Icon spacing */
@@ -73,6 +75,19 @@
 		}
 		&:active:not(:disabled):not(.disabled) {
 			background-color: var(--f-bg-control-active);
+		}
+	}
+
+	&.danger {
+		background-color: var(--f-color-error);
+		color: white;
+		border-color: transparent;
+
+		&:hover:not(:disabled):not(.disabled) {
+			filter: brightness(0.9);
+		}
+		&:active:not(:disabled):not(.disabled) {
+			filter: brightness(0.8);
 		}
 	}
 
@@ -129,7 +144,8 @@
 	font-size: 14px;
 	width: 100%;
 	outline: none;
-	transition: border-color var(--f-transition-fast),
+	transition:
+		border-color var(--f-transition-fast),
 		background-color var(--f-transition-fast);
 
 	&::placeholder {
@@ -168,8 +184,10 @@
 	color: var(--f-text-secondary);
 	font-size: 13px;
 	cursor: pointer;
-	transition: background-color var(--f-transition-normal),
-		color var(--f-transition-normal), border-color var(--f-transition-normal);
+	transition:
+		background-color var(--f-transition-normal),
+		color var(--f-transition-normal),
+		border-color var(--f-transition-normal);
 
 	/* Active Indicator (Pill at bottom for some styles, or Sidebar line) */
 	/* Here we use a subtle left indicator for vertical, or bottom for horizontal. */
@@ -216,7 +234,8 @@
 		height: 20px;
 		border-radius: var(--f-radius-s);
 		opacity: 0; /* Hidden unless hover or active */
-		transition: opacity var(--f-transition-fast),
+		transition:
+			opacity var(--f-transition-fast),
 			background-color var(--f-transition-fast);
 
 		&:hover {
@@ -270,7 +289,8 @@
 	border: 1px solid var(--f-border-default);
 	border-radius: var(--f-radius-m);
 	box-shadow: var(--f-shadow-card);
-	transition: transform var(--f-transition-fast),
+	transition:
+		transform var(--f-transition-fast),
 		box-shadow var(--f-transition-fast);
 }
 

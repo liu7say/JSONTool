@@ -195,6 +195,7 @@ const triggerToggleDiff = () => jsonEditorRef.value?.toggleDiffMode();
 const triggerNextError = () => jsonEditorRef.value?.jumpToNextError();
 const triggerExpandAll = () => jsonEditorRef.value?.expandAll();
 const triggerCollapseAll = () => jsonEditorRef.value?.collapseAll();
+const triggerNextDiff = () => jsonEditorRef.value?.nextDiff();
 
 // --- 侧边栏 Hover Popover 逻辑 ---
 const hoveredTabId = ref(null);
@@ -259,7 +260,7 @@ const onPopoverMouseLeave = (e) => {
 // 辅助计算属性
 const activeTab = computed(() => sessionStore.activeTab);
 const hoveredTab = computed(() =>
-	sessionStore.tabs.find((t) => t.id === hoveredTabId.value)
+	sessionStore.tabs.find((t) => t.id === hoveredTabId.value),
 );
 
 // 状态栏信息
@@ -316,7 +317,7 @@ const handleThemeToggle = (event) => {
 	// 计算到最远角落的半径
 	const endRadius = Math.hypot(
 		Math.max(x, innerWidth - x),
-		Math.max(y, innerHeight - y)
+		Math.max(y, innerHeight - y),
 	);
 
 	// 开始视图转换
@@ -339,7 +340,7 @@ const handleThemeToggle = (event) => {
 				duration: 800,
 				easing: 'ease-in-out',
 				pseudoElement: '::view-transition-new(root)',
-			}
+			},
 		);
 	});
 };
@@ -394,13 +395,29 @@ const handleThemeToggle = (event) => {
 								{{ activeTab.viewMode === 'diff' ? '退出对比' : '对比' }}
 							</FButton>
 						</div>
+
+						<div
+							class="f-button-group"
+							v-if="
+								activeTab.viewMode === 'diff' &&
+								jsonEditorRef &&
+								jsonEditorRef.diffCount > 0
+							">
+							<FButton
+								size="small"
+								type="danger"
+								@click="triggerNextDiff"
+								title="跳转到下一个差异">
+								下一个差异 <component :is="ArrowRight" style="width: 14px" />
+							</FButton>
+						</div>
 					</div>
 
 					<!-- 错误跳转 (仅 Code 模式) -->
 					<div
 						class="tool-section"
 						v-if="activeTab.viewMode === 'code' && activeTab.doc.parseError">
-						<FButton size="small" class="error-btn" @click="triggerNextError">
+						<FButton size="small" type="danger" @click="triggerNextError">
 							跳到错误
 						</FButton>
 					</div>
@@ -833,7 +850,9 @@ const handleThemeToggle = (event) => {
 	border-radius: 4px;
 	background-color: transparent; /* Or layer1 if needed, but transparent works well on acrylic */
 	/* overflow: hidden;  REMOVED to allow dropdowns to show */
-	transition: border-color 0.2s, box-shadow 0.2s;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s;
 
 	/* Subtle shadow for depth */
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -928,6 +947,26 @@ const handleThemeToggle = (event) => {
 			box-shadow: none; /* Group handles shadow */
 		}
 
+		/* Danger Button Style within group */
+		&.danger {
+			background-color: var(--f-color-error);
+			color: white;
+
+			&:hover {
+				filter: brightness(0.9);
+			}
+
+			&:active {
+				filter: brightness(0.8);
+			}
+
+			&:not(:last-child) {
+				border-right: 1px solid rgba(255, 255, 255, 0.2);
+			}
+
+			box-shadow: none;
+		}
+
 		/* Disable state handling */
 		&:disabled {
 			background-color: transparent;
@@ -984,7 +1023,9 @@ const handleThemeToggle = (event) => {
 /* 菜单过渡 */
 .fade-scale-enter-active,
 .fade-scale-leave-active {
-	transition: opacity 0.15s ease, transform 0.15s ease;
+	transition:
+		opacity 0.15s ease,
+		transform 0.15s ease;
 }
 
 .fade-scale-enter-from,
@@ -1064,7 +1105,9 @@ const handleThemeToggle = (event) => {
 	color: var(--f-text-secondary);
 	border-bottom: 1px solid var(--f-border-subtle);
 	margin-bottom: 4px;
-	transition: background-color 0.2s, color 0.2s;
+	transition:
+		background-color 0.2s,
+		color 0.2s;
 
 	&:hover {
 		background-color: var(--f-bg-control-hover);
@@ -1385,15 +1428,5 @@ const handleThemeToggle = (event) => {
 	text-align: center;
 	color: var(--f-text-secondary);
 	padding: 40px 0;
-}
-
-.error-btn {
-	background-color: var(--f-color-error) !important;
-	color: white !important;
-	border: none !important;
-
-	&:hover {
-		filter: brightness(0.9);
-	}
 }
 </style>

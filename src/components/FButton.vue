@@ -4,8 +4,9 @@ import { computed } from 'vue';
 const props = defineProps({
 	type: {
 		type: String,
-		default: 'default', // 'default' | 'primary' | 'subtle'
-		validator: (val) => ['default', 'primary', 'subtle'].includes(val),
+		default: 'default', // 'default' | 'primary' | 'subtle' | 'danger'
+		validator: (val) =>
+			['default', 'primary', 'subtle', 'danger'].includes(val),
 	},
 	size: {
 		type: String,
