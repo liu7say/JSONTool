@@ -287,6 +287,45 @@ const applyUnescape = () => {
 	}
 };
 
+/**
+ * 将 Unicode 转义序列转换为中文
+ * 实际上标准格式化就会自动处理 \u 转义
+ */
+const applyUnicodeToChinese = () => {
+	applyFormat();
+};
+
+/**
+ * 将中文转换为 Unicode 转义序列
+ * 例如: 测试 -> \u6d4b\u8bd5
+ */
+const applyChineseToUnicode = () => {
+	const toUnicode = (str) => {
+		return str.replace(/[\u4e00-\u9fa5]/g, (match) => {
+			return '\\u' + match.charCodeAt(0).toString(16).padStart(4, '0');
+		});
+	};
+
+	// 处理主文档
+	// 先格式化，确保结构清晰
+	const { text, error } = formatJsonText(props.doc, { indent: 2 });
+	if (!error && text) {
+		const result = toUnicode(text);
+		emit('update:doc', result);
+	}
+
+	// 处理对比文档
+	if (props.viewMode === 'diff' && localCompareContent.value) {
+		const { parsedValue } = tryParseJson(localCompareContent.value);
+		if (parsedValue) {
+			const res = formatJsonText({ parsedValue }, { indent: 2 });
+			if (!res.error && res.text) {
+				localCompareContent.value = toUnicode(res.text);
+			}
+		}
+	}
+};
+
 const applySort = (options = {}) => {
 	if (isSorting.value) return;
 	isSorting.value = true;
@@ -344,6 +383,8 @@ defineExpose({
 	applyCompact,
 	applyEscape,
 	applyUnescape,
+	applyUnicodeToChinese,
+	applyChineseToUnicode,
 	applySort,
 	toggleTableMode,
 	toggleDiffMode,
