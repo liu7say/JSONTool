@@ -11,12 +11,12 @@ export const fluentTheme = EditorView.theme({
 		fontSize: '14px',
 		color: 'var(--f-text-primary)',
 		backgroundColor: 'var(--f-editor-bg)',
-		fontFamily: "'Cascadia Code', Consolas, monospace",
+		fontFamily: "'Fira Code', 'Microsoft YaHei', 'PingFang SC', monospace",
 	},
 	// Scroller
 	'.cm-scroller': {
 		overflow: 'auto',
-		fontFamily: "'Cascadia Code', Consolas, monospace",
+		fontFamily: "'Fira Code', 'Microsoft YaHei', 'PingFang SC', monospace",
 	},
 	// Gutters
 	'.cm-gutters': {
