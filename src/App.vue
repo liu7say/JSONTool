@@ -30,6 +30,8 @@ import {
 	Fold,
 	Link,
 	Unlock,
+	MagicStick,
+	Connection,
 } from '@element-plus/icons-vue';
 import draggable from 'vuedraggable';
 
@@ -203,6 +205,10 @@ const setFormatIndent = (indent) => {
 const triggerCompact = () => jsonEditorRef.value?.applyCompact();
 const triggerEscape = () => jsonEditorRef.value?.applyEscape();
 const triggerUnescape = () => jsonEditorRef.value?.applyUnescape();
+const triggerUnicodeToChinese = () =>
+	jsonEditorRef.value?.applyUnicodeToChinese();
+const triggerChineseToUnicode = () =>
+	jsonEditorRef.value?.applyChineseToUnicode();
 
 const triggerSort = () => {
 	jsonEditorRef.value?.applySort({
@@ -596,6 +602,25 @@ const handleThemeToggle = (event) => {
 									</div>
 								</div>
 							</transition>
+						</div>
+
+						<div class="f-button-group">
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerUnicodeToChinese"
+								title="将 Unicode 转义序列转换为中文">
+								<component :is="MagicStick" style="width: 14px" /> Uni->中
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerChineseToUnicode"
+								title="将中文转换为 Unicode 转义序列">
+								<component :is="Connection" style="width: 14px" /> 中->Uni
+							</FButton>
 						</div>
 
 						<div class="f-button-group">
