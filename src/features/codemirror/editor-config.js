@@ -39,6 +39,7 @@ import { highlightSelectionMatches } from '@codemirror/search';
 import { closeBrackets, autocompletion } from '@codemirror/autocomplete';
 
 import { bracketScopeLines } from './bracket-scope-lines';
+import { richCopyExtension } from './rich-copy';
 
 import { fluentTheme } from './fluent-theme';
 import { fluentFoldGutter } from './fluent-fold';
@@ -163,6 +164,8 @@ export const baseEditorExtensions = [
 	highlightActiveLine(),
 	highlightSelectionMatches(),
 	keymap.of([
+		// 屏蔽注释快捷键，JSON/JS Object 不支持注释语法
+		{ key: 'Mod-/', run: () => true },
 		...defaultKeymap,
 		...historyKeymap,
 		...searchKeymap,
@@ -174,6 +177,7 @@ export const baseEditorExtensions = [
 	...bracketScopeLines, // JSON 括号范围线
 	...searchWithMatchCount, // 带匹配计数的搜索面板
 	pasteTransactionFilter, // 粘贴行为控制
+	richCopyExtension, // 富文本复制（保留语法高亮）
 ];
 
 /**

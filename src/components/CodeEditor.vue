@@ -8,8 +8,10 @@ import { search } from '@codemirror/search';
 import { foldAll, unfoldAll, ensureSyntaxTree } from '@codemirror/language';
 
 import { useThemeStore } from '../stores/theme';
+import { useSettingsStore } from '../stores/settings';
 import { getEditorExtensions } from '../features/codemirror/editor-config';
 import { relaxedJsonParse } from '../features/json/parse';
+import { stringifyJson } from '../features/json/stringify';
 
 const props = defineProps({
 	modelValue: {
@@ -26,6 +28,7 @@ const emit = defineEmits(['update:modelValue', 'change', 'paste-into-empty']);
 
 const editorContainer = ref(null);
 const themeStore = useThemeStore();
+const settingsStore = useSettingsStore();
 let editorView = null;
 // 当前使用的语言模式：'json' 或 'javascript'
 let currentLanguage = 'json';
@@ -129,22 +132,28 @@ const buildJsonDiagnostics = (sourceText, parseError) => {
 };
 
 const jsonSyntaxLinter = () => (view) => {
-	const original = view.state.doc.toString();
-	if (!original.trim()) return [];
-
-	const cleaned = stripBom(original);
 	try {
-		JSON.parse(cleaned);
-		return [];
-	} catch (error) {
-		// Try relaxed parse (JS Object)
+		const original = view.state.doc.toString();
+		if (!original.trim()) return [];
+
+		const cleaned = stripBom(original);
 		try {
-			relaxedJsonParse(cleaned);
-			return []; // Valid JS Object, suppress error
-		} catch (e) {
-			const message = error instanceof Error ? error.message : String(error);
-			return buildJsonDiagnostics(original, message);
+			JSON.parse(cleaned);
+			return [];
+		} catch (error) {
+			// Try relaxed parse (JS Object)
+			try {
+				relaxedJsonParse(cleaned);
+				return []; // Valid JS Object, suppress error
+			} catch (e) {
+				const message = error instanceof Error ? error.message : String(error);
+				return buildJsonDiagnostics(original, message);
+			}
 		}
+	} catch (unexpectedError) {
+		// 捕获所有意外异常，防止 linter 错误导致编辑器状态损坏
+		console.warn('[JSONTool] Linter 意外错误:', unexpectedError);
+		return [];
 	}
 };
 
@@ -193,7 +202,22 @@ const getCodeEditorExtensions = () => [
 					if (currentDoc.trim()) {
 						try {
 							const parsed = JSON.parse(currentDoc);
-							const formatted = JSON.stringify(parsed, null, 2);
+							// 使用用户选择的缩进设置
+							const indentSetting = settingsStore.indent;
+							let formatted;
+							if (indentSetting === 'jsObj') {
+								// JS Object 格式
+								formatted = stringifyJson({
+									value: parsed,
+									indent: 2,
+									format: 'jsObj',
+								});
+							} else {
+								// 标准 JSON 格式
+								const indent =
+									typeof indentSetting === 'number' ? indentSetting : 2;
+								formatted = JSON.stringify(parsed, null, indent);
+							}
 							if (formatted !== currentDoc) {
 								editorView.dispatch({
 									changes: {
