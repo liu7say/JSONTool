@@ -250,13 +250,12 @@ watch(
 		if (newLanguage !== currentLanguage) {
 			// 语言模式变化，需要重建编辑器以应用新的语法解析器
 			currentLanguage = newLanguage;
-			const selection = editorView.state.selection;
 			editorView.destroy();
 
 			const state = EditorState.create({
 				doc: newVal,
 				extensions: getExtensions(themeStore.isDark, currentLanguage),
-				selection,
+				// 不保持旧的 selection，因为新文档可能更短导致选择点超出范围
 			});
 
 			editorView = new EditorView({
