@@ -1,6 +1,15 @@
 @use 'fluent';
 @use 'components';
 
+/* 编辑器专用字体（仅英文） */
+@font-face {
+	font-family: 'Fira Code';
+	src: url('../assets/FiraCode-Medium.woff2') format('woff2');
+	font-weight: 100 900; /* 支持所有粗细 */
+	font-style: normal;
+	font-display: swap;
+}
+
 /* Global Reset & Base Styles */
 body {
 	margin: 0;
@@ -11,7 +20,8 @@ body {
 	font-size: var(--f-font-size-base);
 	-webkit-font-smoothing: antialiased;
 	overflow: hidden; /* App-like feel */
-	transition: background-color var(--f-transition-normal),
+	transition:
+		background-color var(--f-transition-normal),
 		color var(--f-transition-normal);
 }
 
