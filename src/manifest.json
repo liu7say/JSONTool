@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "JSONTool",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "JSON 格式化、对比、表格化、排序、历史缓存。",
 	"action": {
 		"default_title": "JSONTool",
