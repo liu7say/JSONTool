@@ -27,10 +27,38 @@ const emit = defineEmits(['update:modelValue', 'change', 'paste-into-empty']);
 const editorContainer = ref(null);
 const themeStore = useThemeStore();
 let editorView = null;
+// 当前使用的语言模式：'json' 或 'javascript'
+let currentLanguage = 'json';
 
 // 去除 BOM 头
 const stripBom = (text) =>
 	text && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+
+/**
+ * 检测文本是否为 JS Object 格式（即不是有效 JSON 但可以被宽松解析）
+ * JS Object 格式特征：键名不带引号，使用单引号等
+ * @param {string} text - 要检测的文本
+ * @returns {boolean} 是否为 JS Object 格式
+ */
+const isJsObjectFormat = (text) => {
+	if (!text || !text.trim()) return false;
+	const cleaned = stripBom(text);
+	try {
+		JSON.parse(cleaned);
+		// 能直接解析为 JSON，使用 JSON 解析器
+		return false;
+	} catch (e) {
+		// JSON 解析失败，尝试 relaxedJsonParse
+		try {
+			relaxedJsonParse(cleaned);
+			// 宽松解析成功，说明是 JS Object 格式
+			return true;
+		} catch (e2) {
+			// 连宽松解析都失败，可能是无效内容，默认用 JSON
+			return false;
+		}
+	}
+};
 
 /**
  * 尝试从错误信息中提取位置信息
@@ -188,16 +216,20 @@ const getCodeEditorExtensions = () => [
 ];
 
 // 组装所有 Editor 扩展（使用共享配置 + CodeEditor 特有配置）
-const getExtensions = (isDark) => {
-	return getEditorExtensions(isDark, getCodeEditorExtensions());
+// language 参数：'json'（默认）或 'javascript'（用于 JS Object 格式）
+const getExtensions = (isDark, language = 'json') => {
+	return getEditorExtensions(isDark, getCodeEditorExtensions(), { language });
 };
 
 const initEditor = () => {
 	if (!editorContainer.value) return;
 
+	// 检测初始内容的格式并选择合适的语言解析器
+	currentLanguage = isJsObjectFormat(props.modelValue) ? 'javascript' : 'json';
+
 	const state = EditorState.create({
 		doc: props.modelValue,
-		extensions: getExtensions(themeStore.isDark),
+		extensions: getExtensions(themeStore.isDark, currentLanguage),
 	});
 
 	editorView = new EditorView({
@@ -209,7 +241,30 @@ const initEditor = () => {
 watch(
 	() => props.modelValue,
 	(newVal) => {
-		if (editorView && newVal !== editorView.state.doc.toString()) {
+		if (!editorView) return;
+
+		// 检测格式变化，如果语言模式需要切换则重建编辑器
+		const needsJsLanguage = isJsObjectFormat(newVal);
+		const newLanguage = needsJsLanguage ? 'javascript' : 'json';
+
+		if (newLanguage !== currentLanguage) {
+			// 语言模式变化，需要重建编辑器以应用新的语法解析器
+			currentLanguage = newLanguage;
+			const selection = editorView.state.selection;
+			editorView.destroy();
+
+			const state = EditorState.create({
+				doc: newVal,
+				extensions: getExtensions(themeStore.isDark, currentLanguage),
+				selection,
+			});
+
+			editorView = new EditorView({
+				state,
+				parent: editorContainer.value,
+			});
+		} else if (newVal !== editorView.state.doc.toString()) {
+			// 语言模式未变，直接更新内容
 			editorView.dispatch({
 				changes: { from: 0, to: editorView.state.doc.length, insert: newVal },
 			});
@@ -221,7 +276,7 @@ watch(
 	() => themeStore.isDark,
 	(isDark) => {
 		if (!editorView) return;
-		// Recreate editor to switch syntax highlighting (OneDark vs Default)
+		// 重建编辑器以切换主题高亮（保持当前语言模式）
 		const content = editorView.state.doc.toString();
 		const selection = editorView.state.selection;
 
@@ -229,7 +284,7 @@ watch(
 
 		const state = EditorState.create({
 			doc: content,
-			extensions: getExtensions(isDark),
+			extensions: getExtensions(isDark, currentLanguage),
 			selection,
 		});
 
@@ -248,7 +303,7 @@ watch(
 		editorView.destroy();
 		const state = EditorState.create({
 			doc: content,
-			extensions: getExtensions(themeStore.isDark),
+			extensions: getExtensions(themeStore.isDark, currentLanguage),
 		});
 		editorView = new EditorView({ state, parent: editorContainer.value });
 	},

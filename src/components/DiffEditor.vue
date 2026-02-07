@@ -6,6 +6,7 @@ import { foldAll, unfoldAll, ensureSyntaxTree } from '@codemirror/language';
 
 import { useThemeStore } from '../stores/theme';
 import { getEditorExtensions } from '../features/codemirror/editor-config';
+import { relaxedJsonParse } from '../features/json/parse';
 
 const props = defineProps({
 	original: {
@@ -26,10 +27,47 @@ let mergeView = null;
 const lastEmittedOriginal = ref(null);
 const lastEmittedModified = ref(null);
 const diffCount = ref(0);
+// 当前使用的语言模式：'json' 或 'javascript'
+let currentLanguage = 'json';
 
-// DiffEditor 特有的扩展配置生成器
-const getDiffEditorExtensions = (isDark) => {
-	return getEditorExtensions(isDark);
+// 去除 BOM 头
+const stripBom = (text) =>
+	text && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+
+/**
+ * 检测文本是否为 JS Object 格式（即不是有效 JSON 但可以被宽松解析）
+ * @param {string} text - 要检测的文本
+ * @returns {boolean} 是否为 JS Object 格式
+ */
+const isJsObjectFormat = (text) => {
+	if (!text || !text.trim()) return false;
+	const cleaned = stripBom(text);
+	try {
+		JSON.parse(cleaned);
+		return false;
+	} catch (e) {
+		try {
+			relaxedJsonParse(cleaned);
+			return true;
+		} catch (e2) {
+			return false;
+		}
+	}
+};
+
+/**
+ * 根据两边内容检测应使用的语言模式
+ * 如果任一边是 JS Object 格式，则使用 JavaScript 解析器
+ */
+const detectLanguage = (original, modified) => {
+	return isJsObjectFormat(original) || isJsObjectFormat(modified)
+		? 'javascript'
+		: 'json';
+};
+
+// DiffEditor 特有的扩展配置生成器（支持语言参数）
+const getDiffEditorExtensions = (isDark, language = 'json') => {
+	return getEditorExtensions(isDark, [], { language });
 };
 
 const initMergeView = () => {
@@ -40,11 +78,14 @@ const initMergeView = () => {
 		mergeView.destroy();
 	}
 
+	// 检测语言模式
+	currentLanguage = detectLanguage(props.original, props.modified);
+
 	mergeView = new MergeView({
 		a: {
 			doc: props.original,
 			extensions: [
-				...getDiffEditorExtensions(themeStore.isDark),
+				...getDiffEditorExtensions(themeStore.isDark, currentLanguage),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
 						const val = update.state.doc.toString();
@@ -61,7 +102,7 @@ const initMergeView = () => {
 		b: {
 			doc: props.modified,
 			extensions: [
-				...getDiffEditorExtensions(themeStore.isDark),
+				...getDiffEditorExtensions(themeStore.isDark, currentLanguage),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
 						const val = update.state.doc.toString();
