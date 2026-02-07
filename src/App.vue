@@ -31,6 +31,7 @@ import {
 	Link,
 	Unlock,
 } from '@element-plus/icons-vue';
+import draggable from 'vuedraggable';
 
 // 状态管理 stores
 const sessionStore = useSessionStore();
@@ -231,6 +232,14 @@ const getShortTitle = (title) => {
 	// 返回第一个字符（如果需要处理代理对，但简单的索引目前就够了）
 	return String(title).substring(0, 1).toUpperCase();
 };
+
+// 拖拽排序用的计算属性
+const tabsList = computed({
+	get: () => sessionStore.tabs,
+	set: (value) => {
+		sessionStore.tabs = value;
+	},
+});
 
 const onTabMouseEnter = (e, tabId) => {
 	if (!sessionStore.sidebarCollapsed) {
@@ -679,32 +688,41 @@ const handleThemeToggle = (event) => {
 				</div>
 
 				<div class="tabs-list f-tabs vertical">
-					<div
-						v-for="tab in sessionStore.tabs"
-						:key="tab.id"
-						class="f-tab-item vertical"
-						:class="{ active: sessionStore.activeTabId === tab.id }"
-						:data-id="tab.id"
-						@click="sessionStore.setActive(tab.id)"
-						@mousedown.middle.prevent="sessionStore.closeTab(tab.id)"
-						@mouseenter="(e) => onTabMouseEnter(e, tab.id)"
-						@mouseleave="onTabMouseLeave">
-						<div class="tab-content">
-							<span class="tab-text" :title="tab.title">
-								{{
-									sessionStore.sidebarCollapsed
-										? getShortTitle(tab.title)
-										: tab.title
-								}}
-							</span>
-						</div>
-						<span
-							class="tab-close"
-							@click.stop="sessionStore.closeTab(tab.id)"
-							title="关闭">
-							<component :is="Close" style="width: 12px; height: 12px" />
-						</span>
-					</div>
+					<draggable
+						v-model="tabsList"
+						item-key="id"
+						:animation="200"
+						ghost-class="ghost-tab"
+						drag-class="drag-tab"
+						:disabled="sessionStore.sidebarCollapsed"
+						class="drag-container">
+						<template #item="{ element: tab }">
+							<div
+								class="f-tab-item vertical"
+								:class="{ active: sessionStore.activeTabId === tab.id }"
+								:data-id="tab.id"
+								@click="sessionStore.setActive(tab.id)"
+								@mousedown.middle.prevent="sessionStore.closeTab(tab.id)"
+								@mouseenter="(e) => onTabMouseEnter(e, tab.id)"
+								@mouseleave="onTabMouseLeave">
+								<div class="tab-content">
+									<span class="tab-text" :title="tab.title">
+										{{
+											sessionStore.sidebarCollapsed
+												? getShortTitle(tab.title)
+												: tab.title
+										}}
+									</span>
+								</div>
+								<span
+									class="tab-close"
+									@click.stop="sessionStore.closeTab(tab.id)"
+									title="关闭">
+									<component :is="Close" style="width: 12px; height: 12px" />
+								</span>
+							</div>
+						</template>
+					</draggable>
 
 					<!-- 新建标签页按钮 (行内) -->
 					<div class="new-tab-wrapper">
@@ -1294,6 +1312,32 @@ const handleThemeToggle = (event) => {
 	}
 }
 
+/* 拖拽相关样式 */
+.drag-container {
+	display: flex;
+	flex-direction: column;
+	min-height: 10px; /* 保证有空位可以拖入 */
+}
+
+.ghost-tab {
+	opacity: 0.5;
+	background-color: var(--f-bg-control-alt);
+	border: 1px dashed var(--f-border-default);
+
+	/* 隐藏内部元素以保持简洁 */
+	// .tab-content, .tab-close {
+	// 	opacity: 0.5;
+	// }
+}
+
+.drag-tab {
+	/* 拖拽时的样式，通常不需要特别设置，vuedraggable 会处理 */
+	cursor: grabbing;
+	background-color: var(--f-bg-layer2);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	z-index: 9999;
+}
+
 .tab-popover {
 	position: fixed;
 	z-index: 1000;
@@ -1538,5 +1582,31 @@ const handleThemeToggle = (event) => {
 	100% {
 		transform: scale(1);
 	}
+}
+
+/* 拖拽相关样式 */
+.drag-container {
+	display: flex;
+	flex-direction: column;
+	min-height: 10px; /* 保证有空位可以拖入 */
+}
+
+.ghost-tab {
+	opacity: 0.5;
+	background-color: var(--f-bg-control-alt);
+	border: 1px dashed var(--f-border-default);
+
+	/* 隐藏内部元素以保持简洁 */
+	// .tab-content, .tab-close {
+	// 	opacity: 0.5;
+	// }
+}
+
+.drag-tab {
+	/* 拖拽时的样式，通常不需要特别设置，vuedraggable 会处理 */
+	cursor: grabbing;
+	background-color: var(--f-bg-layer2);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	z-index: 9999;
 }
 </style>
