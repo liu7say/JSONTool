@@ -231,6 +231,62 @@ const applyCompact = () => {
 	}
 };
 
+/**
+ * 转义 JSON
+ * 将 JSON 对象转换为转义后的字符串格式
+ */
+const applyEscape = () => {
+	const sourceText = props.doc.sourceText || '';
+	if (!sourceText.trim()) return;
+
+	// 将整个内容作为字符串进行 JSON 序列化（会自动添加双引号和转义）
+	const escaped = JSON.stringify(sourceText);
+	emit('update:doc', escaped);
+
+	// 处理对比文档
+	if (props.viewMode === 'diff' && localCompareContent.value) {
+		localCompareContent.value = JSON.stringify(localCompareContent.value);
+	}
+};
+
+/**
+ * 去除转义
+ * 将转义过的 JSON 字符串还原为正常格式
+ */
+const applyUnescape = () => {
+	const sourceText = props.doc.sourceText || '';
+	if (!sourceText.trim()) return;
+
+	try {
+		// 尝试解析转义的字符串
+		const unescaped = JSON.parse(sourceText);
+		// 如果解析结果是字符串，直接使用；否则格式化为 JSON
+		if (typeof unescaped === 'string') {
+			emit('update:doc', unescaped);
+		} else {
+			// 如果是对象/数组，格式化输出
+			emit('update:doc', JSON.stringify(unescaped, null, 2));
+		}
+	} catch {
+		// 解析失败，不做任何操作
+		return;
+	}
+
+	// 处理对比文档
+	if (props.viewMode === 'diff' && localCompareContent.value) {
+		try {
+			const unescaped = JSON.parse(localCompareContent.value);
+			if (typeof unescaped === 'string') {
+				localCompareContent.value = unescaped;
+			} else {
+				localCompareContent.value = JSON.stringify(unescaped, null, 2);
+			}
+		} catch {
+			// 解析失败，不做任何操作
+		}
+	}
+};
+
 const applySort = (options = {}) => {
 	if (isSorting.value) return;
 	isSorting.value = true;
@@ -286,6 +342,8 @@ const nextDiff = () => {
 defineExpose({
 	applyFormat,
 	applyCompact,
+	applyEscape,
+	applyUnescape,
 	applySort,
 	toggleTableMode,
 	toggleDiffMode,

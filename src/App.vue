@@ -28,6 +28,8 @@ import {
 	Check,
 	Expand,
 	Fold,
+	Link,
+	Unlock,
 } from '@element-plus/icons-vue';
 
 // 状态管理 stores
@@ -198,6 +200,8 @@ const setFormatIndent = (indent) => {
 	showFormatMenu.value = false;
 };
 const triggerCompact = () => jsonEditorRef.value?.applyCompact();
+const triggerEscape = () => jsonEditorRef.value?.applyEscape();
+const triggerUnescape = () => jsonEditorRef.value?.applyUnescape();
 
 const triggerSort = () => {
 	jsonEditorRef.value?.applySort({
@@ -515,6 +519,24 @@ const handleThemeToggle = (event) => {
 									</div>
 								</div>
 							</transition>
+						</div>
+						<div class="f-button-group">
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerEscape"
+								title="将内容转义为 JSON 字符串">
+								<component :is="Link" style="width: 14px" /> 转义
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerUnescape"
+								title="去除 JSON 字符串转义">
+								<component :is="Unlock" style="width: 14px" /> 去转义
+							</FButton>
 						</div>
 						<div class="f-button-group">
 							<FButton
