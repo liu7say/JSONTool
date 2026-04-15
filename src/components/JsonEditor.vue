@@ -349,6 +349,7 @@ const applySort = (options = {}) => {
 			// 排序主文档
 			const { text, error } = sortJsonKeys(props.doc, {
 				indent,
+				format,
 				...options,
 			});
 			if (!error && text) emit('update:doc', text);
@@ -357,7 +358,7 @@ const applySort = (options = {}) => {
 			if (props.viewMode === 'diff' && localCompareContent.value) {
 				const { parsedValue } = tryParseJson(localCompareContent.value);
 				if (parsedValue) {
-					const res = sortJsonKeys({ parsedValue }, { indent, ...options });
+					const res = sortJsonKeys({ parsedValue }, { indent, format, ...options });
 					if (!res.error && res.text) {
 						localCompareContent.value = res.text;
 					}

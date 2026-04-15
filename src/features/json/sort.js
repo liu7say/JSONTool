@@ -95,12 +95,12 @@ const sortObjectKeysDeep = (value, options = {}) => {
  */
 export const sortJsonKeys = (
 	doc,
-	{ indent = 2, structureAtEnd = false } = {}
+	{ indent = 2, structureAtEnd = false, format = 'json' } = {}
 ) => {
 	if (!doc || doc.parseError) {
 		return { text: null, error: doc?.parseError || 'JSON 解析失败' };
 	}
 
 	const sorted = sortObjectKeysDeep(doc.parsedValue, { structureAtEnd });
-	return { text: stringifyJson({ value: sorted, indent }), error: null };
+	return { text: stringifyJson({ value: sorted, indent, format }), error: null };
 };
