@@ -4,9 +4,12 @@ import { formatJsonText } from '../features/json/format';
 import { sortJsonKeys } from '../features/json/sort';
 import { jsonToTable, findArrayPaths } from '../features/json/table';
 import { tryParseJson } from '../features/json/parse';
+import { useSettingsStore } from '../stores/settings';
 import { Search as SearchIcon } from '@element-plus/icons-vue';
 import CodeEditor from './CodeEditor.vue';
 import DiffEditor from './DiffEditor.vue';
+
+const settingsStore = useSettingsStore();
 
 const props = defineProps({
 	doc: {
@@ -335,12 +338,17 @@ const applySort = (options = {}) => {
 		showLoader.value = true;
 	}, 100);
 
+	// 使用用户配置的缩进设置
+	const currentIndent = settingsStore.indent;
+	const indent = currentIndent === 'jsObj' ? 2 : currentIndent;
+	const format = currentIndent === 'jsObj' ? 'jsObj' : 'json';
+
 	// 使用 nextTick -> setTimeout(0) 让 UI 渲染周期先运行，避免阻塞
 	setTimeout(() => {
 		try {
 			// 排序主文档
 			const { text, error } = sortJsonKeys(props.doc, {
-				indent: 2,
+				indent,
 				...options,
 			});
 			if (!error && text) emit('update:doc', text);
@@ -349,7 +357,7 @@ const applySort = (options = {}) => {
 			if (props.viewMode === 'diff' && localCompareContent.value) {
 				const { parsedValue } = tryParseJson(localCompareContent.value);
 				if (parsedValue) {
-					const res = sortJsonKeys({ parsedValue }, { indent: 2, ...options });
+					const res = sortJsonKeys({ parsedValue }, { indent, ...options });
 					if (!res.error && res.text) {
 						localCompareContent.value = res.text;
 					}
@@ -499,8 +507,7 @@ defineExpose({
 				<div class="editor-pane">
 					<CodeEditor
 						ref="codeEditorRef"
-						v-model="inputText"
-						@change="(val) => emit('update:doc', val)" />
+						v-model="inputText" />
 				</div>
 				<div v-if="showLoader" class="overlay-loader">
 					<span>排序中...</span>

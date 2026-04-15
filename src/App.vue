@@ -107,6 +107,8 @@ onMounted(() => {
 onUnmounted(() => {
 	window.removeEventListener('click', handleClickOutside);
 	window.removeEventListener('keydown', handleGlobalKeydown);
+	if (toastTimer) clearTimeout(toastTimer);
+	if (hoverTimer) clearTimeout(hoverTimer);
 });
 
 /**
@@ -767,6 +769,7 @@ const handleThemeToggle = (event) => {
 			<div class="content-area">
 				<JsonEditor
 					v-if="activeTab"
+					:key="activeTab.id"
 					ref="jsonEditorRef"
 					:doc="activeTab.doc"
 					:view-mode="activeTab.viewMode"
