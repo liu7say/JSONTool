@@ -12,6 +12,12 @@ export const useSettingsStore = defineStore('settings', () => {
 
 	// --- 助手：通用存储访问 ---
 	const storage = {
+		/**
+		 * 从存储中读取设置项
+		 * 在 Chrome 扩展环境下使用 chrome.storage.sync，Web 开发环境下使用 localStorage
+		 * @param {Object} defaults - 默认值对象，key 为设置项名称
+		 * @returns {Promise<Object>} 读取到的设置项（未找到的项使用默认值）
+		 */
 		get: (defaults) =>
 			new Promise((resolve) => {
 				// Chrome 扩展环境
@@ -41,6 +47,12 @@ export const useSettingsStore = defineStore('settings', () => {
 					resolve(result);
 				}
 			}),
+		/**
+		 * 将设置项保存到存储中
+		 * 在 Chrome 扩展环境下使用 chrome.storage.sync，Web 开发环境下使用 localStorage
+		 * @param {Object} items - 要保存的设置项键值对
+		 * @returns {Promise<void>}
+		 */
 		set: (items) =>
 			new Promise((resolve) => {
 				if (
@@ -59,6 +71,11 @@ export const useSettingsStore = defineStore('settings', () => {
 	};
 
 	// --- 动作 ---
+	/**
+	 * 从存储中加载用户设置
+	 * 应在应用初始化时调用，以确保状态与持久化存储同步
+	 * @returns {Promise<void>}
+	 */
 	const loadSettings = async () => {
 		const defaults = {
 			sortStructureAtEnd: false,

@@ -1,4 +1,8 @@
 <script setup>
+/**
+ * DiffEditor - 基于 CodeMirror 6 MergeView 的 JSON 差异对比编辑器组件
+ * 支持左右两侧独立编辑，并高亮显示内容差异，同时支持折叠/展开和跳转到差异块
+ */
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { EditorView } from 'codemirror';
 import { MergeView } from '@codemirror/merge';
@@ -65,11 +69,21 @@ const detectLanguage = (original, modified) => {
 		: 'json';
 };
 
+/**
+ * 获取 DiffEditor 使用的 CodeMirror 扩展配置
+ * @param {boolean} isDark - 是否为深色主题
+ * @param {'json'|'javascript'} [language='json'] - 语言模式
+ * @returns {import('@codemirror/state').Extension[]} 扩展数组
+ */
 // DiffEditor 特有的扩展配置生成器（支持语言参数）
 const getDiffEditorExtensions = (isDark, language = 'json') => {
 	return getEditorExtensions(isDark, [], { language });
 };
 
+/**
+ * 初始化（或重建）CodeMirror MergeView 实例
+ * 自动检测语言模式并配置左右两侧编辑器的更新监听器
+ */
 const initMergeView = () => {
 	if (!containerRef.value) return;
 
@@ -178,6 +192,9 @@ onBeforeUnmount(() => {
 	}
 });
 
+/**
+ * 展开左右两侧编辑器中所有折叠的代码块
+ */
 const expandAll = () => {
 	if (mergeView) {
 		unfoldAll(mergeView.a);
@@ -185,6 +202,9 @@ const expandAll = () => {
 	}
 };
 
+/**
+ * 折叠左右两侧编辑器中所有可折叠的代码块
+ */
 const collapseAll = () => {
 	if (mergeView) {
 		// 左侧
@@ -197,6 +217,10 @@ const collapseAll = () => {
 	}
 };
 
+/**
+ * 跳转到下一个差异块
+ * 若已在最后一个差异块，则循环回到第一个
+ */
 const nextDiff = () => {
 	if (!mergeView) return;
 

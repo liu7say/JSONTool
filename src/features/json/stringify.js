@@ -1,15 +1,20 @@
 /**
- * 将对象转换回 JSON 字符串
- * 支持按 Key 排序，保证输出的稳定性。
- *
- * @param {Object} params
- * @param {any} params.value - 要转换的值
- * @param {number|string} params.indent - 缩进
- * @param {boolean} params.sortKeys - 是否按 Key 排序
- * @returns {string}
+ * 判断对象键名是否为合法的 JavaScript 标识符
+ * 合法标识符无需加引号即可直接用作 JS Object 的键名
+ * @param {string} key - 键名
+ * @returns {boolean} 是否为合法标识符
  */
 const isSafeKey = (key) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key);
 
+/**
+ * 将 JavaScript 值序列化为 JS Object 格式字符串（非标准 JSON）
+ * 与 JSON.stringify 的区别：合法标识符键名不加引号
+ *
+ * @param {any} value - 要序列化的值
+ * @param {number} indentLevel - 缩进大小（空格数）
+ * @param {string} currentIndent - 当前层级的缩进字符串
+ * @returns {string} 序列化后的字符串
+ */
 const stringifyJsObject = (value, indentLevel, currentIndent) => {
 	const space = ' '.repeat(indentLevel);
 	const nextIndent = currentIndent + space;
@@ -51,6 +56,17 @@ const stringifyJsObject = (value, indentLevel, currentIndent) => {
 	return String(value);
 };
 
+/**
+ * 将 JavaScript 值序列化为字符串
+ * 支持标准 JSON 格式和 JS Object 格式，以及可选的按 Key 排序功能
+ *
+ * @param {Object} params - 参数对象
+ * @param {any} params.value - 要转换的值
+ * @param {number|string} params.indent - 缩进量，数字或字符串
+ * @param {boolean} [params.sortKeys=false] - 是否按 Key 字母序排序
+ * @param {'json'|'jsObj'} [params.format='json'] - 输出格式：'json' 为标准 JSON，'jsObj' 为 JS Object 格式
+ * @returns {string} 序列化后的字符串
+ */
 export const stringifyJson = ({
 	value,
 	indent = 2,

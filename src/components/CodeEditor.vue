@@ -1,4 +1,8 @@
 <script setup>
+/**
+ * CodeEditor - 基于 CodeMirror 6 的 JSON 代码编辑器组件
+ * 支持 JSON 语法检查、格式化、折叠/展开，以及 JS Object 格式自动检测
+ */
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 // CodeMirror 核心
 import { EditorView } from 'codemirror';
@@ -89,6 +93,9 @@ const findNonWhitespaceBackward = (text, start) => {
  * 构建 JSON 解析错误的 Diagnostics
  * 准确的错误定位是提升开发者体验的关键。
  * 我们不仅要告诉用户错了，还要尽可能精确地指出是哪里错了。
+ * @param {string} sourceText - 原始文本内容
+ * @param {string} parseError - JSON 解析错误信息
+ * @returns {Array<{from: number, to: number, severity: string, message: string}>} CodeMirror Diagnostics 数组
  */
 const buildJsonDiagnostics = (sourceText, parseError) => {
 	const original = String(sourceText || '');
@@ -131,6 +138,11 @@ const buildJsonDiagnostics = (sourceText, parseError) => {
 	];
 };
 
+/**
+ * 创建 JSON 语法检查器（CodeMirror Linter）
+ * 优先使用标准 JSON 解析，失败后尝试宽松解析，两者均失败时报告错误
+ * @returns {function(EditorView): Diagnostic[]} CodeMirror linter 函数
+ */
 const jsonSyntaxLinter = () => (view) => {
 	try {
 		const original = view.state.doc.toString();
@@ -157,16 +169,26 @@ const jsonSyntaxLinter = () => (view) => {
 	}
 };
 
+/**
+ * 跳转到编辑器中的下一个语法错误位置
+ */
 const jumpToNextError = () => {
 	if (!editorView) return;
 	nextDiagnostic(editorView);
 	editorView.focus();
 };
 
+/**
+ * 展开编辑器中所有折叠的代码块
+ */
 const expandAll = () => {
 	if (editorView) unfoldAll(editorView);
 };
 
+/**
+ * 折叠编辑器中所有可折叠的代码块
+ * 先强制解析完整语法树，再执行全部折叠，以确保嵌套结构也能正确折叠
+ */
 const collapseAll = () => {
 	if (editorView) {
 		// 1. 强制解析完整语法树，确保所有节点都可以被折叠
@@ -180,6 +202,11 @@ const collapseAll = () => {
 
 defineExpose({ jumpToNextError, expandAll, collapseAll });
 
+/**
+ * 获取 CodeEditor 专属的 CodeMirror 扩展配置
+ * 包含 Lint（语法检查）、搜索和粘贴自动格式化功能
+ * @returns {import('@codemirror/state').Extension[]} 扩展数组
+ */
 // CodeEditor 特有的扩展配置（Lint、搜索、自动格式化）
 const getCodeEditorExtensions = () => [
 	search({ top: true }), // 搜索框在顶部
@@ -239,12 +266,22 @@ const getCodeEditorExtensions = () => [
 	EditorState.readOnly.of(props.readonly),
 ];
 
+/**
+ * 获取完整的编辑器扩展配置（共享配置 + CodeEditor 专属配置）
+ * @param {boolean} isDark - 是否为深色主题
+ * @param {'json'|'javascript'} [language='json'] - 语言模式
+ * @returns {import('@codemirror/state').Extension[]} 完整扩展数组
+ */
 // 组装所有 Editor 扩展（使用共享配置 + CodeEditor 特有配置）
 // language 参数：'json'（默认）或 'javascript'（用于 JS Object 格式）
 const getExtensions = (isDark, language = 'json') => {
 	return getEditorExtensions(isDark, getCodeEditorExtensions(), { language });
 };
 
+/**
+ * 初始化 CodeMirror 编辑器实例
+ * 自动检测内容格式（JSON 或 JS Object）并选择对应的语言解析器
+ */
 const initEditor = () => {
 	if (!editorContainer.value) return;
 

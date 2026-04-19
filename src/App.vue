@@ -138,6 +138,11 @@ const onUpdateArrayPath = (id, path) => {
 	sessionStore.updateTabArrayPath(id, path);
 };
 
+/**
+ * 处理对比文档内容更新事件
+ * @param {string} id - Tab ID
+ * @param {string} text - 新的对比文档内容
+ */
 const onUpdateCompareContent = (id, text) => {
 	sessionStore.updateTabCompareContent(id, text);
 };
@@ -190,6 +195,10 @@ const loadHistoryEntry = async (entry) => {
 };
 
 // --- 编辑器操作代理方法 ---
+/**
+ * 触发 JSON 格式化操作
+ * 根据用户在设置中选择的缩进类型（数字缩进或 JS Object 格式）执行对应格式化
+ */
 const triggerFormat = () => {
 	const currentIndent = settingsStore.indent;
 	if (currentIndent === 'jsObj') {
@@ -199,6 +208,10 @@ const triggerFormat = () => {
 	}
 };
 
+/**
+ * 设置缩进格式并立即触发格式化，同时关闭格式化菜单
+ * @param {number|'jsObj'} indent - 缩进量（2/4/8 空格，或 'jsObj' 表示 JS Object 格式）
+ */
 const setFormatIndent = (indent) => {
 	settingsStore.indent = indent;
 	triggerFormat();
@@ -212,6 +225,9 @@ const triggerUnicodeToChinese = () =>
 const triggerChineseToUnicode = () =>
 	jsonEditorRef.value?.applyChineseToUnicode();
 
+/**
+ * 触发排序操作，并传入当前"结构类型置后"设置
+ */
 const triggerSort = () => {
 	jsonEditorRef.value?.applySort({
 		structureAtEnd: settingsStore.sortStructureAtEnd,
@@ -219,6 +235,9 @@ const triggerSort = () => {
 	showSortMenu.value = false;
 };
 
+/**
+ * 切换"结构类型置后"排序选项并立即重新排序
+ */
 const toggleSortStructureAtEnd = () => {
 	settingsStore.sortStructureAtEnd = !settingsStore.sortStructureAtEnd;
 	triggerSort();
@@ -235,12 +254,22 @@ const hoveredTabId = ref(null);
 const popoverStyle = ref({ top: '0px', left: '0px', width: '200px' });
 let hoverTimer = null;
 
+/**
+ * 获取标签页标题的首字母缩写（大写），用于折叠侧边栏时的图标显示
+ * @param {string} title - 标签页标题
+ * @returns {string} 首字母大写字符
+ */
 const getShortTitle = (title) => {
 	if (!title) return '';
 	// 返回第一个字符（如果需要处理代理对，但简单的索引目前就够了）
 	return String(title).substring(0, 1).toUpperCase();
 };
 
+/**
+ * 用于拖拽排序的标签页列表计算属性
+ * 读取时返回 store 中的 tabs 数组，写入时直接更新 store
+ * @type {import('vue').ComputedRef<Array>}
+ */
 // 拖拽排序用的计算属性
 const tabsList = computed({
 	get: () => sessionStore.tabs,
@@ -249,6 +278,12 @@ const tabsList = computed({
 	},
 });
 
+/**
+ * 处理侧边栏标签页的鼠标悬停事件
+ * 在侧边栏收起时，计算并显示浮窗，展示完整标签页标题
+ * @param {MouseEvent} e - 鼠标事件
+ * @param {string} tabId - 标签页 ID
+ */
 const onTabMouseEnter = (e, tabId) => {
 	if (!sessionStore.sidebarCollapsed) {
 		hoveredTabId.value = null;
@@ -270,6 +305,11 @@ const onTabMouseEnter = (e, tabId) => {
 	if (hoverTimer) clearTimeout(hoverTimer);
 };
 
+/**
+ * 处理侧边栏标签页的鼠标离开事件
+ * 延迟关闭浮窗，以便鼠标可以移入浮窗而不触发关闭
+ * @param {MouseEvent} e - 鼠标事件
+ */
 const onTabMouseLeave = (e) => {
 	// 如果移动到弹出框，不关闭
 	if (
@@ -285,10 +325,17 @@ const onTabMouseLeave = (e) => {
 	}, 100);
 };
 
+/**
+ * 鼠标进入浮窗时，取消延迟关闭定时器，保持浮窗显示
+ */
 const onPopoverMouseEnter = () => {
 	if (hoverTimer) clearTimeout(hoverTimer);
 };
 
+/**
+ * 鼠标离开浮窗时，延迟关闭浮窗
+ * @param {MouseEvent} e - 鼠标事件
+ */
 const onPopoverMouseLeave = (e) => {
 	// 如果移回侧边栏标签页，允许标签页的 mouseenter 处理它（通过清除定时器）
 	// 但我们仍然在这里设置定时器，以防我们移动到空白处
@@ -299,12 +346,18 @@ const onPopoverMouseLeave = (e) => {
 };
 
 // 辅助计算属性
+/** 当前激活的标签页对象 */
 const activeTab = computed(() => sessionStore.activeTab);
+/** 当前 Hover 的标签页对象（用于浮窗显示） */
 const hoveredTab = computed(() =>
 	sessionStore.tabs.find((t) => t.id === hoveredTabId.value),
 );
 
-// 状态栏信息
+/**
+ * 状态栏显示信息
+ * 根据当前激活标签页的视图模式和文档状态，返回状态文本和错误标志
+ * @returns {{ text: string, isError: boolean }}
+ */
 const statusBarInfo = computed(() => {
 	if (!activeTab.value) return { text: '就绪', isError: false };
 

@@ -1,4 +1,8 @@
 <script setup>
+/**
+ * Logo - 应用 Logo 组件
+ * 支持展开和折叠两种状态，折叠时隐藏文字，切换时带淡入淡出动画
+ */
 import logoIcon from '@/assets/icon24.svg';
 defineProps({
 	collapsed: {

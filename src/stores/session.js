@@ -79,7 +79,12 @@ export const useSessionStore = defineStore('session', {
 			}
 		},
 
-		// 更新 Tab 文档内容
+		/**
+		 * 更新 Tab 文档内容
+		 * 同时根据新内容自动更新标签页标题
+		 * @param {string} id - Tab ID
+		 * @param {string} text - 新的 JSON 文本内容
+		 */
 		updateTabDoc(id, text) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (!tab) return;
@@ -90,31 +95,49 @@ export const useSessionStore = defineStore('session', {
 			tab.title = generateTabName(text, tab.title);
 		},
 
-		// 更新 Tab 标题
+		/**
+		 * 更新 Tab 标题
+		 * @param {string} id - Tab ID
+		 * @param {string} title - 新标题
+		 */
 		updateTabTitle(id, title) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (tab) tab.title = title;
 		},
 
-		// 更新 Tab 视图模式
+		/**
+		 * 更新 Tab 视图模式
+		 * @param {string} id - Tab ID
+		 * @param {'code'|'table'|'diff'} mode - 视图模式
+		 */
 		updateTabViewMode(id, mode) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (tab) tab.viewMode = mode;
 		},
 
-		// 更新 Tab 选中的数组路径（表格模式用）
+		/**
+		 * 更新 Tab 选中的数组路径（表格视图使用）
+		 * @param {string} id - Tab ID
+		 * @param {string} path - 数组路径，例如 'data.items'
+		 */
 		updateTabArrayPath(id, path) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (tab) tab.selectedArrayPath = path;
 		},
 
-		// 更新 Tab 对比内容
+		/**
+		 * 更新 Tab 对比内容（差异对比视图使用）
+		 * @param {string} id - Tab ID
+		 * @param {string} text - 对比文档的文本内容
+		 */
 		updateTabCompareContent(id, text) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (tab) tab.compareContent = text;
 		},
 
-		// 切换侧边栏状态
+		/**
+		 * 切换侧边栏展开/收起状态
+		 */
 		toggleSidebar() {
 			this.sidebarCollapsed = !this.sidebarCollapsed;
 		},
