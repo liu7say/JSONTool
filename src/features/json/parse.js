@@ -58,6 +58,16 @@ export const relaxedJsonParse = (text) => {
 	return JSON.parse(jsonStr);
 };
 
+/**
+ * 尝试解析 JSON 文本
+ *
+ * 永远不要信任用户的输入。
+ * 始终捕获错误并优雅地返回，而不是让程序崩溃。
+ * 若标准 JSON 解析失败，会自动尝试宽松解析（支持 JS Object 语法）。
+ *
+ * @param {string} sourceText - 原始 JSON 文本
+ * @returns {{ parsedValue: any, parseError: string|null }} 解析结果，包含解析值和错误信息
+ */
 export const tryParseJson = (sourceText) => {
 	const text = stripBom(
 		typeof sourceText === 'string' ? sourceText : String(sourceText ?? '')

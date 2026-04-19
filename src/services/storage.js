@@ -38,6 +38,12 @@ const storageSet = (obj) => {
 	});
 };
 
+/**
+ * 封装 chrome.storage.local.remove 为 Promise
+ * 批量删除指定键对应的存储条目
+ * @param {string[]} keyList - 要删除的键名数组
+ * @returns {Promise<void>}
+ */
 const storageRemove = (keyList) => {
 	return new Promise((resolve, reject) => {
 		chrome.storage.local.remove(keyList, () => {

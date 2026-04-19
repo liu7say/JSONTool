@@ -1,4 +1,8 @@
 <script setup>
+/**
+ * JsonEditor - JSON 编辑器核心组件
+ * 整合代码模式、表格模式和差异对比模式，并提供格式化、排序、转义等操作接口
+ */
 import { computed, ref, watch, nextTick } from 'vue';
 import { formatJsonText } from '../features/json/format';
 import { sortJsonKeys } from '../features/json/sort';
@@ -125,7 +129,11 @@ const processedRows = computed(() => {
 	return result;
 });
 
-// 动作
+/**
+ * 处理表格列头点击排序事件
+ * 若点击同一列则切换升序/降序，否则切换到新列并默认升序
+ * @param {string} col - 列名（对应 JSON 字段名）
+ */
 const handleSort = (col) => {
 	if (sortCol.value === col) {
 		sortAsc.value = !sortAsc.value; // 切换
@@ -140,6 +148,11 @@ const resizingCol = ref(null);
 const startX = ref(0);
 const startWidth = ref(0);
 
+/**
+ * 开始拖拽调整列宽
+ * @param {MouseEvent} e - 鼠标按下事件
+ * @param {string} col - 正在调整的列名
+ */
 const startResize = (e, col) => {
 	resizingCol.value = col;
 	startX.value = e.pageX;
@@ -151,6 +164,10 @@ const startResize = (e, col) => {
 	document.body.style.cursor = 'col-resize';
 };
 
+/**
+ * 拖拽过程中更新列宽
+ * @param {MouseEvent} e - 鼠标移动事件
+ */
 const onMouseMove = (e) => {
 	if (!resizingCol.value) return;
 	const diff = e.pageX - startX.value;
@@ -158,6 +175,9 @@ const onMouseMove = (e) => {
 	colWidths.value = { ...colWidths.value, [resizingCol.value]: newWidth };
 };
 
+/**
+ * 结束拖拽调整列宽，清除事件监听器并恢复光标样式
+ */
 const onMouseUp = () => {
 	resizingCol.value = null;
 	document.removeEventListener('mousemove', onMouseMove);
@@ -171,6 +191,9 @@ const showLoader = ref(false);
 const codeEditorRef = ref(null);
 const diffEditorRef = ref(null);
 
+/**
+ * 展开当前视图（代码模式或差异对比模式）中所有折叠的代码块
+ */
 const expandAll = () => {
 	if (props.viewMode === 'diff') {
 		diffEditorRef.value?.expandAll();
@@ -179,6 +202,9 @@ const expandAll = () => {
 	}
 };
 
+/**
+ * 折叠当前视图（代码模式或差异对比模式）中所有可折叠的代码块
+ */
 const collapseAll = () => {
 	if (props.viewMode === 'diff') {
 		diffEditorRef.value?.collapseAll();
@@ -197,6 +223,11 @@ const jumpToNextError = () => {
 	codeEditorRef.value.jumpToNextError();
 };
 
+/**
+ * 格式化 JSON 文档
+ * 若当前处于差异对比模式，同时格式化对比文档
+ * @param {Object} [options={}] - 格式化选项，透传给 formatJsonText
+ */
 const applyFormat = (options = {}) => {
 	// 格式化主文档
 	const { text, error } = formatJsonText(props.doc, { indent: 2, ...options });
@@ -217,6 +248,10 @@ const applyFormat = (options = {}) => {
 	}
 };
 
+/**
+ * 将 JSON 文档压缩为单行格式（去除所有缩进和换行）
+ * 若当前处于差异对比模式，同时压缩对比文档
+ */
 const applyCompact = () => {
 	// 压缩主文档
 	const { text, error } = formatJsonText(props.doc, { indent: 0 });
@@ -329,6 +364,12 @@ const applyChineseToUnicode = () => {
 	}
 };
 
+/**
+ * 对 JSON 文档的所有键进行排序
+ * 使用防抖 + 加载状态避免大文档时界面卡顿
+ * 同时使用用户配置的缩进和格式设置，若在差异对比模式下同时排序对比文档
+ * @param {Object} [options={}] - 排序选项，透传给 sortJsonKeys
+ */
 const applySort = (options = {}) => {
 	if (isSorting.value) return;
 	isSorting.value = true;
@@ -372,10 +413,16 @@ const applySort = (options = {}) => {
 	}, 0);
 };
 
+/**
+ * 切换表格视图模式（代码模式 ↔ 表格模式）
+ */
 const toggleTableMode = () => {
 	emit('update:viewMode', props.viewMode === 'table' ? 'code' : 'table');
 };
 
+/**
+ * 切换差异对比视图模式（代码模式 ↔ 差异对比模式）
+ */
 const toggleDiffMode = () => {
 	emit('update:viewMode', props.viewMode === 'diff' ? 'code' : 'diff');
 };
