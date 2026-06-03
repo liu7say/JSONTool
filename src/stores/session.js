@@ -1,7 +1,45 @@
 import { defineStore } from 'pinia';
 import { createDocument, updateDocumentText } from '../domain/document';
+import {
+	loadWorkspaceSnapshot as loadStoredWorkspaceSnapshot,
+	saveWorkspaceSnapshot as saveStoredWorkspaceSnapshot,
+} from '../services/storage';
 import { createId } from '../utils/id';
 import { generateTabName } from '../utils/smartTabName';
+
+const WORKSPACE_VERSION = 1;
+const VIEW_MODES = new Set(['code', 'table', 'diff']);
+
+const asText = (value) => (typeof value === 'string' ? value : '');
+const asViewMode = (value) => (VIEW_MODES.has(value) ? value : 'code');
+const asSplitRatio = (value) => (Number.isFinite(value) ? value : 50);
+
+const toSnapshotTab = (tab) => ({
+	id: tab.id,
+	title: tab.title,
+	doc: {
+		sourceText: asText(tab.doc?.sourceText),
+	},
+	viewMode: asViewMode(tab.viewMode),
+	compareContent: asText(tab.compareContent),
+	splitRatio: asSplitRatio(tab.splitRatio),
+	selectedArrayPath: asText(tab.selectedArrayPath),
+});
+
+const fromSnapshotTab = (tab, index) => {
+	const sourceText = asText(tab.doc?.sourceText ?? tab.sourceText);
+	const title = asText(tab.title) || generateTabName(sourceText, `Tab ${index + 1}`);
+
+	return {
+		id: asText(tab.id) || createId(),
+		title,
+		doc: createDocument(sourceText),
+		viewMode: asViewMode(tab.viewMode),
+		compareContent: asText(tab.compareContent),
+		splitRatio: asSplitRatio(tab.splitRatio),
+		selectedArrayPath: asText(tab.selectedArrayPath),
+	};
+};
 
 export const useSessionStore = defineStore('session', {
 	state: () => ({
@@ -112,6 +150,38 @@ export const useSessionStore = defineStore('session', {
 		updateTabCompareContent(id, text) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (tab) tab.compareContent = text;
+		},
+
+		getWorkspaceSnapshot() {
+			return {
+				version: WORKSPACE_VERSION,
+				tabs: this.tabs.map(toSnapshotTab),
+				activeTabId: this.activeTabId,
+				sidebarCollapsed: this.sidebarCollapsed,
+			};
+		},
+
+		restoreWorkspaceSnapshot(snapshot) {
+			if (!snapshot || !Array.isArray(snapshot.tabs) || !snapshot.tabs.length) {
+				return false;
+			}
+
+			const tabs = snapshot.tabs.map(fromSnapshotTab);
+			const activeTab = tabs.find((tab) => tab.id === snapshot.activeTabId);
+
+			this.tabs = tabs;
+			this.activeTabId = activeTab?.id || tabs[0].id;
+			this.sidebarCollapsed = !!snapshot.sidebarCollapsed;
+			return true;
+		},
+
+		async loadWorkspaceSnapshot() {
+			const snapshot = await loadStoredWorkspaceSnapshot();
+			return this.restoreWorkspaceSnapshot(snapshot);
+		},
+
+		saveWorkspaceSnapshot() {
+			return saveStoredWorkspaceSnapshot(this.getWorkspaceSnapshot());
 		},
 
 		// 切换侧边栏状态
