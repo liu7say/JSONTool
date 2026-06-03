@@ -998,7 +998,6 @@ const handleThemeToggle = (event) => {
 
 	.f-button {
 		border-radius: 0;
-		/* 恢复边框 */
 		border: 1px solid var(--f-border-default);
 		box-shadow: none !important;
 		margin: 0;
@@ -1008,130 +1007,85 @@ const handleThemeToggle = (event) => {
 		position: relative;
 		padding: 0 8px;
 
-		/* Flex alignment for Icon + Text */
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: 6px;
 
-		&::after {
-			content: '';
-			position: absolute;
-			top: -1px;
-			bottom: -1px;
-			left: -1px;
-			border-left: 1px solid transparent;
-			pointer-events: none;
+		&:not(:first-of-type) {
+			margin-left: -1px;
 		}
 
-		&:hover,
-		&:focus {
-			background-color: var(--f-bg-control-hover);
-			/* 确保 hover 时浮起在相邻按钮之上 */
-			z-index: 5;
-			border-color: var(--f-text-secondary);
-		}
-
-		&:not(:first-of-type):hover::after,
-		&:not(:first-of-type):focus::after {
-			border-left-color: var(--f-text-secondary);
-		}
-
-		&:active {
-			background-color: var(--f-bg-control-active);
-			/* 恢复缩放动画 */
-			transform: scale(0.96);
-			z-index: 5;
-		}
-
-		/* Fix Corners */
 		&:first-of-type {
 			border-top-left-radius: 4px;
 			border-bottom-left-radius: 4px;
 		}
+
 		&:last-of-type {
 			border-top-right-radius: 4px;
 			border-bottom-right-radius: 4px;
 		}
 
-		&:not(:first-of-type) {
-			border-left: 0;
+		&:hover:not(:disabled):not(.disabled),
+		&:focus:not(:disabled):not(.disabled) {
+			background-color: var(--f-bg-control-hover);
+			border-color: var(--f-text-secondary);
+			z-index: 5;
 		}
 
-		/* Generic Separator: Apply to all except the last button */
-		&:not(:last-of-type) {
-			border-right: 1px solid var(--f-border-subtle);
+		&:active:not(:disabled):not(.disabled) {
+			background-color: var(--f-bg-control-active);
+			transform: scale(0.96);
+			z-index: 5;
 		}
 
 		&.group-left {
-			/* Already handled by generic rule, but ensure padding */
 			padding: 0 8px;
 		}
 
 		&.group-right {
-			padding: 0; /* Icon only override */
-			width: 20px; /* Slightly narrower */
-			/* display: flex; already set globally above */
+			padding: 0;
+			width: 20px;
 		}
 
-		/* Restore Primary Button Style priority */
 		&.primary {
 			background-color: var(--f-brand-base);
-			color: white; /* Always white on primary */
-
-			&:hover {
-				background-color: var(--f-brand-hover);
-			}
-
-			&:active {
-				background-color: var(--f-brand-pressed);
-			}
-
-			/* Remove separator for primary buttons if desired, or keep it light? 
-			   Usually primary buttons don't have borders, but if they are next to something, 
-			   the group border is enough. Inside, maybe a darker blue separator? 
-			   For now let's leave the subtle separator or hide it? 
-			   Let's hide the right border for primary buttons to make them look cleaner 
-			   unless they are not the last one. 
-			   Actually, let's keep the separator but make it compatible with the blue bg. 
-			   rgba(255,255,255, 0.2) 
-			*/
-			&:not(:last-of-type) {
-				border-right: 1px solid rgba(255, 255, 255, 0.2);
-			}
-
-			/* Fix shadow for primary */
-			box-shadow: none; /* Group handles shadow */
-		}
-
-		/* Danger Button Style within group */
-		&.danger {
-			background-color: var(--f-color-error);
+			border-color: var(--f-brand-base);
 			color: white;
 
-			&:hover {
-				filter: brightness(0.9);
+			&:hover:not(:disabled):not(.disabled),
+			&:focus:not(:disabled):not(.disabled) {
+				background-color: var(--f-brand-hover);
+				border-color: var(--f-brand-hover);
 			}
 
-			&:active {
-				filter: brightness(0.8);
+			&:active:not(:disabled):not(.disabled) {
+				background-color: var(--f-brand-pressed);
+				border-color: var(--f-brand-pressed);
 			}
-
-			&:not(:last-of-type) {
-				border-right: 1px solid rgba(255, 255, 255, 0.2);
-			}
-
-			box-shadow: none;
 		}
 
-		/* Disable state handling */
-		&:disabled {
+		&.danger {
+			background-color: var(--f-color-error);
+			border-color: var(--f-color-error);
+			color: white;
+
+			&:hover:not(:disabled):not(.disabled),
+			&:focus:not(:disabled):not(.disabled) {
+				filter: brightness(0.9);
+				border-color: var(--f-color-error);
+			}
+
+			&:active:not(:disabled):not(.disabled) {
+				filter: brightness(0.8);
+			}
+		}
+
+		&:disabled,
+		&.disabled {
 			background-color: transparent;
 			color: var(--f-text-disabled);
 			cursor: not-allowed;
-			&:hover {
-				background-color: transparent;
-			}
 		}
 	}
 }
