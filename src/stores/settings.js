@@ -9,6 +9,7 @@ export const useSettingsStore = defineStore('settings', () => {
 	// --- 状态 ---
 	const sortStructureAtEnd = ref(false);
 	const indent = ref(2);
+	const autoFormatDetection = ref(true);
 
 	// --- 助手：通用存储访问 ---
 	const storage = {
@@ -63,11 +64,13 @@ export const useSettingsStore = defineStore('settings', () => {
 		const defaults = {
 			sortStructureAtEnd: false,
 			indent: 2,
+			autoFormatDetection: true,
 		};
 		const data = await storage.get(defaults);
 
 		sortStructureAtEnd.value = !!data.sortStructureAtEnd;
 		indent.value = data.indent;
+		autoFormatDetection.value = data.autoFormatDetection !== false;
 	};
 
 	// --- 监听器 ---
@@ -77,10 +80,14 @@ export const useSettingsStore = defineStore('settings', () => {
 	watch(indent, (newVal) => {
 		storage.set({ indent: newVal });
 	});
+	watch(autoFormatDetection, (newVal) => {
+		storage.set({ autoFormatDetection: newVal });
+	});
 
 	return {
 		sortStructureAtEnd,
 		indent,
+		autoFormatDetection,
 		loadSettings,
 	};
 });
