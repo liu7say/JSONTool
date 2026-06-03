@@ -22,6 +22,10 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	autoFormatDetection: {
+		type: Boolean,
+		default: true,
+	},
 });
 
 const emit = defineEmits(['update:modelValue', 'change', 'paste-into-empty']);
@@ -180,11 +184,13 @@ const collapseAll = () => {
 
 defineExpose({ jumpToNextError, expandAll, collapseAll });
 
+const getDocumentLanguage = (text) =>
+	props.autoFormatDetection && isJsObjectFormat(text) ? 'javascript' : 'json';
+
 // CodeEditor 特有的扩展配置（Lint、搜索、自动格式化）
 const getCodeEditorExtensions = () => [
 	search({ top: true }), // 搜索框在顶部
-	lintGutter(),
-	linter(jsonSyntaxLinter()), // JSON 语法检查
+	...(props.autoFormatDetection ? [lintGutter(), linter(jsonSyntaxLinter())] : []),
 	EditorView.updateListener.of((update) => {
 		if (update.docChanged) {
 			const newVal = update.state.doc.toString();
@@ -193,6 +199,7 @@ const getCodeEditorExtensions = () => [
 
 			// 自动格式化：当粘贴到空文档时，自动进行格式化
 			if (
+				props.autoFormatDetection &&
 				update.startState.doc.length === 0 &&
 				update.transactions.some((tr) => tr.isUserEvent('input.paste'))
 			) {
@@ -249,7 +256,7 @@ const initEditor = () => {
 	if (!editorContainer.value) return;
 
 	// 检测初始内容的格式并选择合适的语言解析器
-	currentLanguage = isJsObjectFormat(props.modelValue) ? 'javascript' : 'json';
+	currentLanguage = getDocumentLanguage(props.modelValue);
 
 	const state = EditorState.create({
 		doc: props.modelValue,
@@ -268,8 +275,7 @@ watch(
 		if (!editorView) return;
 
 		// 检测格式变化，如果语言模式需要切换则重建编辑器
-		const needsJsLanguage = isJsObjectFormat(newVal);
-		const newLanguage = needsJsLanguage ? 'javascript' : 'json';
+		const newLanguage = getDocumentLanguage(newVal);
 
 		if (newLanguage !== currentLanguage) {
 			// 语言模式变化，需要重建编辑器以应用新的语法解析器
@@ -327,6 +333,23 @@ watch(
 		const state = EditorState.create({
 			doc: content,
 			extensions: getExtensions(themeStore.isDark, currentLanguage),
+		});
+		editorView = new EditorView({ state, parent: editorContainer.value });
+	},
+);
+
+watch(
+	() => props.autoFormatDetection,
+	() => {
+		if (!editorView) return;
+		const content = editorView.state.doc.toString();
+		const selection = editorView.state.selection;
+		currentLanguage = getDocumentLanguage(content);
+		editorView.destroy();
+		const state = EditorState.create({
+			doc: content,
+			extensions: getExtensions(themeStore.isDark, currentLanguage),
+			selection,
 		});
 		editorView = new EditorView({ state, parent: editorContainer.value });
 	},

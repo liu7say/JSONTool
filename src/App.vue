@@ -7,6 +7,7 @@ import { useSettingsStore } from './stores/settings';
 import JsonEditor from './components/JsonEditor.vue';
 import GithubIconUrl from './assets/github.svg';
 import FButton from './components/FButton.vue';
+import FVerticalSwitch from './components/FVerticalSwitch.vue';
 import Logo from './components/Logo.vue';
 import {
 	Plus,
@@ -534,6 +535,13 @@ const handleThemeToggle = (event) => {
 									v-if="showFormatMenu"
 									class="f-popover-menu"
 									ref="formatMenuRef">
+									<div class="menu-item switch-menu-item" @click.stop>
+										<span style="white-space: nowrap">自动格式化</span>
+										<FVerticalSwitch
+											v-model="settingsStore.autoFormatDetection"
+											title="自动格式化"
+											aria-label="自动格式化" />
+									</div>
 									<div class="menu-item" @click="setFormatIndent(2)">
 										<span>2 空格</span>
 										<div class="check-box">
@@ -811,6 +819,7 @@ const handleThemeToggle = (event) => {
 					:view-mode="activeTab.viewMode"
 					:selected-array-path="activeTab.selectedArrayPath"
 					:compare-content="activeTab.compareContent"
+					:auto-format-detection="settingsStore.autoFormatDetection"
 					@update:doc="(val) => onUpdateDoc(activeTab.id, val)"
 					@update:view-mode="(val) => onUpdateViewMode(activeTab.id, val)"
 					@update:selected-array-path="
@@ -1108,16 +1117,22 @@ const handleThemeToggle = (event) => {
 	.menu-item {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		padding: 6px 8px;
 		border-radius: 4px;
 		cursor: pointer;
 		font-size: 13px;
 		color: var(--f-text-primary);
-		gap: 8px;
+		gap: 12px;
 		user-select: none;
 
 		&:hover {
 			background-color: var(--f-bg-control-hover);
+		}
+
+		&.switch-menu-item {
+			cursor: default;
+			padding: 4px 6px 4px 8px;
 		}
 
 		.check-box {

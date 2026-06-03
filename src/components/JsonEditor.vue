@@ -25,6 +25,10 @@ const props = defineProps({
 		type: String,
 		default: '',
 	},
+	autoFormatDetection: {
+		type: Boolean,
+		default: true,
+	},
 });
 
 const emit = defineEmits([
@@ -500,6 +504,7 @@ defineExpose({
 					<CodeEditor
 						ref="codeEditorRef"
 						v-model="inputText"
+						:auto-format-detection="autoFormatDetection"
 						@change="(val) => emit('update:doc', val)" />
 				</div>
 				<div v-if="showLoader" class="overlay-loader">
