@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, nextTick, watch, computed } from 'vue';
+import { onMounted, onUnmounted, ref, nextTick, computed } from 'vue';
 import { useSessionStore } from './stores/session';
 import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
@@ -42,6 +42,7 @@ const themeStore = useThemeStore();
 const settingsStore = useSettingsStore();
 
 // UI 状态 refs
+const showHistoryEntry = false;
 const showHistory = ref(false); // 控制历史记录抽屉的显示
 const jsonEditorRef = ref(null); // JsonEditor 实例引用
 const showSortMenu = ref(false);
@@ -57,6 +58,30 @@ const historyButtonAnimate = ref(false);
 const toastVisible = ref(false);
 const toastMessage = ref('');
 let toastTimer = null;
+let workspaceSaveInFlight = false;
+let workspaceSaveQueued = false;
+let unsubscribeSessionStore = null;
+
+const saveWorkspaceNow = () => {
+	if (workspaceSaveInFlight) {
+		workspaceSaveQueued = true;
+		return Promise.resolve();
+	}
+
+	workspaceSaveInFlight = true;
+	return sessionStore
+		.saveWorkspaceSnapshot()
+		.catch((error) => {
+			console.error(error);
+		})
+		.finally(() => {
+			workspaceSaveInFlight = false;
+			if (workspaceSaveQueued) {
+				workspaceSaveQueued = false;
+				saveWorkspaceNow();
+			}
+		});
+};
 
 // 点击外部关闭菜单
 const handleClickOutside = (e) => {
@@ -93,20 +118,33 @@ const handleGlobalKeydown = (e) => {
 	}
 };
 
-onMounted(() => {
+onMounted(async () => {
 	window.addEventListener('click', handleClickOutside);
-	settingsStore.loadSettings();
-
-	if (sessionStore.tabs.length === 0) {
-		sessionStore.createTab();
-	}
-	historyStore.loadIndex();
 	window.addEventListener('keydown', handleGlobalKeydown);
+
+	await settingsStore.loadSettings();
+
+	try {
+		const restored = await sessionStore.loadWorkspaceSnapshot();
+		if (!restored) sessionStore.createTab();
+	} catch (error) {
+		console.error(error);
+		if (sessionStore.tabs.length === 0) sessionStore.createTab();
+	}
+
+	historyStore.loadIndex();
+	unsubscribeSessionStore = sessionStore.$subscribe(saveWorkspaceNow, {
+		detached: true,
+	});
+	saveWorkspaceNow();
 });
 
 onUnmounted(() => {
 	window.removeEventListener('click', handleClickOutside);
 	window.removeEventListener('keydown', handleGlobalKeydown);
+	unsubscribeSessionStore?.();
+	unsubscribeSessionStore = null;
+	saveWorkspaceNow();
 });
 
 /**
@@ -657,6 +695,7 @@ const handleThemeToggle = (event) => {
 					</FButton>
 
 					<FButton
+						v-if="showHistoryEntry"
 						size="small"
 						type="subtle"
 						icon-only
@@ -923,7 +962,6 @@ const handleThemeToggle = (event) => {
 
 	/* 视觉上将 logo 与侧边栏边框分开 */
 	padding-right: 16px;
-	border-right: 1px solid var(--f-border-subtle);
 }
 
 .header-content {
@@ -964,8 +1002,6 @@ const handleThemeToggle = (event) => {
 		border: 1px solid var(--f-border-default);
 		box-shadow: none !important;
 		margin: 0;
-		/* 处理边框重叠 */
-		margin-left: -1px;
 		height: 24px;
 		background-color: transparent;
 		color: var(--f-text-primary);
@@ -978,12 +1014,27 @@ const handleThemeToggle = (event) => {
 		justify-content: center;
 		gap: 6px;
 
+		&::after {
+			content: '';
+			position: absolute;
+			top: -1px;
+			bottom: -1px;
+			left: -1px;
+			border-left: 1px solid transparent;
+			pointer-events: none;
+		}
+
 		&:hover,
 		&:focus {
 			background-color: var(--f-bg-control-hover);
 			/* 确保 hover 时浮起在相邻按钮之上 */
 			z-index: 5;
-			border-color: var(--f-text-secondary); /* Hover 时稍微加深边框 */
+			border-color: var(--f-text-secondary);
+		}
+
+		&:not(:first-of-type):hover::after,
+		&:not(:first-of-type):focus::after {
+			border-left-color: var(--f-text-secondary);
 		}
 
 		&:active {
@@ -994,18 +1045,21 @@ const handleThemeToggle = (event) => {
 		}
 
 		/* Fix Corners */
-		&:first-child {
+		&:first-of-type {
 			border-top-left-radius: 4px;
 			border-bottom-left-radius: 4px;
-			margin-left: 0;
 		}
-		&:last-child {
+		&:last-of-type {
 			border-top-right-radius: 4px;
 			border-bottom-right-radius: 4px;
 		}
 
-		/* Generic Separator: Apply to all except the last one */
-		&:not(:last-child) {
+		&:not(:first-of-type) {
+			border-left: 0;
+		}
+
+		/* Generic Separator: Apply to all except the last button */
+		&:not(:last-of-type) {
 			border-right: 1px solid var(--f-border-subtle);
 		}
 
@@ -1042,7 +1096,7 @@ const handleThemeToggle = (event) => {
 			   Actually, let's keep the separator but make it compatible with the blue bg. 
 			   rgba(255,255,255, 0.2) 
 			*/
-			&:not(:last-child) {
+			&:not(:last-of-type) {
 				border-right: 1px solid rgba(255, 255, 255, 0.2);
 			}
 
@@ -1063,7 +1117,7 @@ const handleThemeToggle = (event) => {
 				filter: brightness(0.8);
 			}
 
-			&:not(:last-child) {
+			&:not(:last-of-type) {
 				border-right: 1px solid rgba(255, 255, 255, 0.2);
 			}
 
