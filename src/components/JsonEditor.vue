@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatJsonText } from '../features/json/format';
 import { sortJsonKeys } from '../features/json/sort';
 import { jsonToTable, findArrayPaths } from '../features/json/table';
@@ -25,6 +25,13 @@ const props = defineProps({
 		type: String,
 		default: '',
 	},
+	foldRanges: {
+		type: Object,
+		default: () => ({
+			code: [],
+			diff: { original: [], modified: [] },
+		}),
+	},
 	autoFormatDetection: {
 		type: Boolean,
 		default: true,
@@ -36,6 +43,7 @@ const emit = defineEmits([
 	'update:viewMode',
 	'update:selectedArrayPath',
 	'update:compareContent',
+	'update:foldRanges',
 	'save',
 ]);
 
@@ -192,6 +200,20 @@ const inputText = computed({
 	get: () => props.doc.sourceText || '',
 	set: (val) => emit('update:doc', val),
 });
+
+const updateCodeFoldRanges = (ranges) => {
+	emit('update:foldRanges', {
+		...props.foldRanges,
+		code: ranges,
+	});
+};
+
+const updateDiffFoldRanges = (ranges) => {
+	emit('update:foldRanges', {
+		...props.foldRanges,
+		diff: ranges,
+	});
+};
 
 const jumpToNextError = () => {
 	if (!codeEditorRef.value || !codeEditorRef.value.jumpToNextError) return;
@@ -492,7 +514,9 @@ defineExpose({
 				<DiffEditor
 					ref="diffEditorRef"
 					v-model:original="inputText"
-					v-model:modified="localCompareContent" />
+					v-model:modified="localCompareContent"
+					:fold-ranges="foldRanges.diff"
+					@update:fold-ranges="updateDiffFoldRanges" />
 				<div v-if="showLoader" class="overlay-loader">
 					<span>排序中...</span>
 				</div>
@@ -505,7 +529,9 @@ defineExpose({
 						ref="codeEditorRef"
 						v-model="inputText"
 						:auto-format-detection="autoFormatDetection"
-						@change="(val) => emit('update:doc', val)" />
+						:fold-ranges="foldRanges.code"
+						@change="(val) => emit('update:doc', val)"
+						@update:fold-ranges="updateCodeFoldRanges" />
 				</div>
 				<div v-if="showLoader" class="overlay-loader">
 					<span>排序中...</span>

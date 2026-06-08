@@ -5,7 +5,14 @@ import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { lintGutter, linter, nextDiagnostic } from '@codemirror/lint';
 import { search } from '@codemirror/search';
-import { foldAll, unfoldAll, ensureSyntaxTree } from '@codemirror/language';
+import {
+	foldAll,
+	unfoldAll,
+	ensureSyntaxTree,
+	foldedRanges,
+	foldEffect,
+	unfoldEffect,
+} from '@codemirror/language';
 
 import { useThemeStore } from '../stores/theme';
 import { useSettingsStore } from '../stores/settings';
@@ -26,9 +33,18 @@ const props = defineProps({
 		type: Boolean,
 		default: true,
 	},
+	foldRanges: {
+		type: Array,
+		default: () => [],
+	},
 });
 
-const emit = defineEmits(['update:modelValue', 'change', 'paste-into-empty']);
+const emit = defineEmits([
+	'update:modelValue',
+	'change',
+	'paste-into-empty',
+	'update:foldRanges',
+]);
 
 const editorContainer = ref(null);
 const themeStore = useThemeStore();
@@ -161,6 +177,72 @@ const jsonSyntaxLinter = () => (view) => {
 	}
 };
 
+let applyingFoldRanges = false;
+
+const normalizeFoldRanges = (ranges, docLength) => {
+	if (!Array.isArray(ranges)) return [];
+	return ranges
+		.map((range) => ({
+			from: Number(range?.from),
+			to: Number(range?.to),
+		}))
+		.filter(
+			(range) =>
+				Number.isFinite(range.from) &&
+				Number.isFinite(range.to) &&
+				range.from >= 0 &&
+				range.to > range.from &&
+				range.to <= docLength,
+		)
+		.sort((a, b) => a.from - b.from || a.to - b.to);
+};
+
+const rangesEqual = (left, right) => {
+	if (left.length !== right.length) return false;
+	return left.every(
+		(range, index) =>
+			range.from === right[index].from && range.to === right[index].to,
+	);
+};
+
+const getFoldRanges = (view) => {
+	const ranges = [];
+	foldedRanges(view.state).between(0, view.state.doc.length, (from, to) => {
+		ranges.push({ from, to });
+	});
+	return ranges;
+};
+
+const emitFoldRanges = () => {
+	if (!editorView || applyingFoldRanges) return;
+	emit('update:foldRanges', getFoldRanges(editorView));
+};
+
+const hasFoldChanged = (update) =>
+	update.transactions.some((transaction) =>
+		transaction.effects.some(
+			(effect) => effect.is(foldEffect) || effect.is(unfoldEffect),
+		),
+	);
+
+const applyFoldRanges = (ranges) => {
+	if (!editorView) return;
+
+	const nextRanges = normalizeFoldRanges(ranges, editorView.state.doc.length);
+	const currentRanges = getFoldRanges(editorView);
+	if (rangesEqual(currentRanges, nextRanges)) return;
+
+	const effects = [
+		...currentRanges.map((range) => unfoldEffect.of(range)),
+		...nextRanges.map((range) => foldEffect.of(range)),
+	];
+	if (!effects.length) return;
+
+	applyingFoldRanges = true;
+	editorView.dispatch({ effects });
+	applyingFoldRanges = false;
+};
+
 const jumpToNextError = () => {
 	if (!editorView) return;
 	nextDiagnostic(editorView);
@@ -168,18 +250,14 @@ const jumpToNextError = () => {
 };
 
 const expandAll = () => {
-	if (editorView) unfoldAll(editorView);
+	if (!editorView) return;
+	unfoldAll(editorView);
 };
 
 const collapseAll = () => {
-	if (editorView) {
-		// 1. 强制解析完整语法树，确保所有节点都可以被折叠
-		ensureSyntaxTree(editorView.state, editorView.state.doc.length, 5000);
-
-		// 2. 使用 foldAll 递归折叠所有层级
-		// foldAll 会正确处理嵌套结构，当展开外层时内层仍保持折叠状态
-		foldAll(editorView);
-	}
+	if (!editorView) return;
+	ensureSyntaxTree(editorView.state, editorView.state.doc.length, 5000);
+	foldAll(editorView);
 };
 
 defineExpose({ jumpToNextError, expandAll, collapseAll });
@@ -242,6 +320,8 @@ const getCodeEditorExtensions = () => [
 				}, 16);
 			}
 		}
+
+		if (hasFoldChanged(update)) emitFoldRanges();
 	}),
 	EditorState.readOnly.of(props.readonly),
 ];
@@ -267,6 +347,7 @@ const initEditor = () => {
 		state,
 		parent: editorContainer.value,
 	});
+	applyFoldRanges(props.foldRanges);
 };
 
 watch(
@@ -292,6 +373,7 @@ watch(
 				state,
 				parent: editorContainer.value,
 			});
+			applyFoldRanges(props.foldRanges);
 		} else if (newVal !== editorView.state.doc.toString()) {
 			// 语言模式未变，直接更新内容
 			editorView.dispatch({
@@ -321,6 +403,7 @@ watch(
 			state,
 			parent: editorContainer.value,
 		});
+		applyFoldRanges(props.foldRanges);
 	},
 );
 
@@ -335,6 +418,7 @@ watch(
 			extensions: getExtensions(themeStore.isDark, currentLanguage),
 		});
 		editorView = new EditorView({ state, parent: editorContainer.value });
+		applyFoldRanges(props.foldRanges);
 	},
 );
 
@@ -352,7 +436,14 @@ watch(
 			selection,
 		});
 		editorView = new EditorView({ state, parent: editorContainer.value });
+		applyFoldRanges(props.foldRanges);
 	},
+);
+
+watch(
+	() => props.foldRanges,
+	(ranges) => applyFoldRanges(ranges),
+	{ deep: true },
 );
 
 onMounted(() => {

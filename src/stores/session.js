@@ -13,6 +13,30 @@ const VIEW_MODES = new Set(['code', 'table', 'diff']);
 const asText = (value) => (typeof value === 'string' ? value : '');
 const asViewMode = (value) => (VIEW_MODES.has(value) ? value : 'code');
 const asSplitRatio = (value) => (Number.isFinite(value) ? value : 50);
+const asFoldRanges = (value) => {
+	if (!Array.isArray(value)) return [];
+	return value
+		.map((range) => ({
+			from: Number(range?.from),
+			to: Number(range?.to),
+		}))
+		.filter(
+			(range) =>
+				Number.isFinite(range.from) &&
+				Number.isFinite(range.to) &&
+				range.from >= 0 &&
+				range.to > range.from,
+		);
+};
+const asTabFoldRanges = (value) => ({
+	code: asFoldRanges(value?.code),
+	diff: {
+		original: asFoldRanges(value?.diff?.original),
+		modified: asFoldRanges(value?.diff?.modified),
+	},
+});
+
+const createFoldRanges = () => asTabFoldRanges();
 
 const toSnapshotTab = (tab) => ({
 	id: tab.id,
@@ -24,6 +48,7 @@ const toSnapshotTab = (tab) => ({
 	compareContent: asText(tab.compareContent),
 	splitRatio: asSplitRatio(tab.splitRatio),
 	selectedArrayPath: asText(tab.selectedArrayPath),
+	foldRanges: asTabFoldRanges(tab.foldRanges),
 });
 
 const fromSnapshotTab = (tab, index) => {
@@ -38,6 +63,7 @@ const fromSnapshotTab = (tab, index) => {
 		compareContent: asText(tab.compareContent),
 		splitRatio: asSplitRatio(tab.splitRatio),
 		selectedArrayPath: asText(tab.selectedArrayPath),
+		foldRanges: asTabFoldRanges(tab.foldRanges),
 	};
 };
 
@@ -75,6 +101,7 @@ export const useSessionStore = defineStore('session', {
 				compareContent: '', // 独立保存对比内容
 				splitRatio: 50, // 左右分栏比例
 				selectedArrayPath: '', // 表格视图选中的数组路径
+				foldRanges: createFoldRanges(),
 			};
 
 			this.tabs.push(newTab);
@@ -150,6 +177,12 @@ export const useSessionStore = defineStore('session', {
 		updateTabCompareContent(id, text) {
 			const tab = this.tabs.find((t) => t.id === id);
 			if (tab) tab.compareContent = text;
+		},
+
+		// 更新 Tab 折叠状态
+		updateTabFoldRanges(id, ranges) {
+			const tab = this.tabs.find((t) => t.id === id);
+			if (tab) tab.foldRanges = asTabFoldRanges(ranges);
 		},
 
 		getWorkspaceSnapshot() {

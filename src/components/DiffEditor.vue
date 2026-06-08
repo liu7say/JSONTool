@@ -2,7 +2,14 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { EditorView } from 'codemirror';
 import { MergeView } from '@codemirror/merge';
-import { foldAll, unfoldAll, ensureSyntaxTree } from '@codemirror/language';
+import {
+	foldAll,
+	unfoldAll,
+	ensureSyntaxTree,
+	foldedRanges,
+	foldEffect,
+	unfoldEffect,
+} from '@codemirror/language';
 
 import { useThemeStore } from '../stores/theme';
 import { getEditorExtensions } from '../features/codemirror/editor-config';
@@ -17,9 +24,17 @@ const props = defineProps({
 		type: String,
 		default: '',
 	},
+	foldRanges: {
+		type: Object,
+		default: () => ({ original: [], modified: [] }),
+	},
 });
 
-const emit = defineEmits(['update:original', 'update:modified']);
+const emit = defineEmits([
+	'update:original',
+	'update:modified',
+	'update:foldRanges',
+]);
 
 const containerRef = ref(null);
 const themeStore = useThemeStore();
@@ -70,6 +85,74 @@ const getDiffEditorExtensions = (isDark, language = 'json') => {
 	return getEditorExtensions(isDark, [], { language });
 };
 
+let applyingFoldRanges = false;
+
+const normalizeFoldRanges = (ranges, docLength) => {
+	if (!Array.isArray(ranges)) return [];
+	return ranges
+		.map((range) => ({ from: Number(range?.from), to: Number(range?.to) }))
+		.filter(
+			(range) =>
+				Number.isFinite(range.from) &&
+				Number.isFinite(range.to) &&
+				range.from >= 0 &&
+				range.to > range.from &&
+				range.to <= docLength,
+		)
+		.sort((a, b) => a.from - b.from || a.to - b.to);
+};
+
+const rangesEqual = (left, right) => {
+	if (left.length !== right.length) return false;
+	return left.every(
+		(range, index) =>
+			range.from === right[index].from && range.to === right[index].to,
+	);
+};
+
+const getFoldRanges = (view) => {
+	const ranges = [];
+	foldedRanges(view.state).between(0, view.state.doc.length, (from, to) => {
+		ranges.push({ from, to });
+	});
+	return ranges;
+};
+
+const applyEditorFoldRanges = (view, ranges) => {
+	const nextRanges = normalizeFoldRanges(ranges, view.state.doc.length);
+	const currentRanges = getFoldRanges(view);
+	if (rangesEqual(currentRanges, nextRanges)) return;
+
+	const effects = [
+		...currentRanges.map((range) => unfoldEffect.of(range)),
+		...nextRanges.map((range) => foldEffect.of(range)),
+	];
+	if (effects.length) view.dispatch({ effects });
+};
+
+const applyFoldRanges = (ranges) => {
+	if (!mergeView) return;
+	applyingFoldRanges = true;
+	applyEditorFoldRanges(mergeView.a, ranges?.original);
+	applyEditorFoldRanges(mergeView.b, ranges?.modified);
+	applyingFoldRanges = false;
+};
+
+const emitFoldRanges = () => {
+	if (!mergeView || applyingFoldRanges) return;
+	emit('update:foldRanges', {
+		original: getFoldRanges(mergeView.a),
+		modified: getFoldRanges(mergeView.b),
+	});
+};
+
+const hasFoldChanged = (update) =>
+	update.transactions.some((transaction) =>
+		transaction.effects.some(
+			(effect) => effect.is(foldEffect) || effect.is(unfoldEffect),
+		),
+	);
+
 const initMergeView = () => {
 	if (!containerRef.value) return;
 
@@ -92,10 +175,10 @@ const initMergeView = () => {
 						lastEmittedOriginal.value = val;
 						emit('update:original', val);
 					}
-					// 每次更新都检查差异数量
 					if (mergeView && mergeView.chunks) {
 						diffCount.value = mergeView.chunks.length;
 					}
+					if (hasFoldChanged(update)) emitFoldRanges();
 				}),
 			],
 		},
@@ -109,10 +192,10 @@ const initMergeView = () => {
 						lastEmittedModified.value = val;
 						emit('update:modified', val);
 					}
-					// 每次更新都检查差异数量
 					if (mergeView && mergeView.chunks) {
 						diffCount.value = mergeView.chunks.length;
 					}
+					if (hasFoldChanged(update)) emitFoldRanges();
 				}),
 			],
 		},
@@ -126,6 +209,7 @@ const initMergeView = () => {
 	if (mergeView && mergeView.chunks) {
 		diffCount.value = mergeView.chunks.length;
 	}
+	applyFoldRanges(props.foldRanges);
 };
 
 // 监听 props 变化同步到编辑器
@@ -159,6 +243,12 @@ watch(
 	},
 );
 
+watch(
+	() => props.foldRanges,
+	(ranges) => applyFoldRanges(ranges),
+	{ deep: true },
+);
+
 // 监听主题变化
 watch(
 	() => themeStore.isDark,
@@ -179,22 +269,17 @@ onBeforeUnmount(() => {
 });
 
 const expandAll = () => {
-	if (mergeView) {
-		unfoldAll(mergeView.a);
-		unfoldAll(mergeView.b);
-	}
+	if (!mergeView) return;
+	unfoldAll(mergeView.a);
+	unfoldAll(mergeView.b);
 };
 
 const collapseAll = () => {
-	if (mergeView) {
-		// 左侧
-		ensureSyntaxTree(mergeView.a.state, mergeView.a.state.doc.length, 5000);
-		foldAll(mergeView.a);
-
-		// 右侧
-		ensureSyntaxTree(mergeView.b.state, mergeView.b.state.doc.length, 5000);
-		foldAll(mergeView.b);
-	}
+	if (!mergeView) return;
+	ensureSyntaxTree(mergeView.a.state, mergeView.a.state.doc.length, 5000);
+	foldAll(mergeView.a);
+	ensureSyntaxTree(mergeView.b.state, mergeView.b.state.doc.length, 5000);
+	foldAll(mergeView.b);
 };
 
 const nextDiff = () => {
