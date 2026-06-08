@@ -179,6 +179,10 @@ const onUpdateCompareContent = (id, text) => {
 	sessionStore.updateTabCompareContent(id, text);
 };
 
+const onUpdateFoldRanges = (id, ranges) => {
+	sessionStore.updateTabFoldRanges(id, ranges);
+};
+
 /**
  * 保存当前快照到历史记录
  * @param {Object} tab - 当前 Tab 对象
@@ -425,7 +429,7 @@ const handleThemeToggle = (event) => {
 </script>
 
 <template>
-	<div class="app-container">
+	<div class="app-container" translate="no">
 		<!-- 顶部统一 Header (Logo + Tools) -->
 		<div class="header f-acrylic">
 			<div
@@ -819,6 +823,7 @@ const handleThemeToggle = (event) => {
 					:view-mode="activeTab.viewMode"
 					:selected-array-path="activeTab.selectedArrayPath"
 					:compare-content="activeTab.compareContent"
+					:fold-ranges="activeTab.foldRanges"
 					:auto-format-detection="settingsStore.autoFormatDetection"
 					@update:doc="(val) => onUpdateDoc(activeTab.id, val)"
 					@update:view-mode="(val) => onUpdateViewMode(activeTab.id, val)"
@@ -827,6 +832,9 @@ const handleThemeToggle = (event) => {
 					"
 					@update:compare-content="
 						(val) => onUpdateCompareContent(activeTab.id, val)
+					"
+					@update:fold-ranges="
+						(val) => onUpdateFoldRanges(activeTab.id, val)
 					"
 					@save="onSaveHistory(activeTab)" />
 				<div v-else class="empty-state">
