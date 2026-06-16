@@ -89,6 +89,7 @@
 					ref="diffEditorRef"
 					v-model:original="inputText"
 					v-model:modified="localCompareContent"
+					:language-mode="settingsStore.indent === 'jsObj' ? 'javascript' : 'json'"
 					:fold-ranges="foldRanges.diff"
 					@update:fold-ranges="updateDiffFoldRanges" />
 				<div v-if="showLoader" class="overlay-loader">
@@ -103,6 +104,7 @@
 						ref="codeEditorRef"
 						v-model="inputText"
 						:auto-format-detection="autoFormatDetection"
+						:language-mode="settingsStore.indent === 'jsObj' ? 'javascript' : 'json'"
 						:fold-ranges="foldRanges.code"
 						@change="(val) => emit('update:doc', val)"
 						@update:fold-ranges="updateCodeFoldRanges" />
@@ -125,8 +127,10 @@ import { tryParseJson } from '../features/json/parse';
 import { Search as SearchIcon } from '@element-plus/icons-vue';
 import CodeEditor from './CodeEditor.vue';
 import DiffEditor from './DiffEditor.vue';
+import { useSettingsStore } from '../stores/settings';
 
 const { t } = useI18n();
+const settingsStore = useSettingsStore();
 
 const props = defineProps({
 	doc: {

@@ -32,6 +32,11 @@ const props = defineProps({
 		type: Object,
 		default: () => ({ original: [], modified: [] }),
 	},
+	languageMode: {
+		type: String,
+		default: 'json',
+		validator: (value) => ['json', 'javascript'].includes(value),
+	},
 });
 
 const emit = defineEmits([
@@ -52,37 +57,6 @@ let currentLanguage = 'json';
 // 去除 BOM 头
 const stripBom = (text) =>
 	text && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-
-/**
- * 检测文本是否为 JS Object 格式（即不是有效 JSON 但可以被宽松解析）
- * @param {string} text - 要检测的文本
- * @returns {boolean} 是否为 JS Object 格式
- */
-const isJsObjectFormat = (text) => {
-	if (!text || !text.trim()) return false;
-	const cleaned = stripBom(text);
-	try {
-		JSON.parse(cleaned);
-		return false;
-	} catch (e) {
-		try {
-			relaxedJsonParse(cleaned);
-			return true;
-		} catch (e2) {
-			return false;
-		}
-	}
-};
-
-/**
- * 根据两边内容检测应使用的语言模式
- * 如果任一边是 JS Object 格式，则使用 JavaScript 解析器
- */
-const detectLanguage = (original, modified) => {
-	return isJsObjectFormat(original) || isJsObjectFormat(modified)
-		? 'javascript'
-		: 'json';
-};
 
 // DiffEditor 特有的扩展配置生成器（支持语言参数）
 const getDiffEditorExtensions = (isDark, language = 'json') => {
@@ -165,8 +139,8 @@ const initMergeView = () => {
 		mergeView.destroy();
 	}
 
-	// 检测语言模式
-	currentLanguage = detectLanguage(props.original, props.modified);
+	// 使用 prop 决定语言模式,不再检测内容
+	currentLanguage = props.languageMode;
 
 	mergeView = new MergeView({
 		a: {
