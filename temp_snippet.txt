@@ -1,0 +1,10 @@
+<FButton
+						size="small"
+						type="subtle"
+						icon-only
+						@click="handleThemeToggle"
+						:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
+						<component
+							:is="themeStore.isDark ? Moon : Sunny"
+							style="width: 16px" />
+					</FButton>

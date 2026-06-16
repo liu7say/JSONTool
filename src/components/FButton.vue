@@ -1,3 +1,9 @@
+<template>
+	<button :class="classes" :disabled="disabled" @click="handleClick">
+		<slot />
+	</button>
+</template>
+
 <script setup>
 import { computed } from 'vue';
 
@@ -40,12 +46,6 @@ const handleClick = (e) => {
 	emit('click', e);
 };
 </script>
-
-<template>
-	<button :class="classes" :disabled="disabled" @click="handleClick">
-		<slot />
-	</button>
-</template>
 
 <style scoped lang="scss">
 /* 样式已在全局 components.scss 中定义，此处无需重复 */
