@@ -1,5 +1,565 @@
+<template>
+	<div class="app-container" translate="no">
+		<!-- 顶部统一 Header (Logo + Tools) -->
+		<div class="header f-acrylic">
+			<div
+				class="brand"
+				:style="{
+					width: sessionStore.sidebarCollapsed ? '48px' : '140px',
+					overflow: 'hidden',
+				}">
+				<Logo :collapsed="sessionStore.sidebarCollapsed" />
+			</div>
+
+			<div class="header-content">
+				<!-- 左侧：编辑器工具组 -->
+				<div class="toolbar-group left" v-if="activeTab">
+					<!-- 视图切换 -->
+					<div class="tool-section">
+						<div class="f-button-group">
+							<FButton
+								v-if="activeTab.viewMode !== 'diff'"
+								size="small"
+								:type="activeTab.viewMode === 'table' ? 'primary' : 'subtle'"
+								:disabled="
+									activeTab.viewMode !== 'table' &&
+									!String(activeTab.doc.sourceText || '').trim()
+								"
+								@click="triggerToggleTableRaw">
+								<component
+									:is="activeTab.viewMode === 'table' ? Back : Grid"
+									style="width: 14px" />
+								{{ activeTab.viewMode === 'table' ? t('app.back') : t('app.tableView') }}
+							</FButton>
+
+							<FButton
+								v-if="activeTab.viewMode !== 'table'"
+								size="small"
+								:type="activeTab.viewMode === 'diff' ? 'primary' : 'subtle'"
+								:disabled="
+									activeTab.viewMode !== 'diff' &&
+									!String(activeTab.doc.sourceText || '').trim()
+								"
+								@click="triggerToggleDiff">
+								<component
+									:is="activeTab.viewMode === 'diff' ? Back : Switch"
+									style="width: 14px" />
+								{{ activeTab.viewMode === 'diff' ? t('app.exitDiff') : t('app.diff') }}
+							</FButton>
+						</div>
+
+						<div
+							class="f-button-group"
+							v-if="
+								activeTab.viewMode === 'diff' &&
+								jsonEditorRef &&
+								jsonEditorRef.diffCount > 0 &&
+								String(activeTab.doc.sourceText || '').trim() &&
+								String(activeTab.compareContent || '').trim()
+							">
+							<FButton
+								size="small"
+								type="danger"
+								@click="triggerNextDiff"
+								:title="t('app.nextDiffTitle')">
+								{{ t('app.nextDiff') }} <component :is="ArrowRight" style="width: 14px" />
+							</FButton>
+						</div>
+					</div>
+
+					<!-- 错误跳转 (仅 Code 模式) -->
+					<div
+						class="tool-section"
+						v-if="activeTab.viewMode === 'code' && activeTab.doc.parseError">
+						<FButton size="small" type="danger" @click="triggerNextError">
+							{{ t('app.jumpToError') }}
+						</FButton>
+					</div>
+
+					<!-- 格式化工具 (Code/Diff 模式) -->
+					<div
+						class="tool-section"
+						v-if="
+							activeTab.viewMode === 'code' || activeTab.viewMode === 'diff'
+						">
+						<div class="f-button-group" ref="formatButtonRef">
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-left"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerFormat"
+								:title="t('app.format')">
+								<component :is="DocumentCopy" style="width: 14px" /> {{ t('app.format') }}
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-right"
+								icon-only
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click.stop="showFormatMenu = !showFormatMenu"
+								:title="t('app.formatOptions')">
+								<component :is="ArrowDown" style="width: 12px; height: 12px" />
+							</FButton>
+
+							<!-- 下拉菜单 -->
+							<transition name="fade-scale">
+								<div
+									v-if="showFormatMenu"
+									class="f-popover-menu"
+									ref="formatMenuRef">
+									<div class="menu-item switch-menu-item" @click.stop>
+										<span style="white-space: nowrap">{{ t('app.autoFormat') }}</span>
+										<FVerticalSwitch
+											v-model="settingsStore.autoFormatDetection"
+											:title="t('app.autoFormat')"
+											:aria-label="t('app.autoFormat')" />
+									</div>
+									<div class="menu-item" @click="setFormatIndent(2)">
+										<span>{{ t('app.indent2Spaces') }}</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === 2"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+									<div class="menu-item" @click="setFormatIndent(4)">
+										<span>{{ t('app.indent4Spaces') }}</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === 4"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+									<!-- <div class="menu-item" @click="setFormatIndent('\t')">
+										<span>Tab 缩进</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === '\t'"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div> -->
+									<div class="menu-item" @click="setFormatIndent('jsObj')">
+										<span>JS Object</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.indent === 'jsObj'"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+								</div>
+							</transition>
+						</div>
+						<div class="f-button-group">
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerEscape"
+								:title="t('app.escapeTitle')">
+								<component :is="Link" style="width: 14px" /> {{ t('app.escape') }}
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerUnescape"
+								:title="t('app.unescapeTitle')">
+								<component :is="Unlock" style="width: 14px" /> {{ t('app.unescape') }}
+							</FButton>
+						</div>
+						<div class="f-button-group">
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerCompact"
+								:title="t('app.compactTitle')">
+								<component :is="ScaleToOriginal" style="width: 14px" /> {{ t('app.compact') }}
+							</FButton>
+						</div>
+						<!-- 排序按钮组 (带下拉) -->
+						<div class="f-button-group" ref="sortButtonRef">
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-left"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerSort"
+								:title="t('app.sortTitle')">
+								<component :is="Rank" style="width: 14px" /> {{ t('app.sort') }}
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								class="group-right"
+								icon-only
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click.stop="showSortMenu = !showSortMenu"
+								:title="t('app.sortOptions')">
+								<component :is="ArrowDown" style="width: 12px; height: 12px" />
+							</FButton>
+
+							<!-- 下拉菜单 -->
+							<transition name="fade-scale">
+								<div
+									v-if="showSortMenu"
+									class="f-popover-menu"
+									ref="sortMenuRef">
+									<div class="menu-item" @click="toggleSortStructureAtEnd">
+										<span>{{ t('app.structureAtEnd') }}</span>
+										<div class="check-box">
+											<component
+												v-if="settingsStore.sortStructureAtEnd"
+												:is="Check"
+												style="width: 12px" />
+										</div>
+									</div>
+								</div>
+							</transition>
+						</div>
+
+						<div class="f-button-group">
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerUnicodeToChinese"
+								:title="t('app.unicodeToChineseTitle')">
+								<component :is="MagicStick" style="width: 14px" /> {{ t('app.unicodeToChinese') }}
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerChineseToUnicode"
+								:title="t('app.chineseToUnicodeTitle')">
+								<component :is="Connection" style="width: 14px" /> {{ t('app.chineseToUnicode') }}
+							</FButton>
+						</div>
+
+						<div class="f-button-group">
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerExpandAll"
+								:title="t('app.expandAllTitle')">
+								<component :is="Expand" style="width: 14px" />
+							</FButton>
+							<FButton
+								size="small"
+								type="subtle"
+								:disabled="!String(activeTab.doc.sourceText || '').trim()"
+								@click="triggerCollapseAll"
+								:title="t('app.collapseAllTitle')">
+								<component :is="Fold" style="width: 14px" />
+							</FButton>
+						</div>
+					</div>
+				</div>
+				<div class="toolbar-group left" v-else></div>
+
+				<!-- 右侧：全局操作组 -->
+				<div class="toolbar-group right">
+					<FButton
+						v-if="activeTab"
+						size="small"
+						type="primary"
+						@click="onSaveHistory(activeTab)"
+						:title="t('app.saveSnapshotTitle')">
+						<component :is="Operation" style="width: 14px" /> {{ t('app.saveSnapshot') }}
+					</FButton>
+
+					<FButton
+						v-if="showHistoryEntry"
+						size="small"
+						type="subtle"
+						icon-only
+						@click="showHistory = true"
+						:class="{ 'bump-animation': historyButtonAnimate }"
+						:title="t('app.historyTitle')">
+						<component :is="Clock" style="width: 16px" />
+					</FButton>
+
+					<!-- 语言切换 -->
+					<div class="language-selector-wrapper" ref="languageButtonRef">
+						<FButton
+							size="small"
+							type="subtle"
+							icon-only
+							@click.stop="showLanguageMenu = !showLanguageMenu"
+							:title="t('common.language')">
+							<span style="font-size: 12px; font-weight: 600">{{
+								currentLanguageLabel
+							}}</span>
+						</FButton>
+
+						<!-- 语言下拉菜单 -->
+						<transition name="fade-scale">
+							<div
+								v-if="showLanguageMenu"
+								class="f-popover-menu language-menu"
+								ref="languageMenuRef">
+								<div class="menu-item" @click="changeLocale('zh')">
+									<span>{{ t('common.chinese') }}</span>
+									<div class="check-box">
+										<component
+											v-if="locale === 'zh'"
+											:is="Check"
+											style="width: 12px" />
+									</div>
+								</div>
+								<div class="menu-item" @click="changeLocale('en')">
+									<span>{{ t('common.english') }}</span>
+									<div class="check-box">
+										<component
+											v-if="locale === 'en'"
+											:is="Check"
+											style="width: 12px" />
+									</div>
+								</div>
+							</div>
+						</transition>
+					</div>
+
+					<FButton
+						size="small"
+						type="subtle"
+						icon-only
+						@click="handleThemeToggle"
+						:title="themeStore.isDark ? t('app.themeToLight') : t('app.themeToDark')">
+						<component
+							:is="themeStore.isDark ? Moon : Sunny"
+							style="width: 16px" />
+					</FButton>
+
+					<a
+						class="f-button small subtle icon-only"
+						title="GitHub"
+						href="https://github.com/liu7say/JSONTool"
+						target="_blank"
+						style="
+							text-decoration: none;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+						">
+						<img
+							:src="GithubIconUrl"
+							alt="GitHub"
+							style="width: 16px; height: 16px" />
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<!-- 下方工作区：侧边栏 + 内容 -->
+		<div class="workspace">
+			<!-- 左侧边栏 (Vertical Tabs) -->
+			<div
+				class="sidebar f-acrylic"
+				:class="{ collapsed: sessionStore.sidebarCollapsed }">
+				<div
+					class="toggle-btn"
+					@click="sessionStore.toggleSidebar"
+					:title="sessionStore.sidebarCollapsed ? t('app.expandSidebar') : t('app.collapseSidebar')">
+					<component
+						:is="sessionStore.sidebarCollapsed ? ArrowRight : ArrowLeft"
+						style="width: 12px" />
+				</div>
+
+				<div class="tabs-list f-tabs vertical">
+					<draggable
+						v-model="tabsList"
+						item-key="id"
+						:animation="200"
+						ghost-class="ghost-tab"
+						drag-class="drag-tab"
+						:disabled="sessionStore.sidebarCollapsed"
+						class="drag-container">
+						<template #item="{ element: tab }">
+							<div
+								class="f-tab-item vertical"
+								:class="{ active: sessionStore.activeTabId === tab.id }"
+								:data-id="tab.id"
+								@click="sessionStore.setActive(tab.id)"
+								@mousedown.middle.prevent="sessionStore.closeTab(tab.id)"
+								@mouseenter="(e) => onTabMouseEnter(e, tab.id)"
+								@mouseleave="onTabMouseLeave">
+								<div class="tab-content">
+									<span class="tab-text" :title="tab.title">
+										{{
+											sessionStore.sidebarCollapsed
+												? getShortTitle(tab.title)
+												: tab.title
+										}}
+									</span>
+								</div>
+								<span
+									class="tab-close"
+									@click.stop="sessionStore.closeTab(tab.id)"
+									:title="t('app.closeTab')">
+									<component :is="Close" style="width: 12px; height: 12px" />
+								</span>
+							</div>
+						</template>
+					</draggable>
+
+					<!-- 新建标签页按钮 (行内) -->
+					<div class="new-tab-wrapper">
+						<FButton
+							type="subtle"
+							icon-only
+							class="new-tab-btn"
+							@click="sessionStore.createTab()"
+							:title="t('app.newTab')">
+							<component :is="Plus" style="width: 16px" />
+						</FButton>
+					</div>
+				</div>
+			</div>
+
+			<!-- 主内容区 -->
+			<div class="content-area">
+				<JsonEditor
+					v-if="activeTab"
+					ref="jsonEditorRef"
+					:doc="activeTab.doc"
+					:view-mode="activeTab.viewMode"
+					:selected-array-path="activeTab.selectedArrayPath"
+					:compare-content="activeTab.compareContent"
+					:fold-ranges="activeTab.foldRanges"
+					:auto-format-detection="settingsStore.autoFormatDetection"
+					@update:doc="(val) => onUpdateDoc(activeTab.id, val)"
+					@update:view-mode="(val) => onUpdateViewMode(activeTab.id, val)"
+					@update:selected-array-path="
+						(val) => onUpdateArrayPath(activeTab.id, val)
+					"
+					@update:compare-content="
+						(val) => onUpdateCompareContent(activeTab.id, val)
+					"
+					@update:fold-ranges="
+						(val) => onUpdateFoldRanges(activeTab.id, val)
+					"
+					@save="onSaveHistory(activeTab)" />
+				<div v-else class="empty-state">
+					<div class="empty-content">
+						<h3>{{ t('app.noOpenFiles') }}</h3>
+						<FButton type="primary" @click="sessionStore.createTab()">
+							{{ t('app.newJson') }}
+						</FButton>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 折叠标签页的悬浮弹出框 -->
+		<div
+			v-if="sessionStore.sidebarCollapsed && hoveredTab"
+			class="tab-popover f-tab-item vertical active"
+			:style="popoverStyle"
+			@mouseenter="onPopoverMouseEnter"
+			@mouseleave="onPopoverMouseLeave"
+			@click="
+				sessionStore.setActive(hoveredTab.id);
+				hoveredTabId = null;
+			"
+			@mousedown.middle.prevent="sessionStore.closeTab(hoveredTab.id)">
+			<div class="tab-content">
+				<span class="tab-text" :title="hoveredTab.title">{{
+					hoveredTab.title
+				}}</span>
+			</div>
+			<span
+				class="tab-close"
+				@click.stop="sessionStore.closeTab(hoveredTab.id)"
+				:title="t('app.closeTab')">
+				<component :is="Close" style="width: 12px; height: 12px" />
+			</span>
+
+			<!-- 如果这是当前激活的标签页，复制激活指示器样式 -->
+			<div
+				v-if="sessionStore.activeTabId === hoveredTab.id"
+				class="popover-indicator"></div>
+		</div>
+
+		<!-- 全局底部状态栏 -->
+		<div class="footer status-bar" :class="{ error: statusBarInfo.isError }">
+			<span>{{ statusBarInfo.text }}</span>
+		</div>
+
+		<!-- 历史记录抽屉 (Custom Fluent Drawer) -->
+		<div
+			class="f-drawer-overlay"
+			v-if="showHistory"
+			@click="showHistory = false"></div>
+		<div class="f-drawer" :class="{ open: showHistory }">
+			<div class="f-drawer-header">
+				<span>{{ t('app.history') }}</span>
+				<FButton type="subtle" icon-only @click="showHistory = false">
+					<component :is="Close" style="width: 18px" />
+				</FButton>
+			</div>
+
+			<div class="history-list">
+				<div v-if="!historyStore.index.length" class="muted-text">{{ t('app.noHistory') }}
+				</div>
+				<div
+					v-for="item in historyStore.index"
+					:key="item.id"
+					class="history-entry f-card"
+					@click="loadHistoryEntry(item)">
+					<div class="entry-main">
+						<div class="entry-title">{{ item.title }}</div>
+						<div class="entry-time">
+							{{ new Date(item.createdAt).toLocaleString() }}
+						</div>
+					</div>
+					<FButton
+						type="subtle"
+						icon-only
+						class="entry-del"
+						@click.stop="historyStore.removeEntry(item.id)"
+						:title="t('app.deleteEntry')">
+						<component
+							:is="Delete"
+							style="width: 14px; color: var(--f-color-error)" />
+					</FButton>
+				</div>
+
+				<div v-if="historyStore.index.length" class="history-footer">
+					<FButton
+						type="subtle"
+						style="color: var(--f-color-error)"
+						@click="historyStore.clearAll">
+						{{ t('app.clearAll') }}
+					</FButton>
+				</div>
+			</div>
+		</div>
+
+		<!-- Toast Notification -->
+		<transition name="toast-fade">
+			<div v-if="toastVisible" class="toast-notification f-acrylic">
+				<component
+					:is="Check"
+					style="width: 16px; color: var(--f-brand-base)" />
+				<span>{{ toastMessage }}</span>
+			</div>
+		</transition>
+	</div>
+</template>
+
 <script setup>
 import { onMounted, onUnmounted, ref, nextTick, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { setLocale } from './i18n';
 import { useSessionStore } from './stores/session';
 import { useHistoryStore } from './stores/history';
 import { useThemeStore } from './stores/theme';
@@ -41,6 +601,7 @@ const sessionStore = useSessionStore();
 const historyStore = useHistoryStore();
 const themeStore = useThemeStore();
 const settingsStore = useSettingsStore();
+const { t, locale } = useI18n();
 
 // UI 状态 refs
 const showHistoryEntry = false;
@@ -53,6 +614,16 @@ const sortMenuRef = ref(null);
 const showFormatMenu = ref(false);
 const formatButtonRef = ref(null);
 const formatMenuRef = ref(null);
+
+const showLanguageMenu = ref(false);
+const languageButtonRef = ref(null);
+const languageMenuRef = ref(null);
+const currentLanguageLabel = computed(() => (locale.value === 'zh' ? '中' : 'EN'));
+
+const changeLocale = (value) => {
+	setLocale(value);
+	showLanguageMenu.value = false;
+};
 
 // 动画和提示状态
 const historyButtonAnimate = ref(false);
@@ -105,6 +676,16 @@ const handleClickOutside = (e) => {
 		!formatMenuRef.value.contains(e.target)
 	) {
 		showFormatMenu.value = false;
+	}
+	// 语言菜单
+	if (
+		showLanguageMenu.value &&
+		languageButtonRef.value &&
+		!languageButtonRef.value.contains(e.target) &&
+		languageMenuRef.value &&
+		!languageMenuRef.value.contains(e.target)
+	) {
+		showLanguageMenu.value = false;
 	}
 };
 
@@ -192,7 +773,7 @@ const onSaveHistory = async (tab) => {
 		await historyStore.saveEntry({
 			doc: { ...tab.doc, parsedValue: null }, // 不保存解析后的值，只保存源码
 			toolState: { viewMode: tab.viewMode },
-			title: tab.title || '未命名快照',
+			title: tab.title || t('app.untitledSnapshot'),
 		});
 
 		// 触发按钮动画
@@ -203,7 +784,7 @@ const onSaveHistory = async (tab) => {
 
 		// 显示提示
 		if (toastTimer) clearTimeout(toastTimer);
-		toastMessage.value = '已保存当前标签页快照';
+		toastMessage.value = t('app.savedSnapshot');
 		toastVisible.value = true;
 		toastTimer = setTimeout(() => {
 			toastVisible.value = false;
@@ -347,29 +928,27 @@ const hoveredTab = computed(() =>
 
 // 状态栏信息
 const statusBarInfo = computed(() => {
-	if (!activeTab.value) return { text: '就绪', isError: false };
+	if (!activeTab.value) return { text: t('common.ready'), isError: false };
 
 	const tab = activeTab.value;
 	const doc = tab.doc;
 
 	if (tab.viewMode === 'table') {
-		const path = tab.selectedArrayPath || '(顶层)';
-		return { text: `表格模式 • 路径: ${path}`, isError: false };
+		const path = tab.selectedArrayPath || t('app.topLevel');
+		return { text: t('app.tableStatus', { path }), isError: false };
 	}
 
 	if (tab.viewMode === 'diff') {
-		// Diff 模式显示对比信息
 		const mainLen = (doc.sourceText || '').length;
 		const compareLen = (tab.compareContent || '').length;
 		return {
-			text: `对比模式 • 主文档: ${mainLen} 字符 • 对比文档: ${compareLen} 字符`,
+			text: t('app.diffStatus', { main: mainLen, compare: compareLen }),
 			isError: false,
 		};
 	}
 
-	// 代码模式
 	if (!String(doc.sourceText || '').trim()) {
-		return { text: '请输入 JSON', isError: false };
+		return { text: t('app.inputJson'), isError: false };
 	}
 
 	if (doc.parseError) {
@@ -377,7 +956,7 @@ const statusBarInfo = computed(() => {
 	}
 
 	return {
-		text: `JSON 有效 • ${doc.sourceText.length} 字符`,
+		text: t('app.jsonValid', { count: doc.sourceText.length }),
 		isError: false,
 	};
 });
@@ -428,523 +1007,7 @@ const handleThemeToggle = (event) => {
 };
 </script>
 
-<template>
-	<div class="app-container" translate="no">
-		<!-- 顶部统一 Header (Logo + Tools) -->
-		<div class="header f-acrylic">
-			<div
-				class="brand"
-				:style="{
-					width: sessionStore.sidebarCollapsed ? '48px' : '140px',
-					overflow: 'hidden',
-				}">
-				<Logo :collapsed="sessionStore.sidebarCollapsed" />
-			</div>
 
-			<div class="header-content">
-				<!-- 左侧：编辑器工具组 -->
-				<div class="toolbar-group left" v-if="activeTab">
-					<!-- 视图切换 -->
-					<div class="tool-section">
-						<div class="f-button-group">
-							<FButton
-								v-if="activeTab.viewMode !== 'diff'"
-								size="small"
-								:type="activeTab.viewMode === 'table' ? 'primary' : 'subtle'"
-								:disabled="
-									activeTab.viewMode !== 'table' &&
-									!String(activeTab.doc.sourceText || '').trim()
-								"
-								@click="triggerToggleTableRaw">
-								<component
-									:is="activeTab.viewMode === 'table' ? Back : Grid"
-									style="width: 14px" />
-								{{ activeTab.viewMode === 'table' ? '返回' : '表格视图' }}
-							</FButton>
-
-							<FButton
-								v-if="activeTab.viewMode !== 'table'"
-								size="small"
-								:type="activeTab.viewMode === 'diff' ? 'primary' : 'subtle'"
-								:disabled="
-									activeTab.viewMode !== 'diff' &&
-									!String(activeTab.doc.sourceText || '').trim()
-								"
-								@click="triggerToggleDiff">
-								<component
-									:is="activeTab.viewMode === 'diff' ? Back : Switch"
-									style="width: 14px" />
-								{{ activeTab.viewMode === 'diff' ? '退出对比' : '对比' }}
-							</FButton>
-						</div>
-
-						<div
-							class="f-button-group"
-							v-if="
-								activeTab.viewMode === 'diff' &&
-								jsonEditorRef &&
-								jsonEditorRef.diffCount > 0 &&
-								String(activeTab.doc.sourceText || '').trim() &&
-								String(activeTab.compareContent || '').trim()
-							">
-							<FButton
-								size="small"
-								type="danger"
-								@click="triggerNextDiff"
-								title="跳转到下一个差异">
-								下一个差异 <component :is="ArrowRight" style="width: 14px" />
-							</FButton>
-						</div>
-					</div>
-
-					<!-- 错误跳转 (仅 Code 模式) -->
-					<div
-						class="tool-section"
-						v-if="activeTab.viewMode === 'code' && activeTab.doc.parseError">
-						<FButton size="small" type="danger" @click="triggerNextError">
-							跳到错误
-						</FButton>
-					</div>
-
-					<!-- 格式化工具 (Code/Diff 模式) -->
-					<div
-						class="tool-section"
-						v-if="
-							activeTab.viewMode === 'code' || activeTab.viewMode === 'diff'
-						">
-						<div class="f-button-group" ref="formatButtonRef">
-							<FButton
-								size="small"
-								type="subtle"
-								class="group-left"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerFormat"
-								title="Format">
-								<component :is="DocumentCopy" style="width: 14px" /> 格式化
-							</FButton>
-							<FButton
-								size="small"
-								type="subtle"
-								class="group-right"
-								icon-only
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click.stop="showFormatMenu = !showFormatMenu"
-								title="格式化选项">
-								<component :is="ArrowDown" style="width: 12px; height: 12px" />
-							</FButton>
-
-							<!-- 下拉菜单 -->
-							<transition name="fade-scale">
-								<div
-									v-if="showFormatMenu"
-									class="f-popover-menu"
-									ref="formatMenuRef">
-									<div class="menu-item switch-menu-item" @click.stop>
-										<span style="white-space: nowrap">自动格式化</span>
-										<FVerticalSwitch
-											v-model="settingsStore.autoFormatDetection"
-											title="自动格式化"
-											aria-label="自动格式化" />
-									</div>
-									<div class="menu-item" @click="setFormatIndent(2)">
-										<span>2 空格</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.indent === 2"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div>
-									<div class="menu-item" @click="setFormatIndent(4)">
-										<span>4 空格</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.indent === 4"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div>
-									<!-- <div class="menu-item" @click="setFormatIndent('\t')">
-										<span>Tab 缩进</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.indent === '\t'"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div> -->
-									<div class="menu-item" @click="setFormatIndent('jsObj')">
-										<span>JS Object</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.indent === 'jsObj'"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div>
-								</div>
-							</transition>
-						</div>
-						<div class="f-button-group">
-							<FButton
-								size="small"
-								type="subtle"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerEscape"
-								title="将内容转义为 JSON 字符串">
-								<component :is="Link" style="width: 14px" /> 转义
-							</FButton>
-							<FButton
-								size="small"
-								type="subtle"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerUnescape"
-								title="去除 JSON 字符串转义">
-								<component :is="Unlock" style="width: 14px" /> 去转义
-							</FButton>
-						</div>
-						<div class="f-button-group">
-							<FButton
-								size="small"
-								type="subtle"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerCompact"
-								title="Compact">
-								<component :is="ScaleToOriginal" style="width: 14px" /> 压缩
-							</FButton>
-						</div>
-						<!-- 排序按钮组 (带下拉) -->
-						<div class="f-button-group" ref="sortButtonRef">
-							<FButton
-								size="small"
-								type="subtle"
-								class="group-left"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerSort"
-								title="按 Keys 排序">
-								<component :is="Rank" style="width: 14px" /> 排序
-							</FButton>
-							<FButton
-								size="small"
-								type="subtle"
-								class="group-right"
-								icon-only
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click.stop="showSortMenu = !showSortMenu"
-								title="排序选项">
-								<component :is="ArrowDown" style="width: 12px; height: 12px" />
-							</FButton>
-
-							<!-- 下拉菜单 -->
-							<transition name="fade-scale">
-								<div
-									v-if="showSortMenu"
-									class="f-popover-menu"
-									ref="sortMenuRef">
-									<div class="menu-item" @click="toggleSortStructureAtEnd">
-										<span>结构类型在后</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.sortStructureAtEnd"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div>
-								</div>
-							</transition>
-						</div>
-
-						<div class="f-button-group">
-							<FButton
-								size="small"
-								type="subtle"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerUnicodeToChinese"
-								title="将 Unicode 转义序列转换为中文">
-								<component :is="MagicStick" style="width: 14px" /> Uni->中
-							</FButton>
-							<FButton
-								size="small"
-								type="subtle"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerChineseToUnicode"
-								title="将中文转换为 Unicode 转义序列">
-								<component :is="Connection" style="width: 14px" /> 中->Uni
-							</FButton>
-						</div>
-
-						<div class="f-button-group">
-							<FButton
-								size="small"
-								type="subtle"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerExpandAll"
-								title="全部展开">
-								<component :is="Expand" style="width: 14px" />
-							</FButton>
-							<FButton
-								size="small"
-								type="subtle"
-								:disabled="!String(activeTab.doc.sourceText || '').trim()"
-								@click="triggerCollapseAll"
-								title="全部收起">
-								<component :is="Fold" style="width: 14px" />
-							</FButton>
-						</div>
-					</div>
-				</div>
-				<div class="toolbar-group left" v-else></div>
-
-				<!-- 右侧：全局操作组 -->
-				<div class="toolbar-group right">
-					<FButton
-						v-if="activeTab"
-						size="small"
-						type="primary"
-						@click="onSaveHistory(activeTab)"
-						title="只会保存当前标签页的快照">
-						<component :is="Operation" style="width: 14px" /> 保存快照
-					</FButton>
-
-					<FButton
-						v-if="showHistoryEntry"
-						size="small"
-						type="subtle"
-						icon-only
-						@click="showHistory = true"
-						:class="{ 'bump-animation': historyButtonAnimate }"
-						title="历史记录">
-						<component :is="Clock" style="width: 16px" />
-					</FButton>
-
-					<FButton
-						size="small"
-						type="subtle"
-						icon-only
-						@click="handleThemeToggle"
-						:title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'">
-						<component
-							:is="themeStore.isDark ? Moon : Sunny"
-							style="width: 16px" />
-					</FButton>
-
-					<a
-						class="f-button small subtle icon-only"
-						title="GitHub"
-						href="https://github.com/liu7say/JSONTool"
-						target="_blank"
-						style="
-							text-decoration: none;
-							display: flex;
-							align-items: center;
-							justify-content: center;
-						">
-						<img
-							:src="GithubIconUrl"
-							alt="GitHub"
-							style="width: 16px; height: 16px" />
-					</a>
-				</div>
-			</div>
-		</div>
-
-		<!-- 下方工作区：侧边栏 + 内容 -->
-		<div class="workspace">
-			<!-- 左侧边栏 (Vertical Tabs) -->
-			<div
-				class="sidebar f-acrylic"
-				:class="{ collapsed: sessionStore.sidebarCollapsed }">
-				<div
-					class="toggle-btn"
-					@click="sessionStore.toggleSidebar"
-					:title="sessionStore.sidebarCollapsed ? '展开' : '收起'">
-					<component
-						:is="sessionStore.sidebarCollapsed ? ArrowRight : ArrowLeft"
-						style="width: 12px" />
-				</div>
-
-				<div class="tabs-list f-tabs vertical">
-					<draggable
-						v-model="tabsList"
-						item-key="id"
-						:animation="200"
-						ghost-class="ghost-tab"
-						drag-class="drag-tab"
-						:disabled="sessionStore.sidebarCollapsed"
-						class="drag-container">
-						<template #item="{ element: tab }">
-							<div
-								class="f-tab-item vertical"
-								:class="{ active: sessionStore.activeTabId === tab.id }"
-								:data-id="tab.id"
-								@click="sessionStore.setActive(tab.id)"
-								@mousedown.middle.prevent="sessionStore.closeTab(tab.id)"
-								@mouseenter="(e) => onTabMouseEnter(e, tab.id)"
-								@mouseleave="onTabMouseLeave">
-								<div class="tab-content">
-									<span class="tab-text" :title="tab.title">
-										{{
-											sessionStore.sidebarCollapsed
-												? getShortTitle(tab.title)
-												: tab.title
-										}}
-									</span>
-								</div>
-								<span
-									class="tab-close"
-									@click.stop="sessionStore.closeTab(tab.id)"
-									title="关闭">
-									<component :is="Close" style="width: 12px; height: 12px" />
-								</span>
-							</div>
-						</template>
-					</draggable>
-
-					<!-- 新建标签页按钮 (行内) -->
-					<div class="new-tab-wrapper">
-						<FButton
-							type="subtle"
-							icon-only
-							class="new-tab-btn"
-							@click="sessionStore.createTab()"
-							title="新建标签页">
-							<component :is="Plus" style="width: 16px" />
-						</FButton>
-					</div>
-				</div>
-			</div>
-
-			<!-- 主内容区 -->
-			<div class="content-area">
-				<JsonEditor
-					v-if="activeTab"
-					ref="jsonEditorRef"
-					:doc="activeTab.doc"
-					:view-mode="activeTab.viewMode"
-					:selected-array-path="activeTab.selectedArrayPath"
-					:compare-content="activeTab.compareContent"
-					:fold-ranges="activeTab.foldRanges"
-					:auto-format-detection="settingsStore.autoFormatDetection"
-					@update:doc="(val) => onUpdateDoc(activeTab.id, val)"
-					@update:view-mode="(val) => onUpdateViewMode(activeTab.id, val)"
-					@update:selected-array-path="
-						(val) => onUpdateArrayPath(activeTab.id, val)
-					"
-					@update:compare-content="
-						(val) => onUpdateCompareContent(activeTab.id, val)
-					"
-					@update:fold-ranges="
-						(val) => onUpdateFoldRanges(activeTab.id, val)
-					"
-					@save="onSaveHistory(activeTab)" />
-				<div v-else class="empty-state">
-					<div class="empty-content">
-						<h3>没有打开的文件</h3>
-						<FButton type="primary" @click="sessionStore.createTab()">
-							新建 JSON
-						</FButton>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- 折叠标签页的悬浮弹出框 -->
-		<div
-			v-if="sessionStore.sidebarCollapsed && hoveredTab"
-			class="tab-popover f-tab-item vertical active"
-			:style="popoverStyle"
-			@mouseenter="onPopoverMouseEnter"
-			@mouseleave="onPopoverMouseLeave"
-			@click="
-				sessionStore.setActive(hoveredTab.id);
-				hoveredTabId = null;
-			"
-			@mousedown.middle.prevent="sessionStore.closeTab(hoveredTab.id)">
-			<div class="tab-content">
-				<span class="tab-text" :title="hoveredTab.title">{{
-					hoveredTab.title
-				}}</span>
-			</div>
-			<span
-				class="tab-close"
-				@click.stop="sessionStore.closeTab(hoveredTab.id)"
-				title="关闭">
-				<component :is="Close" style="width: 12px; height: 12px" />
-			</span>
-
-			<!-- 如果这是当前激活的标签页，复制激活指示器样式 -->
-			<div
-				v-if="sessionStore.activeTabId === hoveredTab.id"
-				class="popover-indicator"></div>
-		</div>
-
-		<!-- 全局底部状态栏 -->
-		<div class="footer status-bar" :class="{ error: statusBarInfo.isError }">
-			<span>{{ statusBarInfo.text }}</span>
-		</div>
-
-		<!-- 历史记录抽屉 (Custom Fluent Drawer) -->
-		<div
-			class="f-drawer-overlay"
-			v-if="showHistory"
-			@click="showHistory = false"></div>
-		<div class="f-drawer" :class="{ open: showHistory }">
-			<div class="f-drawer-header">
-				<span>历史记录</span>
-				<FButton type="subtle" icon-only @click="showHistory = false">
-					<component :is="Close" style="width: 18px" />
-				</FButton>
-			</div>
-
-			<div class="history-list">
-				<div v-if="!historyStore.index.length" class="muted-text">
-					暂无历史记录
-				</div>
-				<div
-					v-for="item in historyStore.index"
-					:key="item.id"
-					class="history-entry f-card"
-					@click="loadHistoryEntry(item)">
-					<div class="entry-main">
-						<div class="entry-title">{{ item.title }}</div>
-						<div class="entry-time">
-							{{ new Date(item.createdAt).toLocaleString() }}
-						</div>
-					</div>
-					<FButton
-						type="subtle"
-						icon-only
-						class="entry-del"
-						@click.stop="historyStore.removeEntry(item.id)"
-						title="删除">
-						<component
-							:is="Delete"
-							style="width: 14px; color: var(--f-color-error)" />
-					</FButton>
-				</div>
-
-				<div v-if="historyStore.index.length" class="history-footer">
-					<FButton
-						type="subtle"
-						style="color: var(--f-color-error)"
-						@click="historyStore.clearAll">
-						清空全部
-					</FButton>
-				</div>
-			</div>
-		</div>
-
-		<!-- Toast Notification -->
-		<transition name="toast-fade">
-			<div v-if="toastVisible" class="toast-notification f-acrylic">
-				<component
-					:is="Check"
-					style="width: 16px; color: var(--f-brand-base)" />
-				<span>{{ toastMessage }}</span>
-			</div>
-		</transition>
-	</div>
-</template>
 
 <style scoped lang="scss">
 .app-container {
@@ -1105,6 +1168,16 @@ const handleThemeToggle = (event) => {
 			cursor: not-allowed;
 		}
 	}
+}
+
+.language-selector-wrapper {
+	position: relative;
+	display: inline-flex;
+}
+
+.language-menu {
+	right: 0;
+	left: auto;
 }
 
 .f-popover-menu {
@@ -1666,3 +1739,5 @@ const handleThemeToggle = (event) => {
 	z-index: 9999;
 }
 </style>
+
+

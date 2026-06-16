@@ -1,5 +1,10 @@
+<template>
+	<div class="code-editor-wrapper" ref="editorContainer"></div>
+</template>
+
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 // CodeMirror 核心
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
@@ -19,6 +24,8 @@ import { useSettingsStore } from '../stores/settings';
 import { getEditorExtensions } from '../features/codemirror/editor-config';
 import { relaxedJsonParse } from '../features/json/parse';
 import { stringifyJson } from '../features/json/stringify';
+
+const { t } = useI18n();
 
 const props = defineProps({
 	modelValue: {
@@ -146,7 +153,7 @@ const buildJsonDiagnostics = (sourceText, parseError) => {
 			from,
 			to,
 			severity: 'error',
-			message: String(parseError || 'JSON 解析失败'),
+			message: String(parseError || t('editor.jsonParseFailed')),
 		},
 	];
 };
@@ -268,7 +275,9 @@ const getDocumentLanguage = (text) =>
 // CodeEditor 特有的扩展配置（Lint、搜索、自动格式化）
 const getCodeEditorExtensions = () => [
 	search({ top: true }), // 搜索框在顶部
-	...(props.autoFormatDetection ? [lintGutter(), linter(jsonSyntaxLinter())] : []),
+	...(props.autoFormatDetection
+		? [lintGutter(), linter(jsonSyntaxLinter())]
+		: []),
 	EditorView.updateListener.of((update) => {
 		if (update.docChanged) {
 			const newVal = update.state.doc.toString();
@@ -457,10 +466,6 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<template>
-	<div class="code-editor-wrapper" ref="editorContainer"></div>
-</template>
-
 <style scoped>
 .code-editor-wrapper {
 	height: 100%;
@@ -473,3 +478,4 @@ onBeforeUnmount(() => {
 	width: 0;
 }
 </style>
+

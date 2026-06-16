@@ -1,12 +1,3 @@
-<script setup>
-import logoIcon from '@/assets/icon24.svg';
-defineProps({
-	collapsed: {
-		type: Boolean,
-		default: false,
-	},
-});
-</script>
 
 <template>
 	<div class="app-logo">
@@ -34,6 +25,17 @@ defineProps({
 		</svg> -->
 	</div>
 </template>
+
+<script setup>
+import logoIcon from '@/assets/icon24.svg';
+defineProps({
+	collapsed: {
+		type: Boolean,
+		default: false,
+	},
+});
+</script>
+
 
 <style scoped>
 .app-logo {

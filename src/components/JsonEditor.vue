@@ -1,5 +1,123 @@
+<template>
+	<div class="json-editor">
+		<!-- 主区域 -->
+		<div class="editor-main">
+			<!-- 表格模式 -->
+			<div v-if="viewMode === 'table'" class="table-mode">
+				<!-- 表格控件 -->
+				<div class="table-controls">
+					<div class="path-select-wrapper">
+						<label>{{ t('editor.arrayPath') }}</label>
+						<div class="f-select-container">
+							<select v-model="selectedPath" class="f-select">
+								<option
+									v-for="path in availableArrayPaths"
+									:key="path"
+									:value="path">
+									{{ path || t('editor.topArray') }}
+								</option>
+							</select>
+						</div>
+					</div>
+
+					<div class="filter-wrapper">
+						<div class="f-input-wrapper search-input">
+							<component :is="SearchIcon" class="search-icon" />
+							<input
+								type="text"
+								class="f-input"
+								v-model="filterText"
+								:placeholder="t('editor.searchTable')" />
+						</div>
+					</div>
+				</div>
+
+				<!-- 表格主体 -->
+				<div
+					v-if="
+						!availableArrayPaths.includes(selectedPath) &&
+						availableArrayPaths.length > 0
+					"
+					class="empty-state">
+					{{ t('editor.chooseArrayField') }}
+				</div>
+				<div v-else-if="rawTableData.error" class="empty-state">
+					{{ rawTableData.error }}
+				</div>
+				<div v-else class="f-table-container">
+					<table class="f-table">
+						<thead>
+							<tr>
+								<!-- 行索引列 -->
+								<th class="index-col">#</th>
+								<th
+									v-for="col in rawTableData.columns"
+									:key="col"
+									class="sortable"
+									:style="{
+										width: colWidths[col] ? colWidths[col] + 'px' : 'auto',
+									}"
+									@click="handleSort(col)">
+									<div class="th-content">
+										<span>{{ col }}</span>
+										<span v-if="sortCol === col" class="sort-indicator">
+											{{ sortAsc ? '↑' : '↓' }}
+										</span>
+									</div>
+									<div
+										class="resizer"
+										@click.stop
+										@mousedown.stop="(e) => startResize(e, col)"></div>
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="(row, idx) in processedRows" :key="row.__rowId">
+								<td class="index-col">{{ idx + 1 }}</td>
+								<td v-for="col in rawTableData.columns" :key="col">
+									{{ row[col] !== undefined ? row[col] : '' }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<!-- 差异模式 -->
+			<div v-else-if="viewMode === 'diff'" class="code-wrapper">
+				<DiffEditor
+					ref="diffEditorRef"
+					v-model:original="inputText"
+					v-model:modified="localCompareContent"
+					:fold-ranges="foldRanges.diff"
+					@update:fold-ranges="updateDiffFoldRanges" />
+				<div v-if="showLoader" class="overlay-loader">
+					<span>{{ t('editor.sorting') }}</span>
+				</div>
+			</div>
+
+			<!-- 代码模式 -->
+			<div v-else class="code-wrapper">
+				<div class="editor-pane">
+					<CodeEditor
+						ref="codeEditorRef"
+						v-model="inputText"
+						:auto-format-detection="autoFormatDetection"
+						:fold-ranges="foldRanges.code"
+						@change="(val) => emit('update:doc', val)"
+						@update:fold-ranges="updateCodeFoldRanges" />
+				</div>
+				<div v-if="showLoader" class="overlay-loader">
+					<span>{{ t('editor.sorting') }}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { formatJsonText } from '../features/json/format';
 import { sortJsonKeys } from '../features/json/sort';
 import { jsonToTable, findArrayPaths } from '../features/json/table';
@@ -7,6 +125,8 @@ import { tryParseJson } from '../features/json/parse';
 import { Search as SearchIcon } from '@element-plus/icons-vue';
 import CodeEditor from './CodeEditor.vue';
 import DiffEditor from './DiffEditor.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
 	doc: {
@@ -424,123 +544,6 @@ defineExpose({
 });
 </script>
 
-<template>
-	<div class="json-editor">
-		<!-- 主区域 -->
-		<div class="editor-main">
-			<!-- 表格模式 -->
-			<div v-if="viewMode === 'table'" class="table-mode">
-				<!-- 表格控件 -->
-				<div class="table-controls">
-					<div class="path-select-wrapper">
-						<label>数组路径:</label>
-						<div class="f-select-container">
-							<select v-model="selectedPath" class="f-select">
-								<option
-									v-for="path in availableArrayPaths"
-									:key="path"
-									:value="path">
-									{{ path || '(顶层数组)' }}
-								</option>
-							</select>
-						</div>
-					</div>
-
-					<div class="filter-wrapper">
-						<div class="f-input-wrapper search-input">
-							<component :is="SearchIcon" class="search-icon" />
-							<input
-								type="text"
-								class="f-input"
-								v-model="filterText"
-								placeholder="搜索表格内容..." />
-						</div>
-					</div>
-				</div>
-
-				<!-- 表格主体 -->
-				<div
-					v-if="
-						!availableArrayPaths.includes(selectedPath) &&
-						availableArrayPaths.length > 0
-					"
-					class="empty-state">
-					请选择一个数组字段
-				</div>
-				<div v-else-if="rawTableData.error" class="empty-state">
-					{{ rawTableData.error }}
-				</div>
-				<div v-else class="f-table-container">
-					<table class="f-table">
-						<thead>
-							<tr>
-								<!-- 行索引列 -->
-								<th class="index-col">#</th>
-								<th
-									v-for="col in rawTableData.columns"
-									:key="col"
-									class="sortable"
-									:style="{
-										width: colWidths[col] ? colWidths[col] + 'px' : 'auto',
-									}"
-									@click="handleSort(col)">
-									<div class="th-content">
-										<span>{{ col }}</span>
-										<span v-if="sortCol === col" class="sort-indicator">
-											{{ sortAsc ? '↑' : '↓' }}
-										</span>
-									</div>
-									<div
-										class="resizer"
-										@click.stop
-										@mousedown.stop="(e) => startResize(e, col)"></div>
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="(row, idx) in processedRows" :key="row.__rowId">
-								<td class="index-col">{{ idx + 1 }}</td>
-								<td v-for="col in rawTableData.columns" :key="col">
-									{{ row[col] !== undefined ? row[col] : '' }}
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-
-			<!-- 差异模式 -->
-			<div v-else-if="viewMode === 'diff'" class="code-wrapper">
-				<DiffEditor
-					ref="diffEditorRef"
-					v-model:original="inputText"
-					v-model:modified="localCompareContent"
-					:fold-ranges="foldRanges.diff"
-					@update:fold-ranges="updateDiffFoldRanges" />
-				<div v-if="showLoader" class="overlay-loader">
-					<span>排序中...</span>
-				</div>
-			</div>
-
-			<!-- 代码模式 -->
-			<div v-else class="code-wrapper">
-				<div class="editor-pane">
-					<CodeEditor
-						ref="codeEditorRef"
-						v-model="inputText"
-						:auto-format-detection="autoFormatDetection"
-						:fold-ranges="foldRanges.code"
-						@change="(val) => emit('update:doc', val)"
-						@update:fold-ranges="updateCodeFoldRanges" />
-				</div>
-				<div v-if="showLoader" class="overlay-loader">
-					<span>排序中...</span>
-				</div>
-			</div>
-		</div>
-	</div>
-</template>
-
 <style scoped lang="scss">
 .json-editor {
 	display: flex;
@@ -750,3 +753,4 @@ defineExpose({
 	z-index: 50;
 }
 </style>
+

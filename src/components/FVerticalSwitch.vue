@@ -1,5 +1,24 @@
+<template>
+	<button
+		type="button"
+		:class="classes"
+		:disabled="disabled"
+		:aria-label="computedAriaLabel"
+		:aria-checked="modelValue"
+		:title="title || computedAriaLabel"
+		role="switch"
+		@click="toggle">
+		<span class="switch-track" aria-hidden="true">
+			<span class="switch-thumb"></span>
+		</span>
+	</button>
+</template>
+
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
 	modelValue: {
@@ -16,7 +35,7 @@ const props = defineProps({
 	},
 	ariaLabel: {
 		type: String,
-		default: '开关',
+		default: '',
 	},
 });
 
@@ -30,6 +49,8 @@ const classes = computed(() => [
 	},
 ]);
 
+const computedAriaLabel = computed(() => props.ariaLabel || t('common.switch'));
+
 const toggle = () => {
 	if (props.disabled) return;
 	const nextValue = !props.modelValue;
@@ -37,22 +58,6 @@ const toggle = () => {
 	emit('change', nextValue);
 };
 </script>
-
-<template>
-	<button
-		type="button"
-		:class="classes"
-		:disabled="disabled"
-		:aria-label="ariaLabel"
-		:aria-checked="modelValue"
-		:title="title || ariaLabel"
-		role="switch"
-		@click="toggle">
-		<span class="switch-track" aria-hidden="true">
-			<span class="switch-thumb"></span>
-		</span>
-	</button>
-</template>
 
 <style scoped lang="scss">
 .f-switch {
@@ -75,7 +80,8 @@ const toggle = () => {
 
 		.switch-track {
 			border-color: var(--f-color-info);
-			box-shadow: 0 0 0 2px color-mix(in srgb, var(--f-color-info) 28%, transparent);
+			box-shadow: 0 0 0 2px
+				color-mix(in srgb, var(--f-color-info) 28%, transparent);
 		}
 	}
 

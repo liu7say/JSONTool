@@ -1,3 +1,7 @@
+<template>
+	<div class="diff-editor-container" ref="containerRef"></div>
+</template>
+
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { EditorView } from 'codemirror';
@@ -322,10 +326,6 @@ defineExpose({
 	diffCount: computed(() => diffCount.value),
 });
 </script>
-
-<template>
-	<div class="diff-editor-container" ref="containerRef"></div>
-</template>
 
 <style lang="scss" scoped>
 .diff-editor-container {
