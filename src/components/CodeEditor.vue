@@ -44,6 +44,11 @@ const props = defineProps({
 		type: Array,
 		default: () => [],
 	},
+	languageMode: {
+		type: String,
+		default: 'json',
+		validator: (value) => ['json', 'javascript'].includes(value),
+	},
 });
 
 const emit = defineEmits([
@@ -63,32 +68,6 @@ let currentLanguage = 'json';
 // 去除 BOM 头
 const stripBom = (text) =>
 	text && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-
-/**
- * 检测文本是否为 JS Object 格式（即不是有效 JSON 但可以被宽松解析）
- * JS Object 格式特征：键名不带引号，使用单引号等
- * @param {string} text - 要检测的文本
- * @returns {boolean} 是否为 JS Object 格式
- */
-const isJsObjectFormat = (text) => {
-	if (!text || !text.trim()) return false;
-	const cleaned = stripBom(text);
-	try {
-		JSON.parse(cleaned);
-		// 能直接解析为 JSON，使用 JSON 解析器
-		return false;
-	} catch (e) {
-		// JSON 解析失败，尝试 relaxedJsonParse
-		try {
-			relaxedJsonParse(cleaned);
-			// 宽松解析成功，说明是 JS Object 格式
-			return true;
-		} catch (e2) {
-			// 连宽松解析都失败，可能是无效内容，默认用 JSON
-			return false;
-		}
-	}
-};
 
 /**
  * 尝试从错误信息中提取位置信息
@@ -269,9 +248,6 @@ const collapseAll = () => {
 
 defineExpose({ jumpToNextError, expandAll, collapseAll });
 
-const getDocumentLanguage = (text) =>
-	props.autoFormatDetection && isJsObjectFormat(text) ? 'javascript' : 'json';
-
 // CodeEditor 特有的扩展配置（Lint、搜索、自动格式化）
 const getCodeEditorExtensions = () => [
 	search({ top: true }), // 搜索框在顶部
@@ -295,7 +271,20 @@ const getCodeEditorExtensions = () => [
 					const currentDoc = editorView.state.doc.toString();
 					if (currentDoc.trim()) {
 						try {
-							const parsed = JSON.parse(currentDoc);
+							// 根据当前语言模式选择解析器
+							let parsed;
+							if (currentLanguage === 'javascript') {
+								// JS Object 模式：先尝试标准 JSON，失败则用宽松解析
+								try {
+									parsed = JSON.parse(currentDoc);
+								} catch {
+									parsed = relaxedJsonParse(currentDoc);
+								}
+							} else {
+								// JSON 模式：只用标准解析
+								parsed = JSON.parse(currentDoc);
+							}
+
 							// 使用用户选择的缩进设置
 							const indentSetting = settingsStore.indent;
 							let formatted;
@@ -324,7 +313,10 @@ const getCodeEditorExtensions = () => [
 									userEvent: 'input.format.auto',
 								});
 							}
-						} catch (e) {}
+						} catch (e) {
+							// 解析失败，不进行格式化
+							console.debug('[JSONTool] Auto-format skipped:', e.message);
+						}
 					}
 				}, 16);
 			}
@@ -344,8 +336,8 @@ const getExtensions = (isDark, language = 'json') => {
 const initEditor = () => {
 	if (!editorContainer.value) return;
 
-	// 检测初始内容的格式并选择合适的语言解析器
-	currentLanguage = getDocumentLanguage(props.modelValue);
+	// 使用 prop 决定语言模式,不再检测内容
+	currentLanguage = props.languageMode;
 
 	const state = EditorState.create({
 		doc: props.modelValue,
@@ -364,31 +356,43 @@ watch(
 	(newVal) => {
 		if (!editorView) return;
 
-		// 检测格式变化，如果语言模式需要切换则重建编辑器
-		const newLanguage = getDocumentLanguage(newVal);
-
-		if (newLanguage !== currentLanguage) {
-			// 语言模式变化，需要重建编辑器以应用新的语法解析器
-			currentLanguage = newLanguage;
-			editorView.destroy();
-
-			const state = EditorState.create({
-				doc: newVal,
-				extensions: getExtensions(themeStore.isDark, currentLanguage),
-				// 不保持旧的 selection，因为新文档可能更短导致选择点超出范围
-			});
-
-			editorView = new EditorView({
-				state,
-				parent: editorContainer.value,
-			});
-			applyFoldRanges(props.foldRanges);
-		} else if (newVal !== editorView.state.doc.toString()) {
-			// 语言模式未变，直接更新内容
+		// 不再检测内容,只更新文档内容
+		if (newVal !== editorView.state.doc.toString()) {
 			editorView.dispatch({
 				changes: { from: 0, to: editorView.state.doc.length, insert: newVal },
 			});
 		}
+	},
+);
+
+// 监听语言模式变化
+watch(
+	() => props.languageMode,
+	(newMode) => {
+		if (!editorView || newMode === currentLanguage) return;
+
+		// 只有当用户切换设置时才重建编辑器
+		currentLanguage = newMode;
+		const content = editorView.state.doc.toString();
+		const selection = editorView.state.selection;
+		const scrollPos = editorView.scrollDOM.scrollTop;
+
+		editorView.destroy();
+
+		const state = EditorState.create({
+			doc: content,
+			extensions: getExtensions(themeStore.isDark, currentLanguage),
+			selection,
+		});
+
+		editorView = new EditorView({
+			state,
+			parent: editorContainer.value,
+		});
+
+		editorView.scrollDOM.scrollTop = scrollPos;
+		editorView.focus();
+		applyFoldRanges(props.foldRanges);
 	},
 );
 
@@ -437,7 +441,6 @@ watch(
 		if (!editorView) return;
 		const content = editorView.state.doc.toString();
 		const selection = editorView.state.selection;
-		currentLanguage = getDocumentLanguage(content);
 		editorView.destroy();
 		const state = EditorState.create({
 			doc: content,

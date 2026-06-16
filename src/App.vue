@@ -116,6 +116,14 @@
 											:title="t('app.autoFormat')"
 											:aria-label="t('app.autoFormat')" />
 									</div>
+									<div class="menu-item switch-menu-item" @click.stop>
+										<span style="white-space: nowrap">JS Object</span>
+										<FVerticalSwitch
+											:model-value="settingsStore.indent === 'jsObj'"
+											@update:model-value="setFormatIndent($event ? 'jsObj' : 2)"
+											title="JS Object"
+											aria-label="JS Object" />
+									</div>
 									<div class="menu-item" @click="setFormatIndent(2)">
 										<span>{{ t('app.indent2Spaces') }}</span>
 										<div class="check-box">
@@ -143,15 +151,6 @@
 												style="width: 12px" />
 										</div>
 									</div> -->
-									<div class="menu-item" @click="setFormatIndent('jsObj')">
-										<span>JS Object</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.indent === 'jsObj'"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div>
 								</div>
 							</transition>
 						</div>
