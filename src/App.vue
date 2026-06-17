@@ -266,14 +266,14 @@
 
 				<!-- 右侧：全局操作组 -->
 				<div class="toolbar-group right">
-					<FButton
+					<!-- <FButton
 						v-if="activeTab"
 						size="small"
 						type="primary"
 						@click="onSaveHistory(activeTab)"
 						:title="t('app.saveSnapshotTitle')">
 						<component :is="Operation" style="width: 14px" /> {{ t('app.saveSnapshot') }}
-					</FButton>
+					</FButton> -->
 
 					<FButton
 						v-if="showHistoryEntry"
@@ -691,12 +691,12 @@ const handleClickOutside = (e) => {
 // 全局快捷键处理
 const handleGlobalKeydown = (e) => {
 	// Ctrl+S (Windows) 或 Cmd+S (Mac)
-	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-		e.preventDefault();
-		if (sessionStore.activeTab) {
-			onSaveHistory(sessionStore.activeTab);
-		}
-	}
+	// if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+	// 	e.preventDefault();
+	// 	if (sessionStore.activeTab) {
+	// 		onSaveHistory(sessionStore.activeTab);
+	// 	}
+	// }
 };
 
 onMounted(async () => {
