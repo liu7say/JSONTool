@@ -29,7 +29,11 @@
 								<component
 									:is="activeTab.viewMode === 'table' ? Back : Grid"
 									style="width: 14px" />
-								{{ activeTab.viewMode === 'table' ? t('app.back') : t('app.tableView') }}
+								{{
+									activeTab.viewMode === 'table'
+										? t('app.back')
+										: t('app.tableView')
+								}}
 							</FButton>
 
 							<FButton
@@ -44,7 +48,11 @@
 								<component
 									:is="activeTab.viewMode === 'diff' ? Back : Switch"
 									style="width: 14px" />
-								{{ activeTab.viewMode === 'diff' ? t('app.exitDiff') : t('app.diff') }}
+								{{
+									activeTab.viewMode === 'diff'
+										? t('app.exitDiff')
+										: t('app.diff')
+								}}
 							</FButton>
 						</div>
 
@@ -62,7 +70,8 @@
 								type="danger"
 								@click="triggerNextDiff"
 								:title="t('app.nextDiffTitle')">
-								{{ t('app.nextDiff') }} <component :is="ArrowRight" style="width: 14px" />
+								{{ t('app.nextDiff') }}
+								<component :is="ArrowRight" style="width: 14px" />
 							</FButton>
 						</div>
 					</div>
@@ -90,7 +99,8 @@
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerFormat"
 								:title="t('app.format')">
-								<component :is="DocumentCopy" style="width: 14px" /> {{ t('app.format') }}
+								<component :is="DocumentCopy" style="width: 14px" />
+								{{ t('app.format') }}
 							</FButton>
 							<FButton
 								size="small"
@@ -107,10 +117,12 @@
 							<transition name="fade-scale">
 								<div
 									v-if="showFormatMenu"
-									class="f-popover-menu"
+									class="f-popover-menu f-acrylic"
 									ref="formatMenuRef">
 									<div class="menu-item switch-menu-item" @click.stop>
-										<span style="white-space: nowrap">{{ t('app.autoFormat') }}</span>
+										<span style="white-space: nowrap">{{
+											t('app.autoFormat')
+										}}</span>
 										<FVerticalSwitch
 											v-model="settingsStore.autoFormatDetection"
 											:title="t('app.autoFormat')"
@@ -120,7 +132,9 @@
 										<span style="white-space: nowrap">JS Object</span>
 										<FVerticalSwitch
 											:model-value="settingsStore.indent === 'jsObj'"
-											@update:model-value="setFormatIndent($event ? 'jsObj' : 2)"
+											@update:model-value="
+												setFormatIndent($event ? 'jsObj' : 2, false)
+											"
 											title="JS Object"
 											aria-label="JS Object" />
 									</div>
@@ -161,7 +175,8 @@
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerEscape"
 								:title="t('app.escapeTitle')">
-								<component :is="Link" style="width: 14px" /> {{ t('app.escape') }}
+								<component :is="Link" style="width: 14px" />
+								{{ t('app.escape') }}
 							</FButton>
 							<FButton
 								size="small"
@@ -169,7 +184,8 @@
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerUnescape"
 								:title="t('app.unescapeTitle')">
-								<component :is="Unlock" style="width: 14px" /> {{ t('app.unescape') }}
+								<component :is="Unlock" style="width: 14px" />
+								{{ t('app.unescape') }}
 							</FButton>
 						</div>
 						<div class="f-button-group">
@@ -179,7 +195,8 @@
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerCompact"
 								:title="t('app.compactTitle')">
-								<component :is="ScaleToOriginal" style="width: 14px" /> {{ t('app.compact') }}
+								<component :is="ScaleToOriginal" style="width: 14px" />
+								{{ t('app.compact') }}
 							</FButton>
 						</div>
 						<!-- 排序按钮组 (带下拉) -->
@@ -208,7 +225,7 @@
 							<transition name="fade-scale">
 								<div
 									v-if="showSortMenu"
-									class="f-popover-menu"
+									class="f-popover-menu f-acrylic"
 									ref="sortMenuRef">
 									<div class="menu-item" @click="toggleSortStructureAtEnd">
 										<span>{{ t('app.structureAtEnd') }}</span>
@@ -230,7 +247,8 @@
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerUnicodeToChinese"
 								:title="t('app.unicodeToChineseTitle')">
-								<component :is="MagicStick" style="width: 14px" /> {{ t('app.unicodeToChinese') }}
+								<component :is="MagicStick" style="width: 14px" />
+								{{ t('app.unicodeToChinese') }}
 							</FButton>
 							<FButton
 								size="small"
@@ -238,7 +256,8 @@
 								:disabled="!String(activeTab.doc.sourceText || '').trim()"
 								@click="triggerChineseToUnicode"
 								:title="t('app.chineseToUnicodeTitle')">
-								<component :is="Connection" style="width: 14px" /> {{ t('app.chineseToUnicode') }}
+								<component :is="Connection" style="width: 14px" />
+								{{ t('app.chineseToUnicode') }}
 							</FButton>
 						</div>
 
@@ -303,7 +322,7 @@
 						<transition name="fade-scale">
 							<div
 								v-if="showLanguageMenu"
-								class="f-popover-menu language-menu"
+								class="f-popover-menu language-menu f-acrylic"
 								ref="languageMenuRef">
 								<div class="menu-item" @click="changeLocale('zh')">
 									<span>{{ t('common.chinese') }}</span>
@@ -332,7 +351,9 @@
 						type="subtle"
 						icon-only
 						@click="handleThemeToggle"
-						:title="themeStore.isDark ? t('app.themeToLight') : t('app.themeToDark')">
+						:title="
+							themeStore.isDark ? t('app.themeToLight') : t('app.themeToDark')
+						">
 						<component
 							:is="themeStore.isDark ? Moon : Sunny"
 							style="width: 16px" />
@@ -367,7 +388,11 @@
 				<div
 					class="toggle-btn"
 					@click="sessionStore.toggleSidebar"
-					:title="sessionStore.sidebarCollapsed ? t('app.expandSidebar') : t('app.collapseSidebar')">
+					:title="
+						sessionStore.sidebarCollapsed
+							? t('app.expandSidebar')
+							: t('app.collapseSidebar')
+					">
 					<component
 						:is="sessionStore.sidebarCollapsed ? ArrowRight : ArrowLeft"
 						style="width: 12px" />
@@ -443,9 +468,7 @@
 					@update:compare-content="
 						(val) => onUpdateCompareContent(activeTab.id, val)
 					"
-					@update:fold-ranges="
-						(val) => onUpdateFoldRanges(activeTab.id, val)
-					"
+					@update:fold-ranges="(val) => onUpdateFoldRanges(activeTab.id, val)"
 					@save="onSaveHistory(activeTab)" />
 				<div v-else class="empty-state">
 					<div class="empty-content">
@@ -507,7 +530,8 @@
 			</div>
 
 			<div class="history-list">
-				<div v-if="!historyStore.index.length" class="muted-text">{{ t('app.noHistory') }}
+				<div v-if="!historyStore.index.length" class="muted-text">
+					{{ t('app.noHistory') }}
 				</div>
 				<div
 					v-for="item in historyStore.index"
@@ -528,14 +552,14 @@
 						:title="t('app.deleteEntry')">
 						<component
 							:is="Delete"
-							style="width: 14px; color: var(--f-color-error)" />
+							style="width: 14px; color: var(--colorStatusErrorForeground)" />
 					</FButton>
 				</div>
 
 				<div v-if="historyStore.index.length" class="history-footer">
 					<FButton
 						type="subtle"
-						style="color: var(--f-color-error)"
+						style="color: var(--colorStatusErrorForeground)"
 						@click="historyStore.clearAll">
 						{{ t('app.clearAll') }}
 					</FButton>
@@ -548,7 +572,7 @@
 			<div v-if="toastVisible" class="toast-notification f-acrylic">
 				<component
 					:is="Check"
-					style="width: 16px; color: var(--f-brand-base)" />
+					style="width: 16px; color: var(--colorBrandBackground)" />
 				<span>{{ toastMessage }}</span>
 			</div>
 		</transition>
@@ -570,29 +594,29 @@ import FVerticalSwitch from './components/FVerticalSwitch.vue';
 import Logo from './components/Logo.vue';
 // 引入 Tabler Icons 并通过别名映射到原有变量，保持模板逻辑不变，同时注入现代扁平线性设计
 import {
-	IconPlus as Plus,                      // 新建标签页
-	IconX as Close,                        // 关闭标签页/抽屉
-	IconClock as Clock,                    // 历史记录
-	IconTrash as Delete,                   // 删除/清空历史
-	IconMoon as Moon,                      // 深色主题
-	IconSun as Sunny,                      // 浅色主题
-	IconSettings as Operation,             // 保存快照/设置操作
-	IconCopy as DocumentCopy,              // 复制/格式化
+	IconPlus as Plus, // 新建标签页
+	IconX as Close, // 关闭标签页/抽屉
+	IconClock as Clock, // 历史记录
+	IconTrash as Delete, // 删除/清空历史
+	IconMoon as Moon, // 深色主题
+	IconSun as Sunny, // 浅色主题
+	IconSettings as Operation, // 保存快照/设置操作
+	IconCopy as DocumentCopy, // 复制/格式化
 	IconArrowAutofitWidth as ScaleToOriginal, // 压缩 JSON
-	IconArrowsSort as Rank,                // 排序
-	IconLayoutGrid as Grid,                // 网格/表格视图
-	IconArrowLeft as Back,                 // 返回主编辑器
-	IconGitCompare as Switch,              // 对比/Diff 视图
-	IconChevronLeft as ArrowLeft,          // 侧边栏展开
-	IconChevronRight as ArrowRight,        // 侧边栏折叠/下一个差异
-	IconChevronDown as ArrowDown,          // 下拉菜单箭头
-	IconCheck as Check,                    // 确认/Toast 提示
-	IconArrowsMaximize as Expand,          // 展开层级
-	IconArrowsMinimize as Fold,            // 折叠层级
-	IconLink as Link,                      // 转义 JSON
-	IconUnlink as Unlock,                  // 反转义 JSON
-	IconWand as MagicStick,                // Unicode 转中文
-	IconCode as Connection,                // 中文转 Unicode
+	IconArrowsSort as Rank, // 排序
+	IconLayoutGrid as Grid, // 网格/表格视图
+	IconArrowLeft as Back, // 返回主编辑器
+	IconGitCompare as Switch, // 对比/Diff 视图
+	IconChevronLeft as ArrowLeft, // 侧边栏展开
+	IconChevronRight as ArrowRight, // 侧边栏折叠/下一个差异
+	IconChevronDown as ArrowDown, // 下拉菜单箭头
+	IconCheck as Check, // 确认/Toast 提示
+	IconArrowsMaximize as Expand, // 展开层级
+	IconArrowsMinimize as Fold, // 折叠层级
+	IconLink as Link, // 转义 JSON
+	IconUnlink as Unlock, // 反转义 JSON
+	IconWand as MagicStick, // Unicode 转中文
+	IconCode as Connection, // 中文转 Unicode
 } from '@tabler/icons-vue';
 import draggable from 'vuedraggable';
 
@@ -618,7 +642,9 @@ const formatMenuRef = ref(null);
 const showLanguageMenu = ref(false);
 const languageButtonRef = ref(null);
 const languageMenuRef = ref(null);
-const currentLanguageLabel = computed(() => (locale.value === 'zh' ? '中' : 'EN'));
+const currentLanguageLabel = computed(() =>
+	locale.value === 'zh' ? '中' : 'EN',
+);
 
 const changeLocale = (value) => {
 	setLocale(value);
@@ -702,10 +728,29 @@ const handleGlobalKeydown = (e) => {
 
 // 声明一个包含所有图标组件的数组，以强制阻止 Vite/Rollup 对其进行 Tree Shaking
 const __keep_icons_prevent_tree_shaking = [
-	Plus, Close, Clock, Delete, Moon, Sunny, Operation,
-	DocumentCopy, ScaleToOriginal, Rank, Grid, Back, Switch,
-	ArrowLeft, ArrowRight, ArrowDown, Check, Expand, Fold,
-	Link, Unlock, MagicStick, Connection
+	Plus,
+	Close,
+	Clock,
+	Delete,
+	Moon,
+	Sunny,
+	Operation,
+	DocumentCopy,
+	ScaleToOriginal,
+	Rank,
+	Grid,
+	Back,
+	Switch,
+	ArrowLeft,
+	ArrowRight,
+	ArrowDown,
+	Check,
+	Expand,
+	Fold,
+	Link,
+	Unlock,
+	MagicStick,
+	Connection,
 ];
 
 onMounted(async () => {
@@ -833,10 +878,13 @@ const triggerFormat = () => {
 	}
 };
 
-const setFormatIndent = (indent) => {
+const setFormatIndent = (indent, closeMenu = true) => {
 	settingsStore.indent = indent;
 	triggerFormat();
-	showFormatMenu.value = false;
+	// 仅在 closeMenu 为 true 时关闭格式化下拉菜单，避免 Switch 切换时菜单直接消失
+	if (closeMenu) {
+		showFormatMenu.value = false;
+	}
 };
 const triggerCompact = () => jsonEditorRef.value?.applyCompact();
 const triggerEscape = () => jsonEditorRef.value?.applyEscape();
@@ -1019,8 +1067,6 @@ const handleThemeToggle = (event) => {
 };
 </script>
 
-
-
 <style scoped lang="scss">
 .app-container {
 	display: flex;
@@ -1034,8 +1080,8 @@ const handleThemeToggle = (event) => {
 	display: flex;
 	align-items: center;
 	padding: 0 16px 0 13px;
-	border-bottom: 1px solid var(--f-border-subtle);
-	background-color: var(--f-bg-layer1);
+	border-bottom: 1px solid var(--colorNeutralStroke2);
+	background-color: var(--colorNeutralBackground2);
 	z-index: 100;
 	flex-shrink: 0;
 }
@@ -1049,7 +1095,7 @@ const handleThemeToggle = (event) => {
 	margin-right: 0; /* 移除 margin-right，让 padding 处理间距 */
 	width: 200px; /* 匹配侧边栏宽度 */
 	flex-shrink: 0;
-	color: var(--f-brand-base);
+	color: var(--colorBrandBackground);
 	transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
 	/* 视觉上将 logo 与侧边栏边框分开 */
@@ -1090,12 +1136,12 @@ const handleThemeToggle = (event) => {
 
 	.f-button {
 		border-radius: 0;
-		border: 1px solid var(--f-border-default);
+		border: 1px solid var(--colorNeutralStroke1);
 		box-shadow: none !important;
 		margin: 0;
 		height: 24px;
 		background-color: transparent;
-		color: var(--f-text-primary);
+		color: var(--colorNeutralForeground1);
 		position: relative;
 		padding: 0 8px;
 
@@ -1109,24 +1155,24 @@ const handleThemeToggle = (event) => {
 		}
 
 		&:first-of-type {
-			border-top-left-radius: 4px;
-			border-bottom-left-radius: 4px;
+			border-top-left-radius: 2px;
+			border-bottom-left-radius: 2px;
 		}
 
 		&:last-of-type {
-			border-top-right-radius: 4px;
-			border-bottom-right-radius: 4px;
+			border-top-right-radius: 2px;
+			border-bottom-right-radius: 2px;
 		}
 
 		&:hover:not(:disabled):not(.disabled),
 		&:focus:not(:disabled):not(.disabled) {
-			background-color: var(--f-bg-control-hover);
-			border-color: var(--f-text-secondary);
+			background-color: var(--colorNeutralBackgroundSubtle-hover);
+			border-color: var(--colorNeutralForeground2);
 			z-index: 5;
 		}
 
 		&:active:not(:disabled):not(.disabled) {
-			background-color: var(--f-bg-control-active);
+			background-color: var(--colorNeutralBackgroundSubtle-active);
 			transform: scale(0.96);
 			z-index: 5;
 		}
@@ -1141,31 +1187,31 @@ const handleThemeToggle = (event) => {
 		}
 
 		&.primary {
-			background-color: var(--f-brand-base);
-			border-color: var(--f-brand-base);
+			background-color: var(--colorBrandBackground);
+			border-color: var(--colorBrandBackground);
 			color: white;
 
 			&:hover:not(:disabled):not(.disabled),
 			&:focus:not(:disabled):not(.disabled) {
-				background-color: var(--f-brand-hover);
-				border-color: var(--f-brand-hover);
+				background-color: var(--colorBrandBackgroundHover);
+				border-color: var(--colorBrandBackgroundHover);
 			}
 
 			&:active:not(:disabled):not(.disabled) {
-				background-color: var(--f-brand-pressed);
-				border-color: var(--f-brand-pressed);
+				background-color: var(--colorBrandBackgroundPressed);
+				border-color: var(--colorBrandBackgroundPressed);
 			}
 		}
 
 		&.danger {
-			background-color: var(--f-color-error);
-			border-color: var(--f-color-error);
+			background-color: var(--colorStatusErrorForeground);
+			border-color: var(--colorStatusErrorForeground);
 			color: white;
 
 			&:hover:not(:disabled):not(.disabled),
 			&:focus:not(:disabled):not(.disabled) {
 				filter: brightness(0.9);
-				border-color: var(--f-color-error);
+				border-color: var(--colorStatusErrorForeground);
 			}
 
 			&:active:not(:disabled):not(.disabled) {
@@ -1176,7 +1222,7 @@ const handleThemeToggle = (event) => {
 		&:disabled,
 		&.disabled {
 			background-color: transparent;
-			color: var(--f-text-disabled);
+			color: var(--colorNeutralForegroundDisabled);
 			cursor: not-allowed;
 		}
 	}
@@ -1197,35 +1243,48 @@ const handleThemeToggle = (event) => {
 	top: 100%;
 	left: 0;
 	margin-top: 4px;
-	background-color: var(--f-bg-layer2);
-	border: 1px solid var(--f-border-default);
-	border-radius: 6px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	padding: 4px;
-	min-width: 130px;
+	/* 提供坚实、不可透光的降级背景 (避免在 Chrome 插件 Stacking Context 渲染失效时发生文字重叠) */
+	background-color: var(--colorNeutralBackground3) !important;
+	border: 1px solid var(--colorNeutralStroke1) !important;
+	border-radius: var(--borderRadiusSmall); /* 降级为2px纤细控件圆角 */
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+	padding: 6px;
+	min-width: 140px;
 	z-index: 1000;
 	display: flex;
 	flex-direction: column;
+
+	/* 仅当浏览器支持且触发渲染时应用厚度极高 (96%/98%) 的亚克力，防穿透阅读灾难 */
+	@supports (backdrop-filter: blur(20px)) or
+		(-webkit-backdrop-filter: blur(20px)) {
+		background-color: var(--f-popover-acrylic-bg) !important;
+		backdrop-filter: blur(20px) saturate(125%) !important;
+		-webkit-backdrop-filter: blur(20px) saturate(125%) !important;
+		border-color: var(--colorNeutralStroke2) !important;
+	}
 
 	.menu-item {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 6px 8px;
-		border-radius: 4px;
+		padding: 6px 10px;
+		border-radius: var(--borderRadiusSmall); /* 与外层容器小圆角保持一致，防止悬浮高亮时溢出边界 */
 		cursor: pointer;
 		font-size: 13px;
-		color: var(--f-text-primary);
+		color: var(--colorNeutralForeground1);
 		gap: 12px;
 		user-select: none;
+		transition: background-color var(--f-transition-fast);
 
 		&:hover {
-			background-color: var(--f-bg-control-hover);
+			background-color: var(
+				--colorNeutralBackgroundSubtleHover
+			); /* 修正了原本的拼写错误 */
 		}
 
 		&.switch-menu-item {
 			cursor: default;
-			padding: 4px 6px 4px 8px;
+			padding: 4px 6px 4px 10px;
 		}
 
 		.check-box {
@@ -1234,7 +1293,7 @@ const handleThemeToggle = (event) => {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			color: var(--f-brand-base);
+			color: var(--colorBrandBackground);
 		}
 	}
 }
@@ -1258,8 +1317,8 @@ const handleThemeToggle = (event) => {
 	width: 150px; /* 展开宽度 */
 	display: flex;
 	flex-direction: column;
-	border-right: 1px solid var(--f-border-default);
-	background-color: var(--f-bg-layer2);
+	border-right: 1px solid var(--colorNeutralStroke1);
+	background-color: var(--colorNeutralBackground3);
 	z-index: 50;
 	flex-shrink: 0;
 	position: relative;
@@ -1301,12 +1360,12 @@ const handleThemeToggle = (event) => {
 			justify-content: center;
 			padding: 8px 0;
 			border-radius: 0;
-			border-bottom: 1px solid var(--f-border-subtle);
+			border-bottom: 1px solid var(--colorNeutralStroke2);
 			margin-bottom: 4px;
 			background-color: transparent;
 
 			&:hover {
-				background-color: var(--f-bg-control-hover);
+				background-color: var(--colorNeutralBackgroundSubtle-hover);
 			}
 		}
 	}
@@ -1321,16 +1380,16 @@ const handleThemeToggle = (event) => {
 	justify-content: flex-end; /* 展开模式下右对齐 */
 	padding: 0 8px;
 	cursor: pointer;
-	color: var(--f-text-secondary);
-	border-bottom: 1px solid var(--f-border-subtle);
+	color: var(--colorNeutralForeground2);
+	border-bottom: 1px solid var(--colorNeutralStroke2);
 	margin-bottom: 4px;
 	transition:
 		background-color 0.2s,
 		color 0.2s;
 
 	&:hover {
-		background-color: var(--f-bg-control-hover);
-		color: var(--f-text-primary);
+		background-color: var(--colorNeutralBackgroundSubtle-hover);
+		color: var(--colorNeutralForeground1);
 	}
 }
 
@@ -1348,7 +1407,7 @@ const handleThemeToggle = (event) => {
 		width: 4px;
 	}
 	&::-webkit-scrollbar-thumb {
-		background-color: var(--f-border-default);
+		background-color: var(--colorNeutralStroke1);
 		border-radius: 4px;
 	}
 }
@@ -1366,19 +1425,19 @@ const handleThemeToggle = (event) => {
 	min-height: 32px; /* 减少高度 */
 
 	&:hover {
-		background-color: var(--f-bg-control-hover);
+		background-color: var(--colorNeutralBackgroundSubtle-hover);
 	}
 
 	&.active {
-		background-color: var(--f-bg-control-active);
-		border: 1px solid var(--f-border-default);
+		background-color: var(--colorNeutralBackgroundSubtle-active);
+		border: 1px solid var(--colorNeutralStroke1);
 
 		/* 指示器基础样式 */
 		&::before,
 		&::after {
 			content: '';
 			position: absolute;
-			background-color: var(--f-brand-base);
+			background-color: var(--colorBrandBackground);
 			border-radius: 2px;
 			display: block;
 			transition: opacity 0.2s ease;
@@ -1412,7 +1471,7 @@ const handleThemeToggle = (event) => {
 		bottom: 0;
 		height: 3px;
 		width: auto;
-		background-color: var(--f-brand-base);
+		background-color: var(--colorBrandBackground);
 		border-radius: 2px;
 	}
 
@@ -1439,11 +1498,11 @@ const handleThemeToggle = (event) => {
 		width: 18px;
 		height: 18px;
 		border-radius: 4px;
-		color: var(--f-text-secondary);
+		color: var(--colorNeutralForeground2);
 
 		&:hover {
 			background-color: rgba(0, 0, 0, 0.1);
-			color: var(--f-text-primary);
+			color: var(--colorNeutralForeground1);
 		}
 	}
 
@@ -1462,8 +1521,8 @@ const handleThemeToggle = (event) => {
 
 .ghost-tab {
 	opacity: 0.5;
-	background-color: var(--f-bg-control-alt);
-	border: 1px dashed var(--f-border-default);
+	background-color: var(--colorNeutralBackgroundSubtle-alt);
+	border: 1px dashed var(--colorNeutralStroke1);
 
 	/* 隐藏内部元素以保持简洁 */
 	// .tab-content, .tab-close {
@@ -1474,7 +1533,7 @@ const handleThemeToggle = (event) => {
 .drag-tab {
 	/* 拖拽时的样式，通常不需要特别设置，vuedraggable 会处理 */
 	cursor: grabbing;
-	background-color: var(--f-bg-layer2);
+	background-color: var(--colorNeutralBackground3);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	z-index: 9999;
 }
@@ -1482,8 +1541,8 @@ const handleThemeToggle = (event) => {
 .tab-popover {
 	position: fixed;
 	z-index: 1000;
-	background-color: var(--f-bg-layer2);
-	border: 1px solid var(--f-border-default);
+	background-color: var(--colorNeutralBackground3);
+	border: 1px solid var(--colorNeutralStroke1);
 	border-radius: 6px;
 	box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
 	align-items: center;
@@ -1513,11 +1572,11 @@ const handleThemeToggle = (event) => {
 		width: 18px;
 		height: 18px;
 		border-radius: 4px;
-		color: var(--f-text-secondary);
+		color: var(--colorNeutralForeground2);
 
 		&:hover {
 			background-color: rgba(0, 0, 0, 0.1);
-			color: var(--f-text-primary);
+			color: var(--colorNeutralForeground1);
 		}
 	}
 
@@ -1529,7 +1588,7 @@ const handleThemeToggle = (event) => {
 		bottom: 0;
 		height: 3px;
 		width: auto;
-		background-color: var(--f-brand-base);
+		background-color: var(--colorBrandBackground);
 		border-radius: 2px;
 	}
 }
@@ -1545,12 +1604,12 @@ const handleThemeToggle = (event) => {
 	height: 32px;
 	border-radius: 4px;
 	background-color: transparent;
-	border: 1px dashed var(--f-border-default);
-	color: var(--f-text-secondary);
+	border: 1px dashed var(--colorNeutralStroke1);
+	color: var(--colorNeutralForeground2);
 	&:hover {
-		background-color: var(--f-bg-control-hover);
-		border-color: var(--f-text-secondary);
-		color: var(--f-text-primary);
+		background-color: var(--colorNeutralBackgroundSubtle-hover);
+		border-color: var(--colorNeutralForeground2);
+		color: var(--colorNeutralForeground1);
 	}
 }
 
@@ -1575,7 +1634,7 @@ const handleThemeToggle = (event) => {
 	align-items: center;
 	gap: 6px;
 	padding-right: 12px;
-	border-right: 1px solid var(--f-border-default);
+	border-right: 1px solid var(--colorNeutralStroke1);
 
 	&:last-child {
 		border-right: none;
@@ -1597,7 +1656,7 @@ const handleThemeToggle = (event) => {
 
 .empty-content {
 	text-align: center;
-	color: var(--f-text-secondary);
+	color: var(--colorNeutralForeground2);
 
 	h3 {
 		margin-bottom: 20px;
@@ -1611,14 +1670,14 @@ const handleThemeToggle = (event) => {
 	padding: 0 16px;
 	display: flex;
 	align-items: center;
-	background-color: var(--f-brand-base);
+	background-color: var(--colorBrandBackground);
 	color: white;
 	font-size: 11px;
 	z-index: 100;
 	user-select: none;
 
 	&.error {
-		background-color: var(--f-color-error);
+		background-color: var(--colorStatusErrorForeground);
 	}
 }
 /* 历史记录列表样式（同前） */
@@ -1637,11 +1696,11 @@ const handleThemeToggle = (event) => {
 	padding: 8px 12px;
 	cursor: pointer;
 	transition: background-color 0.2s;
-	background-color: var(--f-bg-layer1);
+	background-color: var(--colorNeutralBackground2);
 
 	&:hover {
-		background-color: var(--f-bg-control-hover);
-		border-color: var(--f-border-default);
+		background-color: var(--colorNeutralBackgroundSubtle-hover);
+		border-color: var(--colorNeutralStroke1);
 	}
 }
 
@@ -1660,7 +1719,7 @@ const handleThemeToggle = (event) => {
 
 .entry-time {
 	font-size: 11px;
-	color: var(--f-text-secondary);
+	color: var(--colorNeutralForeground2);
 	margin-top: 4px;
 }
 
@@ -1671,7 +1730,7 @@ const handleThemeToggle = (event) => {
 
 .muted-text {
 	text-align: center;
-	color: var(--f-text-secondary);
+	color: var(--colorNeutralForeground2);
 	padding: 40px 0;
 }
 
@@ -1686,12 +1745,12 @@ const handleThemeToggle = (event) => {
 	gap: 8px;
 	padding: 8px 16px;
 	border-radius: 20px;
-	background-color: var(--f-bg-layer2);
-	border: 1px solid var(--f-border-default);
+	background-color: var(--colorNeutralBackground3);
+	border: 1px solid var(--colorNeutralStroke1);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 	z-index: 2000;
 	font-size: 13px;
-	color: var(--f-text-primary);
+	color: var(--colorNeutralForeground1);
 	user-select: none;
 }
 
@@ -1734,8 +1793,8 @@ const handleThemeToggle = (event) => {
 
 .ghost-tab {
 	opacity: 0.5;
-	background-color: var(--f-bg-control-alt);
-	border: 1px dashed var(--f-border-default);
+	background-color: var(--colorNeutralBackgroundSubtle-alt);
+	border: 1px dashed var(--colorNeutralStroke1);
 
 	/* 隐藏内部元素以保持简洁 */
 	// .tab-content, .tab-close {
@@ -1746,10 +1805,8 @@ const handleThemeToggle = (event) => {
 .drag-tab {
 	/* 拖拽时的样式，通常不需要特别设置，vuedraggable 会处理 */
 	cursor: grabbing;
-	background-color: var(--f-bg-layer2);
+	background-color: var(--colorNeutralBackground3);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	z-index: 9999;
 }
 </style>
-
-

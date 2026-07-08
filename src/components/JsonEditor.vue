@@ -565,7 +565,7 @@ defineExpose({
 	overflow: hidden;
 	position: relative;
 	min-height: 0;
-	background-color: var(--f-bg-base);
+	background-color: var(--colorNeutralBackground1);
 }
 
 /* 表格模式样式 */
@@ -580,8 +580,8 @@ defineExpose({
 	display: flex;
 	gap: 16px;
 	padding: 12px 16px;
-	background-color: var(--f-bg-layer1);
-	border-bottom: 1px solid var(--f-border-subtle);
+	background-color: var(--colorNeutralBackground2);
+	border-bottom: 1px solid var(--colorNeutralStroke2);
 	align-items: center;
 }
 
@@ -592,7 +592,7 @@ defineExpose({
 
 	label {
 		font-size: 13px;
-		color: var(--f-text-secondary);
+		color: var(--colorNeutralForeground2);
 	}
 
 	.f-select-container {
@@ -615,7 +615,7 @@ defineExpose({
 			top: 50%;
 			transform: translateY(-50%);
 			width: 14px;
-			color: var(--f-text-tertiary);
+			color: var(--colorNeutralForeground3);
 			pointer-events: none;
 		}
 
@@ -629,7 +629,7 @@ defineExpose({
 .f-table-container {
 	flex: 1;
 	overflow: auto;
-	background-color: var(--f-bg-layer1);
+	background-color: var(--colorNeutralBackground2);
 }
 
 .f-table {
@@ -640,19 +640,19 @@ defineExpose({
 	table-layout: fixed;
 
 	th {
-		background-color: var(--f-bg-layer2);
+		background-color: var(--colorNeutralBackground3);
 		position: sticky;
 		top: 0;
 		z-index: 2;
 		font-weight: 600;
-		color: var(--f-text-secondary);
-		border-bottom: 1px solid var(--f-border-default);
-		border-right: 1px solid var(--f-border-subtle);
+		color: var(--colorNeutralForeground2);
+		border-bottom: 1px solid var(--colorNeutralStroke1);
+		border-right: 1px solid var(--colorNeutralStroke2);
 		padding: 0;
 		user-select: none;
 
 		&:hover {
-			background-color: var(--f-bg-control-hover);
+			background-color: var(--colorNeutralBackgroundSubtleHover);
 		}
 
 		&.sortable {
@@ -677,7 +677,7 @@ defineExpose({
 			cursor: col-resize;
 			opacity: 0;
 			transition: opacity 0.2s;
-			background-color: var(--f-brand-base);
+			background-color: var(--colorBrandBackground);
 
 			&:hover {
 				opacity: 1;
@@ -687,9 +687,9 @@ defineExpose({
 
 	td {
 		padding: 8px 12px;
-		border-bottom: 1px solid var(--f-border-subtle);
-		border-right: 1px solid var(--f-border-subtle);
-		color: var(--f-text-primary);
+		border-bottom: 1px solid var(--colorNeutralStroke2);
+		border-right: 1px solid var(--colorNeutralStroke2);
+		color: var(--colorNeutralForeground1);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -697,18 +697,18 @@ defineExpose({
 
 	/* 斑马纹 */
 	tr:nth-child(even) td {
-		background-color: var(--f-bg-layer2);
+		background-color: var(--colorNeutralBackground3);
 	}
 	tr:hover td {
-		background-color: var(--f-bg-control-hover);
+		background-color: var(--colorNeutralBackgroundSubtleHover);
 	}
 
 	.index-col {
 		width: 40px;
 		text-align: center;
-		color: var(--f-text-tertiary);
+		color: var(--colorNeutralForeground3);
 		font-variant-numeric: tabular-nums;
-		background-color: var(--f-bg-layer2); /* 如果需要，左侧固定 */
+		background-color: var(--colorNeutralBackground3); /* 左侧固定 */
 	}
 }
 
@@ -717,7 +717,7 @@ defineExpose({
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--f-text-secondary);
+	color: var(--colorNeutralForeground2);
 	font-size: 14px;
 }
 
@@ -744,7 +744,7 @@ defineExpose({
 	position: relative;
 
 	&.second-pane {
-		border-left: 1px solid var(--f-border-subtle);
+		border-left: 1px solid var(--colorNeutralStroke2);
 	}
 }
 

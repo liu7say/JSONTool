@@ -16,24 +16,51 @@
 	height: 32px;
 	line-height: 1.2;
 	padding: 0 12px;
-	border: 1px solid var(--f-border-default);
-	border-radius: var(--f-radius-s);
-	background-color: var(--f-bg-control);
-	color: var(--f-text-primary);
+	border: 1px solid var(--colorNeutralStroke1);
+	border-radius: var(--borderRadiusMedium);
+	background-color: var(
+		--f-acrylic-background
+	); /* 默认/次要按钮使用半透明亚克力背景 */
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	color: var(--colorNeutralForeground1);
 	font-family: inherit;
 	font-size: 14px;
-	font-weight: 400;
+	font-weight: var(--fontWeightMedium); /* 微软 Fluent 偏好中粗字重 */
 	cursor: pointer;
 	user-select: none;
 	text-decoration: none;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 	transition:
 		background-color var(--f-transition-fast),
 		border-color var(--f-transition-fast),
 		color var(--f-transition-fast),
 		box-shadow var(--f-transition-fast),
-		opacity var(--f-transition-fast);
+		transform var(--f-transition-fast);
 
-	/* Icon spacing */
+	/* 键盘聚焦状态下的双重焦点环，还原 focus:ring-offset-2 效果 */
+	&:focus-visible {
+		outline: none;
+		box-shadow:
+			0 0 0 2px var(--colorNeutralBackground1),
+			0 0 0 4px var(--colorBrandBackground) !important;
+	}
+
+	/* 点击/聚焦时显式的外层环 */
+	&:focus {
+		outline: none;
+		box-shadow:
+			0 0 0 2px var(--colorNeutralBackground1),
+			0 0 0 4px var(--colorBrandBackground);
+	}
+
+	/* 微软官方标准微缩按下反馈及位移还原 */
+	&:active:not(:disabled):not(.disabled) {
+		transform: translateY(0) scale(0.97);
+		box-shadow: none !important;
+	}
+
+	/* 图标默认间距 */
 	.f-icon,
 	svg {
 		width: 16px;
@@ -41,62 +68,104 @@
 		fill: currentColor;
 	}
 
-	&:hover:not(:disabled):not(.disabled):not(.primary):not(.danger) {
-		background-color: var(--f-bg-control-hover);
+	/* 默认普通按钮悬浮与按下 */
+	&:hover:not(:disabled):not(.disabled):not(.primary):not(.subtle):not(
+			.danger
+		) {
+		background-color: var(
+			--colorNeutralBackgroundSubtleHover
+		); /* 悬浮淡蓝/白亮色 */
+		border-color: var(--colorNeutralStrokeAccessible);
+		transform: translateY(-1px); /* 向上微移 */
+		box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 	}
 
-	&:active:not(:disabled):not(.disabled):not(.primary):not(.danger) {
-		background-color: var(--f-bg-control-active);
-		color: var(--f-text-secondary);
-		border-color: var(--f-border-subtle);
-		transform: scale(0.98); /* Subtle Interaction */
+	&:active:not(:disabled):not(.disabled):not(.primary):not(.subtle):not(
+			.danger
+		) {
+		background-color: var(--colorNeutralBackgroundSubtlePressed);
+		border-color: var(--colorNeutralStroke1);
 	}
 
+	/* 1. 主按钮 (Primary Button) */
 	&.primary {
-		background-color: var(--f-brand-base);
-		color: var(--f-text-on-accent);
-		border-color: transparent;
+		background-color: var(--colorBrandBackground);
+		color: var(--colorNeutralForegroundOnBrand);
+		border-color: var(--colorBrandBackground);
+		box-shadow: 0 2px 4px rgba(0, 120, 212, 0.3);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 
 		&:hover:not(:disabled):not(.disabled) {
-			opacity: 0.9;
+			background-color: var(--colorBrandBackgroundHover);
+			transform: translateY(-1px);
+			box-shadow: 0 4px 8px rgba(0, 120, 212, 0.4);
 		}
 		&:active:not(:disabled):not(.disabled) {
-			opacity: 0.82;
+			background-color: var(--colorBrandBackgroundPressed);
+			transform: translateY(0) scale(0.97);
+			box-shadow: none !important;
 		}
 	}
 
+	/* 2. 细微/幽灵按钮 (Subtle Button - 移入后有一层淡淡的蓝色，点击有焦点环) */
 	&.subtle {
 		background-color: transparent;
 		border-color: transparent;
-		color: var(--f-text-primary);
-
-		&:hover {
-			background-color: var(--f-bg-control-hover);
-		}
-		&:active:not(:disabled):not(.disabled) {
-			background-color: var(--f-bg-control-active);
-		}
-	}
-
-	&.danger {
-		background-color: var(--f-color-error);
-		color: white;
-		border-color: transparent;
+		color: var(--colorBrandBackground); /* 幽灵按钮通常采用品牌色字体 */
+		box-shadow: none;
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 
 		&:hover:not(:disabled):not(.disabled) {
-			opacity: 0.9;
+			background-color: color-mix(
+				in srgb,
+				var(--colorBrandBackground) 10%,
+				transparent
+			); /* 淡淡的蓝色悬浮底 */
+			transform: translateY(-1px);
 		}
 		&:active:not(:disabled):not(.disabled) {
-			opacity: 0.82;
+			background-color: color-mix(
+				in srgb,
+				var(--colorBrandBackground) 20%,
+				transparent
+			);
+			color: var(--colorBrandForegroundPressed);
+			transform: translateY(0) scale(0.97);
 		}
 	}
 
-	/* Size Variations */
+	/* 3. 危险按钮 (Danger Button) */
+	&.danger {
+		background-color: var(--colorStatusErrorBackground);
+		color: var(--colorStatusErrorForeground);
+		border: 1px solid var(--colorStatusErrorBorder);
+		box-shadow: 0 2px 4px rgba(196, 43, 28, 0.2);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+
+		&:hover:not(:disabled):not(.disabled) {
+			background-color: var(--colorStatusErrorForeground);
+			color: #ffffff;
+			border-color: transparent;
+			transform: translateY(-1px);
+			box-shadow: 0 4px 8px rgba(196, 43, 28, 0.3);
+		}
+		&:active:not(:disabled):not(.disabled) {
+			background-color: var(--colorStatusErrorBorder);
+			color: #ffffff;
+			transform: translateY(0) scale(0.97);
+			box-shadow: none !important;
+		}
+	}
+
+	/* 按钮尺寸变体 (Size Variations) */
 	&.small {
 		height: 24px;
 		padding: 0 8px;
 		font-size: 12px;
-		border-radius: var(--f-radius-s);
+		border-radius: var(--borderRadiusSmall); /* 小按钮采用更精细的 2px 圆角 */
 
 		.f-icon,
 		svg {
@@ -105,6 +174,7 @@
 		}
 	}
 
+	/* 仅图标按钮 (Icon Only Button) */
 	&.icon-only {
 		width: 32px;
 		padding: 0;
@@ -114,12 +184,15 @@
 		}
 	}
 
+	/* 禁用态 (Disabled) */
 	&:disabled,
 	&.disabled {
-		background-color: var(--f-bg-control-disabled);
-		color: var(--f-text-disabled);
-		border-color: transparent;
+		background-color: var(--colorNeutralBackgroundDisabled) !important;
+		color: var(--colorNeutralForegroundDisabled) !important;
+		border-color: var(--colorNeutralStrokeDisabled) !important;
+		box-shadow: none !important;
 		cursor: not-allowed;
+		transform: none !important;
 	}
 }
 
@@ -135,11 +208,11 @@
 	appearance: none;
 	height: 32px;
 	padding: 0 10px;
-	background-color: var(--f-bg-control-input);
-	color: var(--f-text-primary);
-	border: 1px solid var(--f-border-default);
-	border-bottom: 1px solid var(--f-border-strong); /* Stronger bottom border */
-	border-radius: var(--f-radius-s);
+	background-color: var(--colorNeutralBackground2);
+	color: var(--colorNeutralForeground1);
+	border: 1px solid var(--colorNeutralStroke1);
+	border-bottom: 1px solid var(--colorNeutralStrokeStrong); /* Stronger bottom border */
+	border-radius: var(--borderRadiusMedium);
 	font-family: inherit;
 	font-size: 14px;
 	width: 100%;
@@ -149,16 +222,16 @@
 		background-color var(--f-transition-fast);
 
 	&::placeholder {
-		color: var(--f-text-tertiary);
+		color: var(--colorNeutralForeground3);
 	}
 
 	&:hover {
-		background-color: var(--f-bg-control-hover);
+		background-color: var(--colorNeutralBackgroundSubtleHover);
 	}
 
 	&:focus {
-		background-color: var(--f-bg-control-input-active);
-		border-bottom-color: var(--f-brand-base);
+		background-color: var(--colorNeutralBackground2);
+		border-bottom-color: var(--colorBrandBackground);
 		border-bottom-width: 2px; /* Focus underline */
 		padding-bottom: 1px; /* Adjust layout for thicker border */
 	}
@@ -180,8 +253,8 @@
 	max-width: 200px;
 	height: 36px;
 	border: 1px solid transparent; /* Prevent layout shift */
-	border-radius: var(--f-radius-s);
-	color: var(--f-text-secondary);
+	border-radius: var(--borderRadiusMedium);
+	color: var(--colorNeutralForeground2);
 	font-size: 13px;
 	cursor: pointer;
 	transition:
@@ -194,8 +267,8 @@
 	/* Application seems to use horizontal tabs in titlebar. */
 
 	&:hover {
-		background-color: var(--f-bg-control-hover);
-		color: var(--f-text-primary);
+		background-color: var(--colorNeutralBackgroundSubtleHover);
+		color: var(--colorNeutralForeground1);
 
 		.tab-close {
 			opacity: 1;
@@ -203,8 +276,8 @@
 	}
 
 	&.active {
-		background-color: var(--f-bg-layer2); /* Active Background */
-		color: var(--f-text-primary);
+		background-color: var(--colorNeutralBackground3); /* Active Background */
+		color: var(--colorNeutralForeground1);
 		font-weight: 600;
 
 		&::after {
@@ -214,7 +287,7 @@
 			right: 12px;
 			bottom: 0;
 			height: 3px;
-			background-color: var(--f-brand-base);
+			background-color: var(--colorBrandBackground);
 			border-radius: 3px 3px 0 0;
 		}
 	}
@@ -232,14 +305,14 @@
 		justify-content: center;
 		width: 20px;
 		height: 20px;
-		border-radius: var(--f-radius-s);
+		border-radius: var(--borderRadiusMedium);
 		opacity: 0; /* Hidden unless hover or active */
 		transition:
 			opacity var(--f-transition-fast),
 			background-color var(--f-transition-fast);
 
 		&:hover {
-			background-color: var(--f-bg-control-active);
+			background-color: var(--colorNeutralBackgroundSubtlePressed);
 		}
 	}
 }
@@ -259,8 +332,8 @@
 	right: 0;
 	bottom: 0;
 	width: 360px;
-	background-color: var(--f-bg-layer2); /* Flyout Layer */
-	border-left: 1px solid var(--f-border-subtle);
+	background-color: var(--colorNeutralBackground3); /* Flyout Layer */
+	border-left: 1px solid var(--colorNeutralStroke2);
 	box-shadow: var(--f-shadow-flyout);
 	z-index: 901;
 	display: flex;
@@ -285,9 +358,9 @@
 
 /* --- Cards --- */
 .f-card {
-	background-color: var(--f-bg-layer1);
-	border: 1px solid var(--f-border-default);
-	border-radius: var(--f-radius-m);
+	background-color: var(--colorNeutralBackground2);
+	border: 1px solid var(--colorNeutralStroke1);
+	border-radius: var(--borderRadiusXLarge);
 	box-shadow: var(--f-shadow-card);
 	transition:
 		transform var(--f-transition-fast),

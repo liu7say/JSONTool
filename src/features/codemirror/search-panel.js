@@ -361,13 +361,13 @@ const searchPanelStyles = EditorView.baseTheme({
 		whiteSpace: 'nowrap',
 		minWidth: '50px',
 		textAlign: 'right',
-		color: 'var(--f-text-secondary)',
+		color: 'var(--colorNeutralForeground2)',
 	},
 	'.cm-search-match-counter.no-match': {
-		color: 'var(--f-status-danger)',
+		color: 'var(--colorStatusErrorForeground)',
 	},
 	'.cm-search-match-counter.has-match': {
-		color: 'var(--f-text-secondary)',
+		color: 'var(--colorNeutralForeground2)',
 	},
 });
 

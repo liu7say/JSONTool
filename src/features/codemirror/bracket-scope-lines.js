@@ -49,7 +49,7 @@ class BracketScopeLinesWidget extends WidgetType {
 			line.style.bottom = '0';
 			line.style.width = '1px';
 			line.style.backgroundColor =
-				'var(--f-border-subtle, rgba(128, 128, 128, 0.35))';
+				'var(--colorNeutralStroke2, rgba(128, 128, 128, 0.35))';
 			container.appendChild(line);
 		}
 
@@ -210,7 +210,7 @@ const bracketScopeLinesTheme = EditorView.baseTheme({
 		top: '0',
 		bottom: '0',
 		width: '1px',
-		backgroundColor: 'var(--f-border-subtle, rgba(128, 128, 128, 0.35))',
+		backgroundColor: 'var(--colorNeutralStroke2, rgba(128, 128, 128, 0.35))',
 	},
 });
 

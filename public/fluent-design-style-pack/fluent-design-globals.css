@@ -1,0 +1,62 @@
+/* Fluent Design 全局样式 */
+
+:root {
+  --fluent-blue: #0078d4;
+  --fluent-blue-dark: #106ebe;
+  --fluent-blue-darker: #005a9e;
+  --fluent-yellow: #ffb900;
+  --fluent-red: #e81123;
+  --fluent-green: #00cc6a;
+}
+
+/* 亚克力效果 */
+.fluent-acrylic {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.fluent-acrylic-dark {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Reveal 边框效果（简化版） */
+.fluent-reveal {
+  position: relative;
+  overflow: hidden;
+}
+
+.fluent-reveal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* 柔和阴影 */
+.fluent-shadow {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.08);
+}
+
+.fluent-shadow-hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 16px 32px rgba(0,0,0,0.12);
+}
+
+.fluent-design-hover-lift { transition: transform 0.3s ease; }
+
+.fluent-design-hover-lift:hover { transform: translateY(-2px); }
+
+.fluent-design-focus { outline: 2px solid var(--fluent-design-primary, currentColor); outline-offset: 2px; }
+
+/* Additional techniques */
+@keyframes fluent-design-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+
+.fluent-design-slant { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 3rem), 0 100%); }

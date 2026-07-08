@@ -2,57 +2,58 @@ import { EditorView } from '@codemirror/view';
 
 /**
  * CodeMirror 的 Fluent 2 主题
- * 使用 src/styles/fluent.scss 中定义的 CSS 变量
+ * 使用 src/styles/fluent.scss 中定义的标准 CSS 变量，移除所有的旧版别名，保持纯正风格
  */
 export const fluentTheme = EditorView.theme({
-	// Base Editor Styles
+	// 编辑器基础容器样式 (Base Editor Styles)
 	'&': {
 		height: '100%',
 		fontSize: '14px',
-		color: 'var(--f-text-primary)',
+		color: 'var(--colorNeutralForeground1)',
 		backgroundColor: 'var(--f-editor-bg)',
 		fontFamily: "'Fira Code', 'Microsoft YaHei', 'PingFang SC', monospace",
 	},
-	// Scroller
+	// 滚动区域 (Scroller)
 	'.cm-scroller': {
 		overflow: 'auto',
 		fontFamily: "'Fira Code', 'Microsoft YaHei', 'PingFang SC', monospace",
 	},
-	// Gutters
+	// 侧边栏/行号区域 (Gutters)
 	'.cm-gutters': {
 		backgroundColor: 'var(--f-editor-gutter-bg)',
-		color: 'var(--f-text-disabled)',
+		color: 'var(--colorNeutralForegroundDisabled)',
 		borderRight: '1px solid var(--f-editor-gutter-border)',
 		paddingRight: '6px',
 	},
+	// 激活行对应的侧边行号
 	'.cm-activeLineGutter': {
-		backgroundColor: 'var(--f-bg-control)',
-		color: 'var(--f-text-primary)',
+		backgroundColor: 'var(--colorNeutralBackgroundSubtle)',
+		color: 'var(--colorNeutralForeground1)',
 		fontWeight: 'bold',
 	},
-	// Active Line
+	// 当前激活的行 (Active Line)
 	'.cm-activeLine': {
 		backgroundColor:
-			'color-mix(in srgb, var(--f-text-primary), transparent 96%)',
+			'color-mix(in srgb, var(--colorNeutralForeground1), transparent 96%)',
 	},
-	// Selection - CodeMirror Layer
+	// 选中区域底色 - CodeMirror 编辑器层 (Selection - CodeMirror Layer)
 	'.cm-selectionBackground': {
-		backgroundColor: 'var(--f-brand-base) !important',
+		backgroundColor: 'var(--colorBrandBackground) !important',
 		opacity: '0.3 !important',
 	},
-	// Selection - Native Layer (for simple text selection fallback)
+	// 原生文本选中区配置 (Selection - Native Layer)
 	'::selection': {
 		backgroundColor:
-			'color-mix(in srgb, var(--f-brand-base), transparent 70%) !important',
-		color: 'var(--f-text-primary) !important',
+			'color-mix(in srgb, var(--colorBrandBackground), transparent 70%) !important',
+		color: 'var(--colorNeutralForeground1) !important',
 	},
-	// Focused State
+	// 获得焦点时的选中区样式
 	'&.cm-focused .cm-selectionBackground': {
-		backgroundColor: 'var(--f-brand-base) !important',
+		backgroundColor: 'var(--colorBrandBackground) !important',
 		opacity: '0.3 !important',
 	},
 
-	// Fold Gutter
+	// 折叠栏槽 (Fold Gutter)
 	'.cm-foldGutter': {
 		width: '12px',
 	},
@@ -61,15 +62,15 @@ export const fluentTheme = EditorView.theme({
 		alignItems: 'center',
 		justifyContent: 'center',
 		cursor: 'pointer',
-		color: 'var(--f-text-secondary)',
+		color: 'var(--colorNeutralForeground2)',
 		fontSize: '12px',
 		userSelect: 'none',
 	},
 	'.cm-foldGutter .cm-gutterElement:hover': {
-		color: 'var(--f-brand-base)',
+		color: 'var(--colorBrandBackground)',
 	},
 
-	// --- SEARCH PANEL (Fluent 2 Flyout Grid Style) ---
+	// --- 搜索面板 (Fluent 2 悬浮卡片网格样式) ---
 	'.cm-panels': {
 		backgroundColor: 'transparent !important',
 		border: 'none !important',
@@ -82,41 +83,41 @@ export const fluentTheme = EditorView.theme({
 		borderTop: 'none !important',
 	},
 
-	// Floating Card Container
+	// 悬浮主面板卡片 (Floating Card Container)
 	'.cm-search': {
 		position: 'absolute !important',
 		top: '12px !important',
 		right: '24px !important',
 		padding: '16px !important',
-		backgroundColor: 'var(--f-bg-layer2) !important',
-		color: 'var(--f-text-primary) !important',
-		border: '1px solid var(--f-border-subtle) !important',
-		borderRadius: 'var(--f-radius-l) !important',
+		backgroundColor: 'var(--colorNeutralBackground3) !important',
+		color: 'var(--colorNeutralForeground1) !important',
+		border: '1px solid var(--colorNeutralStroke2) !important',
+		borderRadius: 'var(--borderRadiusXXLarge) !important',
 		boxShadow: 'var(--f-shadow-16) !important',
 		minWidth: '420px !important',
 		maxWidth: '90vw !important',
 
-		// Master Grid: 2 Columns
+		// 主双栏网格布局
 		display: 'grid !important',
-		gridTemplateColumns: '1fr 120px !important' /* 120px for Buttons */,
+		gridTemplateColumns: '1fr 120px !important',
 		columnGap: '12px !important',
 		rowGap: '8px !important',
 		alignItems: 'start !important',
 
 		animation: 'slideIn 0.2s cubic-bezier(0, 0, 0.2, 1)',
-		backdropFilter: 'blur(30px) saturate(125%)', // Acrylic
+		backdropFilter: 'blur(30px) saturate(125%)', // 亚克力磨砂效果
 	},
 
-	/* === COLUMN 1: Inputs === */
+	/* === 第 1 列：输入框及表单项 === */
 
-	// 1. Search Input
+	// 搜索输入框
 	'.cm-search > input.cm-textfield[name="search"]': {
 		gridColumn: '1 / 2 !important',
 		gridRow: '1 / 2 !important',
 		width: '100% !important',
 	},
 
-	// 2. Replace Input
+	// 替换输入框
 	'.cm-search > input.cm-textfield[name="replace"]': {
 		gridColumn: '1 / 2 !important',
 		gridRow: '2 / 3 !important',
@@ -124,7 +125,7 @@ export const fluentTheme = EditorView.theme({
 		marginTop: '8px !important',
 	},
 
-	// 3. Options labels
+	// 搜索选项 Checkbox 标签
 	'.cm-search > label': {
 		gridColumn: '1 / 2 !important',
 		gridRow: '3 / 4 !important',
@@ -135,14 +136,11 @@ export const fluentTheme = EditorView.theme({
 		fontSize: '12px !important',
 		cursor: 'pointer',
 		userSelect: 'none',
-		color: 'var(--f-text-secondary)',
+		color: 'var(--colorNeutralForeground2)',
 		textTransform: 'none !important',
-
-		// Prevent overlapping by default?
-		// We rely on manual positioning below because they share the grid cell.
 	},
 
-	// Manual spacing for labels
+	// 调整复选框标签布局，防止重叠
 	'.cm-search > label:nth-of-type(1)': {
 		justifySelf: 'start !important',
 		marginLeft: '0 !important',
@@ -156,10 +154,9 @@ export const fluentTheme = EditorView.theme({
 		marginLeft: '170px !important',
 	},
 
-	/* === COLUMN 2: Actions === */
+	/* === 第 2 列：操作按钮 === */
 
-	// 1. Navigation Buttons (Prev/Next)
-	// Side-by-side split with larger gap
+	// 导航按钮 (上一个/下一个) 左右平分
 	'.cm-search button[name="prev"]': {
 		gridColumn: '2 / 3 !important',
 		gridRow: '1 / 2 !important',
@@ -175,7 +172,7 @@ export const fluentTheme = EditorView.theme({
 		margin: '0 !important',
 	},
 
-	// 2. Replace & Replace All
+	// 替换 & 替换全部
 	'.cm-search button[name="replace"]': {
 		gridColumn: '2 / 3 !important',
 		gridRow: '2 / 3 !important',
@@ -193,7 +190,7 @@ export const fluentTheme = EditorView.theme({
 		display: 'none !important',
 	},
 
-	/* === CLOSE BUTTON === */
+	/* === 关闭面板按钮 === */
 	'.cm-search button[name="close"]': {
 		position: 'absolute !important',
 		top: '-12px !important',
@@ -201,9 +198,9 @@ export const fluentTheme = EditorView.theme({
 		width: '24px !important',
 		height: '24px !important',
 		borderRadius: '50% !important',
-		backgroundColor: 'var(--f-bg-layer2) !important',
-		border: '1px solid var(--f-border-subtle) !important',
-		color: 'var(--f-text-secondary) !important',
+		backgroundColor: 'var(--colorNeutralBackground3) !important',
+		border: '1px solid var(--colorNeutralStroke2) !important',
+		color: 'var(--colorNeutralForeground2) !important',
 		display: 'flex !important',
 		alignItems: 'center !important',
 		justifyContent: 'center !important',
@@ -214,8 +211,8 @@ export const fluentTheme = EditorView.theme({
 		fontSize: '0 !important',
 	},
 	'.cm-search button[name="close"]:hover': {
-		backgroundColor: 'var(--f-bg-control-hover) !important',
-		color: 'var(--f-text-primary) !important',
+		backgroundColor: 'var(--colorNeutralBackgroundSubtleHover) !important',
+		color: 'var(--colorNeutralForeground1) !important',
 	},
 	'.cm-search button[name="close"]::before': {
 		content: '"✕" !important',
@@ -227,41 +224,41 @@ export const fluentTheme = EditorView.theme({
 	},
 	'.cm-search button[name="close"]::after': { content: 'none !important' },
 
-	/* === COMPONENT STYLING === */
+	/* === 面板内的细微控件样式 === */
 
-	// Inputs
+	// 输入框下划线风格 (Input Fields)
 	'.cm-search input.cm-textfield': {
 		fontSize: '13px !important',
 		padding: '4px 0 !important',
 		height: '28px !important',
 		backgroundColor: 'transparent !important',
 		border: 'none !important',
-		borderBottom: '1px solid var(--f-border-strong) !important',
+		borderBottom: '1px solid var(--colorNeutralStrokeStrong) !important',
 		borderRadius: '0 !important',
 		outline: 'none !important',
-		color: 'var(--f-text-primary) !important',
+		color: 'var(--colorNeutralForeground1) !important',
 		fontFamily: 'inherit',
 		boxShadow: 'none !important',
 	},
 	'.cm-search input.cm-textfield:focus': {
-		borderBottom: '2px solid var(--f-brand-base) !important',
+		borderBottom: '2px solid var(--colorBrandBackground) !important',
 		paddingBottom: '3px !important',
 	},
 
-	// Buttons (Flat)
+	// 扁平交互按钮 (Flat Buttons)
 	'.cm-search button': {
 		appearance: 'none !important',
 		webkitAppearance: 'none !important',
 		fontSize: '12px !important',
 		padding: '0 !important',
 		height: '28px !important',
-		backgroundColor: 'var(--f-bg-control) !important',
+		backgroundColor: 'var(--colorNeutralBackgroundSubtle) !important',
 		backgroundImage: 'none !important',
 		boxShadow: 'none !important',
 		textShadow: 'none !important',
-		border: '1px solid var(--f-border-default) !important',
-		borderRadius: 'var(--f-radius-s) !important',
-		color: 'var(--f-text-primary) !important',
+		border: '1px solid var(--colorNeutralStroke1) !important',
+		borderRadius: 'var(--borderRadiusMedium) !important',
+		color: 'var(--colorNeutralForeground1) !important',
 		cursor: 'pointer !important',
 		display: 'flex !important',
 		alignItems: 'center !important',
@@ -269,32 +266,31 @@ export const fluentTheme = EditorView.theme({
 		textTransform: 'none !important',
 	},
 	'.cm-search button:hover': {
-		backgroundColor: 'var(--f-bg-control-hover) !important',
-		borderColor: 'var(--f-border-default) !important',
+		backgroundColor: 'var(--colorNeutralBackgroundSubtleHover) !important',
+		borderColor: 'var(--colorNeutralStroke1) !important',
 	},
 	'.cm-search button:active': {
-		backgroundColor: 'var(--f-bg-control-active) !important',
+		backgroundColor: 'var(--colorNeutralBackgroundSubtlePressed) !important',
 		transform: 'scale(0.98)',
 	},
 
-	// Primary Actions
+	// 主色动作按钮 (Primary Buttons)
 	'.cm-search button[name="replace"], .cm-search button[name="replaceAll"]': {
-		backgroundColor: 'var(--f-brand-base) !important',
+		backgroundColor: 'var(--colorBrandBackground) !important',
 		color: 'white !important',
 		border: '1px solid transparent !important',
 	},
-	'.cm-search button[name="replace"]:hover, .cm-search button[name="replaceAll"]:hover':
-		{
-			backgroundColor: 'var(--f-brand-hover) !important',
-		},
+	'.cm-search button[name="replace"]:hover, .cm-search button[name="replaceAll"]:hover': {
+		backgroundColor: 'var(--colorBrandBackgroundHover) !important',
+	},
 
-	// Checkboxes
+	// 复选框外观 (Checkboxes)
 	'.cm-search input[type="checkbox"]': {
 		appearance: 'none !important',
 		webkitAppearance: 'none !important',
 		width: '16px !important',
 		height: '16px !important',
-		border: '1px solid var(--f-text-tertiary) !important',
+		border: '1px solid var(--colorNeutralForeground3) !important',
 		borderRadius: '3px !important',
 		backgroundColor: 'transparent !important',
 		marginRight: '6px !important',
@@ -305,8 +301,8 @@ export const fluentTheme = EditorView.theme({
 		cursor: 'pointer !important',
 	},
 	'.cm-search input[type="checkbox"]:checked': {
-		backgroundColor: 'var(--f-brand-base) !important',
-		borderColor: 'var(--f-brand-base) !important',
+		backgroundColor: 'var(--colorBrandBackground) !important',
+		borderColor: 'var(--colorBrandBackground) !important',
 	},
 	'.cm-search input[type="checkbox"]:checked::after': {
 		content: '""',
@@ -321,10 +317,9 @@ export const fluentTheme = EditorView.theme({
 		display: 'block !important',
 	},
 
-	// --- STRICTLY REMOVE ARROWS ---
-	'.cm-search button[name="next"]::before, .cm-search button[name="prev"]::before':
-		{
-			content: 'none !important',
-			display: 'none !important',
-		},
+	// 强制删除自带的多余箭头
+	'.cm-search button[name="next"]::before, .cm-search button[name="prev"]::before': {
+		content: 'none !important',
+		display: 'none !important',
+	},
 });

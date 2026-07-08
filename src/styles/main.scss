@@ -14,9 +14,9 @@
 body {
 	margin: 0;
 	padding: 0;
-	background-color: var(--f-bg-base);
-	color: var(--f-text-primary);
-	font-family: var(--f-font-family);
+	background-color: var(--colorNeutralBackground1);
+	color: var(--colorNeutralForeground1);
+	font-family: var(--fontFamilyBase);
 	font-size: var(--f-font-size-base);
 	-webkit-font-smoothing: antialiased;
 	overflow: hidden; /* App-like feel */
@@ -46,7 +46,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background-color: var(--f-text-tertiary); /* Soft gray */
+	background-color: var(--colorNeutralForeground3); /* Soft gray */
 	border: 3px solid transparent;
 	background-clip: content-box; /* Makes it look like a pill floating */
 	border-radius: 99px;
@@ -54,7 +54,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background-color: var(--f-text-secondary);
+	background-color: var(--colorNeutralForeground2);
 }
 
 ::-webkit-scrollbar-corner {
@@ -63,15 +63,15 @@ body {
 
 /* Utility Classes for Fluent */
 .f-acrylic {
-	background-color: var(--f-bg-layer1);
+	background-color: var(--colorNeutralBackground2);
 	backdrop-filter: blur(20px) saturate(125%);
-	border: 1px solid var(--f-border-subtle);
+	border: 1px solid var(--colorNeutralStroke2);
 }
 
 .f-card {
-	background-color: var(--f-bg-layer1);
-	border: 1px solid var(--f-border-default);
-	border-radius: var(--f-radius-m);
+	background-color: var(--colorNeutralBackground2);
+	border: 1px solid var(--colorNeutralStroke1);
+	border-radius: var(--borderRadiusXLarge);
 	box-shadow: var(--f-shadow-card);
 }
 
@@ -83,9 +83,8 @@ body {
 }
 
 /* Text Selection */
-/* Text Selection */
 ::selection {
-	background-color: var(--f-brand-base);
+	background-color: var(--colorBrandBackground);
 	color: inherit; /* Prevent white text on light backgrounds */
 }
 

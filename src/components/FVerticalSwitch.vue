@@ -71,7 +71,7 @@ const toggle = () => {
 	border: 0;
 	border-radius: 999px;
 	background-color: transparent;
-	color: var(--f-text-primary);
+	color: var(--colorNeutralForeground1);
 	cursor: pointer;
 	user-select: none;
 
@@ -79,29 +79,29 @@ const toggle = () => {
 		outline: none;
 
 		.switch-track {
-			border-color: var(--f-color-info);
+			border-color: var(--colorBrandBackground);
 			box-shadow: 0 0 0 2px
-				color-mix(in srgb, var(--f-color-info) 28%, transparent);
+				color-mix(in srgb, var(--colorBrandBackground) 28%, transparent);
 		}
 	}
 
 	&:hover:not(:disabled):not(.checked) {
 		.switch-track {
-			border-color: var(--f-text-secondary);
-			background-color: var(--f-bg-control-hover);
+			border-color: var(--colorNeutralForeground2);
+			background-color: var(--colorNeutralBackgroundSubtleHover);
 		}
 	}
 
 	&:active:not(:disabled):not(.checked) {
 		.switch-track {
-			background-color: var(--f-bg-control-active);
+			background-color: var(--colorNeutralBackgroundSubtlePressed);
 		}
 	}
 
 	&.checked {
 		.switch-track {
-			border-color: var(--f-color-info);
-			background-color: var(--f-color-info);
+			border-color: var(--colorBrandBackground);
+			background-color: var(--colorBrandBackground);
 			opacity: 1;
 		}
 
@@ -128,12 +128,12 @@ const toggle = () => {
 		cursor: not-allowed;
 
 		.switch-track {
-			background-color: var(--f-bg-control-disabled);
+			background-color: var(--colorNeutralBackgroundDisabled);
 			border-color: transparent;
 		}
 
 		.switch-thumb {
-			background-color: var(--f-text-disabled);
+			background-color: var(--colorNeutralForegroundDisabled);
 			box-shadow: none;
 		}
 	}
@@ -143,9 +143,9 @@ const toggle = () => {
 	position: relative;
 	width: 34px;
 	height: 18px;
-	border: 1px solid var(--f-border-default);
+	border: 1px solid var(--colorNeutralStroke1);
 	border-radius: 999px;
-	background-color: var(--f-bg-control-active);
+	background-color: var(--colorNeutralBackgroundSubtlePressed);
 	transition:
 		background-color var(--f-transition-fast),
 		border-color var(--f-transition-fast),

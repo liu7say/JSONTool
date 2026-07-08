@@ -334,7 +334,7 @@ defineExpose({
 
 	/* 自定义一些连线颜色适配 Fluent 主题 */
 	:deep(.cm-merge-gutter) {
-		background-color: var(--f-bg-layer1);
+		background-color: var(--colorNeutralBackground2);
 	}
 
 	/* 强制覆盖搜索框样式，使其在 Merge View 中也能正确浮动 */

@@ -1,74 +1,116 @@
-/* Fluent 2 Design System Tokens */
+/* ==========================================================================
+   Fluent 2 设计系统设计变量 (Design Tokens)
+   对齐微软 Fluent 2 官方标准规范，融合本地样式包定义并保留完美向后兼容
+   ========================================================================== */
+
 :root {
-	/* 
-    Brand Colors (Windows Blue) 
-    Based on Fluent 2 Brand colors
-  */
-	--f-brand-base: #0078d4;
-	--f-brand-hover: #106ebe;
-	--f-brand-pressed: #005a9e;
-	--f-brand-light: #4cc2ff;
-	--f-brand-bg-subtle: #eff6fc; /* Light blue tint for backgrounds */
+	/* --------------------------------------------------------------------------
+	   全局非主题参数 (不随亮/暗模式改变)
+	   -------------------------------------------------------------------------- */
 
-	/* Functional Colors */
-	--f-color-error: #c42b1c;
-	--f-color-success: #107c10;
-	--f-color-warning: #9d5d00;
-	--f-color-info: #0078d4;
+	/* 官方标准字体族 (Typography Fonts) */
+	--fontFamilyBase: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'PingFang SC', sans-serif; /* 默认主字体 */
+	--fontFamilyNumeric: 'Inter', system-ui, sans-serif; /* 数字专用字体 */
+	--fontFamilyMonospace: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace; /* 等宽/代码字体 */
 
-	/* Radius */
-	--f-radius-s: 4px; /* Controls (Button, Input) */
-	--f-radius-m: 8px; /* Cards, Flyouts, Dialogs */
-	--f-radius-l: 12px; /* Container, Windows */
-	--f-radius-circle: 50%;
+	/* 官方标准圆角 (Border Radius) */
+	--borderRadiusNone: 0px;       /* 无圆角 */
+	--borderRadiusSmall: 2px;      /* 纤细控件圆角 */
+	--borderRadiusMedium: 4px;     /* 标准按钮、输入框圆角 */
+	--borderRadiusLarge: 6px;      /* 中等卡片圆角 */
+	--borderRadiusXLarge: 8px;     /* 大卡片、下拉面板圆角 */
+	--borderRadiusXXLarge: 12px;   /* 浮动对话框、浮沉窗口圆角 */
+	--borderRadiusXXXLarge: 16px;  /* 顶级大窗口圆角 */
+	--borderRadiusCircular: 9999px; /* 胶囊或圆形 */
 
-	/* Typography */
-	--f-font-family:
-		'Microsoft YaHei', 'PingFang SC', -apple-system, BlinkMacSystemFont,
-		sans-serif;
+	/* 官方标准字重 (Font Weights) */
+	--fontWeightRegular: 400;      /* 常规体 */
+	--fontWeightMedium: 500;       /* 中等粗细 */
+	--fontWeightSemibold: 600;     /* 半粗体 */
+	--fontWeightBold: 700;         /* 粗体 */
+
+	/* 官方标准动画缓动 (Transitions & Motion) */
+	--f-transition-fast: 100ms cubic-bezier(0.33, 0, 0.67, 1);   /* 快速过渡 (悬浮等) */
+	--f-transition-normal: 200ms cubic-bezier(0.33, 0, 0.67, 1); /* 标准过渡 (切换等) */
+	--f-transition-slow: 400ms cubic-bezier(0.33, 0, 0.67, 1);   /* 慢速过渡 (页面过渡) */
+
+	/* --------------------------------------------------------------------------
+	   经典变量别名兼容 (对齐原系统内部样式)
+	   -------------------------------------------------------------------------- */
+	--f-radius-s: var(--borderRadiusMedium);
+	--f-radius-m: var(--borderRadiusXLarge);
+	--f-radius-l: var(--borderRadiusXXLarge);
+	--f-radius-circle: var(--borderRadiusCircular);
+
+	--f-font-family: var(--fontFamilyBase);
 	--f-font-size-base: 14px;
 	--f-font-size-s: 12px;
 	--f-font-size-xs: 10px;
 	--f-font-size-l: 20px;
 	--f-font-size-xl: 28px;
-	--f-font-weight-regular: 400;
-	--f-font-weight-sembold: 600;
-
-	/* Animation */
-	--f-transition-fast: 100ms cubic-bezier(0.33, 0, 0.67, 1);
-	--f-transition-normal: 200ms cubic-bezier(0.33, 0, 0.67, 1);
-	--f-transition-slow: 400ms cubic-bezier(0.33, 0, 0.67, 1);
+	--f-font-weight-regular: var(--fontWeightRegular);
+	--f-font-weight-sembold: var(--fontWeightSemibold);
 }
 
-/* Dark Mode (Default) - Fluent 2 Dark */
+/* ==========================================================================
+   默认模式：Fluent 2 暗色主题 (Dark Theme)
+   ========================================================================== */
 :root {
-	/* Neutral Backgrounds */
-	--f-bg-base: #202020; /* Application Background */
-	--f-bg-layer1: #2c2c2c; /* Layer 1 (Cards) */
-	--f-bg-layer2: #333333; /* Layer 2 (Flyouts) */
-	--f-bg-layer3: #3b3b3b; /* Layer 3 (Dialogs) */
+	/* 品牌色体系 (Brand Colors - 暗色优化版 Windows 蓝) */
+	--colorBrandBackground: #118fe3;          /* 品牌主背景色 */
+	--colorBrandBackgroundHover: #249ce6;     /* 品牌背景悬浮色 */
+	--colorBrandBackgroundPressed: #0078d4;   /* 品牌背景按下色 */
+	--colorBrandBackgroundSelected: #118fe3;  /* 品牌背景选中色 */
+	--colorBrandForeground1: #4cc2ff;         /* 品牌高亮文本前景色 1 */
+	--colorBrandForeground2: #0078d4;         /* 品牌文本前景色 2 */
+	--colorBrandForegroundHover: #66d0ff;     /* 品牌文本悬浮色 */
+	--colorBrandForegroundPressed: #4cc2ff;   /* 品牌文本按下色 */
+	--colorBrandBackground2: #002d4d;         /* 暗色微妙品牌背景 */
 
-	/* Controls */
-	--f-bg-control: rgba(255, 255, 255, 0.06);
-	--f-bg-control-hover: rgba(255, 255, 255, 0.09);
-	--f-bg-control-active: rgba(255, 255, 255, 0.04);
-	--f-bg-control-disabled: rgba(255, 255, 255, 0.04);
-	--f-bg-control-input: #1e1e1e; /* Input fields */
-	--f-bg-control-input-active: #1e1e1e;
+	/* 中性背景体系 (Neutral Backgrounds) */
+	--colorNeutralBackground1: #202020;             /* 应用主面板底色 (App Canvas) */
+	--colorNeutralBackground2: #2c2c2c;             /* 一级卡片、内容列表底色 */
+	--colorNeutralBackground3: #333333;             /* 二级悬浮面板、下拉菜单底色 */
+	--colorNeutralBackground4: #3b3b3b;             /* 三级对话框、强提示卡片底色 */
+	--colorNeutralBackground5: #444444;             /* 极浅层底色 */
+	--colorNeutralBackgroundSubtle: rgba(255, 255, 255, 0.06); /* 控件常规背景 (透明底) */
+	--colorNeutralBackgroundSubtleHover: rgba(255, 255, 255, 0.09); /* 控件悬浮底色 */
+	--colorNeutralBackgroundSubtlePressed: rgba(255, 255, 255, 0.04); /* 控件按下底色 */
+	--colorNeutralBackgroundDisabled: rgba(255, 255, 255, 0.04); /* 禁用状态背景 */
+	--colorNeutralBackgroundInverted: #ffffff;      /* 反转背景 (用于极端反差对比) */
 
-	/* Text */
-	--f-text-primary: #ffffff;
-	--f-text-secondary: #d1d1d1; /* ~82% */
-	--f-text-tertiary: #9e9e9e; /* ~60% */
-	--f-text-disabled: #6e6e6e; /* ~42% */
-	--f-text-on-accent: #ffffff;
+	/* 中性文本/前景体系 (Neutral Foregrounds) */
+	--colorNeutralForeground1: #ffffff;             /* 主文本、正文色 */
+	--colorNeutralForeground2: #d1d1d1;             /* 次要说明、辅助文本色 */
+	--colorNeutralForeground3: #9e9e9e;             /* 弱化提示、占位符文本色 */
+	--colorNeutralForeground4: #707070;             /* 不常用弱化文字 */
+	--colorNeutralForegroundDisabled: #6e6e6e;      /* 禁用文本颜色 */
+	--colorNeutralForegroundOnBrand: #ffffff;       /* 覆盖在品牌背景上的反差文字 */
+	--colorNeutralForegroundInverted: #242424;      /* 反转中性文本色 */
 
-	/* Borders */
-	--f-border-subtle: rgba(255, 255, 255, 0.08); /* Divider */
-	--f-border-default: rgba(255, 255, 255, 0.12); /* Card Border */
-	--f-border-strong: rgba(255, 255, 255, 0.45); /* Input/Control Strong */
+	/* 中性边框描边体系 (Neutral Strokes) */
+	--colorNeutralStroke1: rgba(255, 255, 255, 0.12);       /* 标准通用边框 */
+	--colorNeutralStroke2: rgba(255, 255, 255, 0.08);       /* 细微内边框或分割线 */
+	--colorNeutralStrokeSubtle: rgba(255, 255, 255, 0.06);  /* 极淡分割线 */
+	--colorNeutralStrokeStrong: rgba(255, 255, 255, 0.45);  /* 强对比边框 (聚焦/滑块等) */
+	--colorNeutralStrokeDisabled: rgba(255, 255, 255, 0.04);/* 禁用状态边框 */
+	--colorNeutralStrokeAccessible: #adadad;                /* 无障碍对比强化边框 */
 
-	/* Elevation / Shadows */
+	/* 功能状态颜色 (Status Colors - 暗色模式) */
+	--colorStatusErrorBackground: #442726;          /* 错误状态背景 */
+	--colorStatusErrorForeground: #f1707a;          /* 错误状态前景/文字 */
+	--colorStatusErrorBorder: #b13c38;              /* 错误状态描边 */
+	--colorStatusSuccessBackground: #173416;        /* 成功状态背景 */
+	--colorStatusSuccessForeground: #6bc26b;        /* 成功状态前景/文字 */
+	--colorStatusSuccessBorder: #2b5d2b;            /* 成功状态描边 */
+	--colorStatusWarningBackground: #46310f;        /* 警告状态背景 */
+	--colorStatusWarningForeground: #ffb900;        /* 警告状态前景/文字 */
+	--colorStatusWarningBorder: #8f6200;            /* 警告状态描边 */
+	--colorStatusInfoBackground: #0c293c;           /* 信息提示背景 */
+	--colorStatusInfoForeground: #4cc2ff;           /* 信息提示前景/文字 */
+	--colorStatusInfoBorder: #0067b8;               /* 信息提示描边 */
+
+	/* 三维投影体系 (Elevation & Shadows) */
 	--f-shadow-2: 0 2px 4px rgba(0, 0, 0, 0.24);
 	--f-shadow-4: 0 4px 8px rgba(0, 0, 0, 0.28);
 	--f-shadow-8: 0 8px 16px rgba(0, 0, 0, 0.32);
@@ -76,41 +118,75 @@
 	--f-shadow-card: var(--f-shadow-4);
 	--f-shadow-flyout: var(--f-shadow-16);
 
-	/* Code Editor Specific */
+	/* 代码编辑器专用配色 (Editor Color) */
 	--f-editor-bg: #1e1e1e;
 	--f-editor-gutter-bg: #1e1e1e;
 	--f-editor-gutter-border: #333333;
+
+	/* 亚克力混合材质底色 (Acrylic Support) */
+	--f-acrylic-background: rgba(32, 32, 32, 0.7);
+	--f-popover-acrylic-bg: rgba(32, 32, 32, 0.98);
 }
 
-/* Light Mode - Fluent 2 Light */
+/* ==========================================================================
+   切换模式：Fluent 2 亮色主题 (Light Theme)
+   ========================================================================== */
 html.light {
-	/* Neutral Backgrounds */
-	--f-bg-base: #f3f3f3; /* Mica Alt */
-	--f-bg-layer1: #ffffff; /* Layer 0 (Cards) */
-	--f-bg-layer2: #f9f9f9; /* Layer 1 */
-	--f-bg-layer3: #fcfcfc;
+	/* 品牌色体系 (Brand Colors - 经典 Windows 蓝) */
+	--colorBrandBackground: #0078d4;          /* 品牌主背景色 */
+	--colorBrandBackgroundHover: #106ebe;     /* 品牌背景悬浮色 */
+	--colorBrandBackgroundPressed: #005a9e;   /* 品牌背景按下色 */
+	--colorBrandBackgroundSelected: #0078d4;  /* 品牌背景选中色 */
+	--colorBrandForeground1: #0078d4;         /* 品牌高亮文本前景色 1 */
+	--colorBrandForeground2: #005a9e;         /* 品牌文本前景色 2 */
+	--colorBrandForegroundHover: #106ebe;     /* 品牌文本悬浮色 */
+	--colorBrandForegroundPressed: #004578;   /* 品牌文本按下色 */
+	--colorBrandBackground2: #eff6fc;         /* 亮色微妙品牌背景 */
 
-	/* Controls */
-	--f-bg-control: #ffffff; /* Standard Button */
-	--f-bg-control-hover: #f1f1f1;
-	--f-bg-control-active: #e1e1e138;
-	--f-bg-control-disabled: rgba(0, 0, 0, 0.04);
-	--f-bg-control-input: #ffffff;
-	--f-bg-control-input-active: #ffffff;
+	/* 中性背景体系 (Neutral Backgrounds) */
+	--colorNeutralBackground1: #f3f3f3;             /* 应用主面板底色 (App Canvas) */
+	--colorNeutralBackground2: #ffffff;             /* 一级卡片、内容列表底色 */
+	--colorNeutralBackground3: #fafafa;             /* 二级悬浮面板、下拉菜单底色 */
+	--colorNeutralBackground4: #f0f0f0;             /* 三级对话框、强提示卡片底色 */
+	--colorNeutralBackground5: #ebebeb;             /* 极浅层底色 */
+	--colorNeutralBackgroundSubtle: transparent;   /* 控件常规背景 (透明底) */
+	--colorNeutralBackgroundSubtleHover: rgba(0, 0, 0, 0.04); /* 控件悬浮底色 */
+	--colorNeutralBackgroundSubtlePressed: rgba(0, 0, 0, 0.08); /* 控件按下底色 */
+	--colorNeutralBackgroundDisabled: rgba(0, 0, 0, 0.04); /* 禁用状态背景 */
+	--colorNeutralBackgroundInverted: #292929;      /* 反转背景 */
 
-	/* Text */
-	--f-text-primary: #242424;
-	--f-text-secondary: #5d5d5d;
-	--f-text-tertiary: #707070;
-	--f-text-disabled: #9b9b9b;
-	--f-text-on-accent: #ffffff;
+	/* 中性文本/前景体系 (Neutral Foregrounds) */
+	--colorNeutralForeground1: #242424;             /* 主文本、正文色 */
+	--colorNeutralForeground2: #5d5d5d;             /* 次要说明、辅助文本色 */
+	--colorNeutralForeground3: #707070;             /* 弱化提示、占位符文本色 */
+	--colorNeutralForeground4: #a1a1a1;             /* 不常用弱化文字 */
+	--colorNeutralForegroundDisabled: #bdbdbd;      /* 禁用文本颜色 */
+	--colorNeutralForegroundOnBrand: #ffffff;       /* 覆盖在品牌背景上的反差文字 */
+	--colorNeutralForegroundInverted: #ffffff;      /* 反转中性文本色 */
 
-	/* Borders */
-	--f-border-subtle: rgba(0, 0, 0, 0.06);
-	--f-border-default: rgba(0, 0, 0, 0.1);
-	--f-border-strong: rgba(0, 0, 0, 0.45);
+	/* 中性边框描边体系 (Neutral Strokes) */
+	--colorNeutralStroke1: #d1d1d1;                 /* 标准通用边框 */
+	--colorNeutralStroke2: #e0e0e0;                 /* 细微内边框或分割线 */
+	--colorNeutralStrokeSubtle: #f0f0f0;            /* 极淡分割线 */
+	--colorNeutralStrokeStrong: #8a8a8a;            /* 强对比边框 (聚焦/滑块等) */
+	--colorNeutralStrokeDisabled: #e0e0e0;          /* 禁用状态边框 */
+	--colorNeutralStrokeAccessible: #616161;        /* 无障碍对比强化边框 */
 
-	/* Elevation / Shadows */
+	/* 功能状态颜色 (Status Colors - 亮色模式) */
+	--colorStatusErrorBackground: #fde7e9;          /* 错误状态背景 */
+	--colorStatusErrorForeground: #c42b1c;          /* 错误状态前景/文字 */
+	--colorStatusErrorBorder: #f1707a;              /* 错误状态描边 */
+	--colorStatusSuccessBackground: #dff6dd;        /* 成功状态背景 */
+	--colorStatusSuccessForeground: #107c10;        /* 成功状态前景/文字 */
+	--colorStatusSuccessBorder: #6bc26b;            /* 成功状态描边 */
+	--colorStatusWarningBackground: #fff4ce;        /* 警告状态背景 */
+	--colorStatusWarningForeground: #9d5d00;        /* 警告状态前景/文字 */
+	--colorStatusWarningBorder: #ffb900;            /* 警告状态描边 */
+	--colorStatusInfoBackground: #eff6fc;           /* 信息提示背景 */
+	--colorStatusInfoForeground: #0078d4;           /* 信息提示前景/文字 */
+	--colorStatusInfoBorder: #4cc2ff;               /* 信息提示描边 */
+
+	/* 三维投影体系 (Elevation & Shadows) */
 	--f-shadow-2: 0 2px 4px rgba(0, 0, 0, 0.04);
 	--f-shadow-4: 0 4px 8px rgba(0, 0, 0, 0.08);
 	--f-shadow-8: 0 8px 16px rgba(0, 0, 0, 0.12);
@@ -118,25 +194,42 @@ html.light {
 	--f-shadow-card: var(--f-shadow-2);
 	--f-shadow-flyout: var(--f-shadow-8);
 
-	/* Code Editor Specific */
+	/* 代码编辑器专用配色 (Editor Color) */
 	--f-editor-bg: #ffffff;
 	--f-editor-gutter-bg: #f8f8f8;
 	--f-editor-gutter-border: #e6e6e6;
+
+	/* 亚克力混合材质底色 (Acrylic Support) */
+	--f-acrylic-background: rgba(255, 255, 255, 0.75);
+	--f-popover-acrylic-bg: rgba(250, 250, 250, 0.96);
 }
 
-/* Legacy Variable Mapping (Compatibility Layer) */
+/* ==========================================================================
+   向后兼容与桥接图层 (Compatibility & Bridge Layer)
+   ========================================================================== */
 :root,
 html.light {
-	--bg-primary: var(--f-bg-base);
-	--bg-secondary: var(--f-bg-layer1);
-	--bg-tertiary: var(--f-bg-layer2);
-	--text-primary: var(--f-text-primary);
-	--text-secondary: var(--f-text-secondary);
-	--border-color: var(--f-border-default);
-	--accent-color: var(--f-brand-base);
-	--hover-color: var(--f-bg-control-hover);
-
-	/* Scrollbars */
-	--scrollbar-track: transparent;
-	--scrollbar-thumb: var(--f-text-tertiary);
+	/* --------------------------------------------------------------------------
+	   桥接 StylePack HSL 核心变量至标准 Hex Token，为第三方组件和系统打通底层主题
+	   -------------------------------------------------------------------------- */
+	--background: var(--colorNeutralBackground1);
+	--foreground: var(--colorNeutralForeground1);
+	--card: var(--colorNeutralBackground2);
+	--card-foreground: var(--colorNeutralForeground1);
+	--popover: var(--colorNeutralBackground3);
+	--popover-foreground: var(--colorNeutralForeground1);
+	--primary: var(--colorBrandBackground);
+	--primary-foreground: var(--colorNeutralForegroundOnBrand);
+	--secondary: var(--colorNeutralBackgroundSubtleHover);
+	--secondary-foreground: var(--colorNeutralForeground1);
+	--muted: var(--colorNeutralBackground3);
+	--muted-foreground: var(--colorNeutralForeground3);
+	--accent: var(--colorNeutralBackgroundSubtleHover);
+	--accent-foreground: var(--colorNeutralForeground1);
+	--destructive: var(--colorStatusErrorForeground);
+	--destructive-foreground: var(--colorNeutralForegroundOnBrand);
+	--border: var(--colorNeutralStroke1);
+	--input: var(--colorNeutralStrokeStrong);
+	--ring: var(--colorBrandBackground);
+	--radius: var(--borderRadiusXLarge);
 }
