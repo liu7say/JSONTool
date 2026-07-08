@@ -568,31 +568,32 @@ import GithubIconUrl from './assets/github.svg';
 import FButton from './components/FButton.vue';
 import FVerticalSwitch from './components/FVerticalSwitch.vue';
 import Logo from './components/Logo.vue';
+// 引入 Tabler Icons 并通过别名映射到原有变量，保持模板逻辑不变，同时注入现代扁平线性设计
 import {
-	Plus,
-	Close,
-	Clock,
-	Delete,
-	Moon,
-	Sunny,
-	Operation,
-	DocumentCopy,
-	ScaleToOriginal,
-	Rank,
-	Grid,
-	Back,
-	Switch,
-	ArrowLeft,
-	ArrowRight,
-	ArrowDown,
-	Check,
-	Expand,
-	Fold,
-	Link,
-	Unlock,
-	MagicStick,
-	Connection,
-} from '@element-plus/icons-vue';
+	IconPlus as Plus,                      // 新建标签页
+	IconX as Close,                        // 关闭标签页/抽屉
+	IconClock as Clock,                    // 历史记录
+	IconTrash as Delete,                   // 删除/清空历史
+	IconMoon as Moon,                      // 深色主题
+	IconSun as Sunny,                      // 浅色主题
+	IconSettings as Operation,             // 保存快照/设置操作
+	IconCopy as DocumentCopy,              // 复制/格式化
+	IconArrowAutofitWidth as ScaleToOriginal, // 压缩 JSON
+	IconArrowsSort as Rank,                // 排序
+	IconLayoutGrid as Grid,                // 网格/表格视图
+	IconArrowLeft as Back,                 // 返回主编辑器
+	IconGitCompare as Switch,              // 对比/Diff 视图
+	IconChevronLeft as ArrowLeft,          // 侧边栏展开
+	IconChevronRight as ArrowRight,        // 侧边栏折叠/下一个差异
+	IconChevronDown as ArrowDown,          // 下拉菜单箭头
+	IconCheck as Check,                    // 确认/Toast 提示
+	IconArrowsMaximize as Expand,          // 展开层级
+	IconArrowsMinimize as Fold,            // 折叠层级
+	IconLink as Link,                      // 转义 JSON
+	IconUnlink as Unlock,                  // 反转义 JSON
+	IconWand as MagicStick,                // Unicode 转中文
+	IconCode as Connection,                // 中文转 Unicode
+} from '@tabler/icons-vue';
 import draggable from 'vuedraggable';
 
 // 状态管理 stores
@@ -699,7 +700,19 @@ const handleGlobalKeydown = (e) => {
 	// }
 };
 
+// 声明一个包含所有图标组件的数组，以强制阻止 Vite/Rollup 对其进行 Tree Shaking
+const __keep_icons_prevent_tree_shaking = [
+	Plus, Close, Clock, Delete, Moon, Sunny, Operation,
+	DocumentCopy, ScaleToOriginal, Rank, Grid, Back, Switch,
+	ArrowLeft, ArrowRight, ArrowDown, Check, Expand, Fold,
+	Link, Unlock, MagicStick, Connection
+];
+
 onMounted(async () => {
+	// 显式挂载防 Tree Shaking 数组到全局 window 上，阻止构建工具在生产环境 Dead Code Elimination 时将其抹除
+	if (typeof window !== 'undefined') {
+		window.__tabler_icons_registry = __keep_icons_prevent_tree_shaking;
+	}
 	window.addEventListener('click', handleClickOutside);
 	window.addEventListener('keydown', handleGlobalKeydown);
 

@@ -100,3 +100,9 @@ body {
 ::view-transition-new(root) {
 	z-index: 9999;
 }
+
+/* 统一微调 Tabler 图标的线条与填充，使用 1.4px 纤细描边，并强制将 fill 设为 none，防止被 button 等父容器的 fill: currentColor 涂抹成实心色块 */
+.tabler-icon {
+	fill: none !important;
+	stroke-width: 1.5px !important;
+}

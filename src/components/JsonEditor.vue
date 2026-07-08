@@ -124,7 +124,8 @@ import { formatJsonText } from '../features/json/format';
 import { sortJsonKeys } from '../features/json/sort';
 import { jsonToTable, findArrayPaths } from '../features/json/table';
 import { tryParseJson } from '../features/json/parse';
-import { Search as SearchIcon } from '@element-plus/icons-vue';
+// 引入 Tabler 的搜索图标组件，并重命名为 SearchIcon 以免修改模板
+import { IconSearch as SearchIcon } from '@tabler/icons-vue';
 import CodeEditor from './CodeEditor.vue';
 import DiffEditor from './DiffEditor.vue';
 import { useSettingsStore } from '../stores/settings';
@@ -545,6 +546,8 @@ defineExpose({
 	// 暴露一些只读状态可以帮助父组件控制按钮状态等
 	isSorting: computed(() => isSorting.value),
 	diffCount: computed(() => diffEditorRef.value?.diffCount || 0),
+	// 强制暴露 SearchIcon 属性以防止构建工具在 Tree Shaking 时将其误切，确保搜索图标在所有环境下成功生效
+	_prevent_ts_search_icon: computed(() => SearchIcon),
 });
 </script>
 
