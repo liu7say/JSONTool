@@ -134,6 +134,21 @@
 			color: var(--colorBrandForegroundPressed);
 			transform: translateY(0) scale(0.97);
 		}
+
+		/* 中性色幽灵按钮 (例如需要黑/白字，不要主题蓝的场景) */
+		&.neutral {
+			color: var(--colorNeutralForeground1); /* 使用系统标准中性前景色，自动适配暗色/亮色模式 */
+
+			&:hover:not(:disabled):not(.disabled) {
+				background-color: var(--colorNeutralBackgroundSubtleHover); /* 悬浮时使用中性浅背景 */
+				transform: translateY(-1px);
+			}
+			&:active:not(:disabled):not(.disabled) {
+				background-color: var(--colorNeutralBackgroundSubtlePressed); /* 按下时使用稍深的中性背景 */
+				color: var(--colorNeutralForeground1);
+				transform: translateY(0) scale(0.97);
+			}
+		}
 	}
 
 	/* 3. 危险按钮 (Danger Button) */

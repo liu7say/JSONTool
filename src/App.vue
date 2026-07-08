@@ -305,11 +305,12 @@
 						<component :is="Clock" style="width: 16px" />
 					</FButton>
 
-					<!-- 语言切换 -->
+					<!-- 语言切换 (采用中性色按钮，防止主题蓝色干扰视觉) -->
 					<div class="language-selector-wrapper" ref="languageButtonRef">
 						<FButton
 							size="small"
 							type="subtle"
+							color="neutral"
 							icon-only
 							@click.stop="showLanguageMenu = !showLanguageMenu"
 							:title="t('common.language')">
@@ -346,9 +347,11 @@
 						</transition>
 					</div>
 
+					<!-- 主题切换按钮 (采用中性色按钮，使其不呈现主题蓝色) -->
 					<FButton
 						size="small"
 						type="subtle"
+						color="neutral"
 						icon-only
 						@click="handleThemeToggle"
 						:title="
