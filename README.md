@@ -2,103 +2,88 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg)
 
-> 本扩展纯 AI 开发,个人自用,有问题请提交 issue,我也不一定会看 😂
+> 个人自用扩展，欢迎提交 Issue。
 
-> 感谢谷歌大善人
+JSONTool 是一款本地运行的 Chrome/Edge 浏览器扩展，用于 JSON 数据的格式化、验证、表格展示与版本对比。界面基于 Fluent 2 设计规范构建。
 
-JSONTool 是一款专为开发者打造的**本地化** JSON 调试利器。它拒绝花原本能，忠实遵循微软 **Fluent 2 设计语言**，为您提供原生 Windows 11 般的流畅体验。
+所有数据均保存在浏览器存储（`chrome.storage.local`）。
 
-> **我们信仰 "Privacy First"**：所有数据处理均在本地 (`chrome.storage.local`) 完成，绝无任何网络上传，安全是我们的底线。
+## 功能特性
 
-## ✨ 核心特性
+### 界面与交互
 
-### 🎨 极致的 Fluent 2 体验
+- 遵循 Fluent 2 设计规范，支持深色与浅色模式。
+- 标签栏支持多标签管理、鼠标中键快速关闭及滚动平滑遮罩。
+- 支持快捷键保存快照（Ctrl+S / Cmd+S）。
 
-- **原生交互**：
-  - SVG 图标与微动效，细节打磨至像素级。
-  - 标签栏支持**鼠标中键关闭**、平滑滚动及边缘渐变遮罩，多文件管理得心应手。
-  - 支持 **Ctrl+S** (或 Cmd+S) 快捷键快速保存快照，原生体验一气呵成。
+### 编辑器与格式化
 
-### 🛠️ 强大的数据工场
+- 基于 CodeMirror 6，提供语法高亮、代码折叠与正则搜索替换。
+- 支持标准 JSON 与 JS Object 模式（支持无引号键名等宽松语法解析）。
+- 支持一键格式化（Format）、紧凑压缩（Compact）与对象键名递归排序（Sort）。
+- 提供“格式自动检测”开关，避免输入过程中频繁阻断。
+- 独立保持每个标签页的代码折叠状态。
 
-- **现代化编辑器**：基于 **CodeMirror 6**，提供毫秒级响应的语法高亮、代码折叠与正则搜索。
-- **状态保持**：每个标签页独立保存代码折叠状态，切换标签或重启后不会把编辑现场清空。
-- **智能格式化**：
-  - **Format / Compact**：一键格式化或紧凑压缩，容错解析让糟糕的数据也能被拯救。
-  - **格式自动检测**：可关闭输入过程中的实时检测与空文档粘贴自动格式化，手动格式化仍然可用。
-  - **Sort**：支持对象键值递归排序，配合加载动画用户体验更佳。
+### 表格视图
 
-### 📊 超级表格视图
+- 支持将顶层或指定路径的 JSON 数组直接转换为交互式数据表格。
+- 支持列宽拖拽调整、表头多维排序与全文关键词即时筛选。
 
-将复杂的 JSON 数组转化为可交互的电子表格：
+### 差异对比 (Diff Mode)
 
-- **拖拽列宽**：自由调整，长数据一览无余。
-- **即时筛选**：支持全文关键词检索，秒级定位目标行。
-- **多维排序**：点击表头即可升/降序排列，数据规律尽收眼底。
+- 双栏实时对比（Side-by-side），精确高亮差异内容。
+- 对比侧支持独立的格式化与紧凑操作。
 
-### ⚖️ 差异对比 (Diff Mode)
+### 历史记录
 
-- **双栏视图**：左右分栏 (Side-by-side) 实时展示差异，依托高效算法精准高亮变更。
-- **独立操作**：对比侧（右侧）支持独立格式化与压缩，方便处理原始脏数据。
+- 关键操作自动生成快照，支持本地历史记录浏览与一键恢复。
 
-### 💾 时光机 (History)
+### 国际化 (i18n)
 
-- **自动快照**：关键操作自动留痕，不再因为手滑丢失代码。
-- **本地回溯**：历史记录持久化存储，随时找回昨天的灵感。
+- 内置中文与英文语言界面，支持自动检测与手动切换。
 
-### 🌍 国际化 (i18n)
+## 技术选型
 
-- **多语言支持**：内置中文和英文界面，一键切换。
-- **智能检测**：首次启动自动识别浏览器语言。
-- **持久化记忆**：语言偏好保存至本地存储，下次打开自动应用。
+- **核心框架**: Vue 3 (Composition API)
+- **状态管理**: Pinia
+- **代码编辑器**: CodeMirror 6 (@codemirror/lang-json, @codemirror/merge)
+- **样式系统**: 自定义 Fluent 2 SCSS
+- **构建工具**: Vite + @crxjs/vite-plugin
 
-## 🛠️ 技术栈
-
-本项目拒绝臃肿，采用前沿且轻量的技术栈构建：
-
-- **核心框架**: [Vue 3](https://vuejs.org/) (Composition API) - 响应式的基石。
-- **状态管理**: [Pinia](https://pinia.vuejs.org/) - 简洁直观的状态流。
-- **UI 系统**: **自研 Fluent 2 SCSS 库** - 完全移除 Element Plus 依赖，极致轻量。
-- **编辑器**: [CodeMirror 6](https://codemirror.net/) - 强大且可扩展的代码核心。
-- **构建工具**: [Vite](https://vitejs.dev/) + [@crxjs/vite-plugin](https://crxjs.dev/vite-plugin) - 极速开发体验。
-
-## 📂 项目结构
+## 目录结构
 
 ```
 src/
-├── stores/          # 状态管理 (Session, History, Theme)
-├── domain/          # 核心业务逻辑 (Document Model)
-├── features/        # 功能模块 (CodeMirror Extensions, JSON Ops, Diff)
-├── components/      # Vue 组件 (Editor, UI Controls)
-├── services/        # 基础设施 (Chrome Storage)
-└── styles/          # Fluent 2 样式系统 (SCSS Variables, Mixins)
+├── stores/          # 状态管理 (Session, History, Theme, Settings)
+├── domain/          # 领域模型 (Document Model)
+├── features/        # 功能模块 (CodeMirror 扩展, JSON 解析/排序/表格, 差异对比)
+├── components/      # Vue 组件 (编辑器, UI 控件)
+├── services/        # 浏览器存储与底层服务
+└── styles/          # Fluent 2 样式规范实现
 ```
 
-## 🚀 快速开始
+## 开发与构建
 
-### 环境准备
+### 环境要求
 
 - Node.js >= 16
 - npm / pnpm
 
-### 安装与构建
+### 常用命令
 
 ```bash
 # 1. 安装依赖
 npm install
 
-# 2. 开发模式 (热更新支持)
+# 2. 开发模式 (支持热更新)
 npm run dev
-# 访问 http://localhost:5173 或加载 dist/ 到浏览器
 
-# 3. 生产构建
+# 3. 生产环境构建
 npm run build
 ```
 
-## 💿 安装载入
+## 扩展安装
 
-1. 浏览器打开扩展管理页 (`chrome://extensions/` 或 `edge://extensions/`)。
-2. 开启右上角的 **"开发者模式"**。
-3. 点击 **"加载已解压的扩展程序"**，选择本项目生成的 `dist/` 目录。
-
----
+1. 在 Chromium 内核浏览器中打开扩展管理页面 (`chrome://extensions/` 或 `edge://extensions/`)。
+2. 开启右上角的“开发者模式”。
+3. 点击“加载已解压的扩展程序”，选择项目构建输出的 `dist/` 目录。

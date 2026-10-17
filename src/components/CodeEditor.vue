@@ -308,7 +308,8 @@ const getCodeEditorExtensions = () => [
 										to: editorView.state.doc.length,
 										insert: formatted,
 									},
-									selection: { anchor: 0 },
+									// 修复光标位置：自动格式化后将光标定位至文本末尾，并跟随滚动
+									selection: { anchor: formatted.length },
 									scrollIntoView: true,
 									userEvent: 'input.format.auto',
 								});

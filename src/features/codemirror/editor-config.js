@@ -43,6 +43,7 @@ import { richCopyExtension } from './rich-copy';
 
 import { fluentTheme } from './fluent-theme';
 import { fluentFoldGutter } from './fluent-fold';
+import { fallbackFoldService } from './fallback-fold';
 
 /**
  * 自定义 JavaScript 高亮样式（浅色模式）
@@ -116,30 +117,6 @@ export const editorPhrases = {
 };
 
 /**
- * 粘贴行为过滤器
- * 保持光标在粘贴内容的开始处，而不是结束处，防止页面跳动
- */
-export const pasteTransactionFilter = EditorState.transactionFilter.of((tr) => {
-	if (tr.isUserEvent('input.paste')) {
-		let minFrom = Infinity;
-		tr.changes.iterChanges((fromA, toA, fromB, toB) => {
-			if (fromB < minFrom) minFrom = fromB;
-		});
-
-		if (minFrom !== Infinity) {
-			return [
-				tr,
-				{
-					selection: { anchor: minFrom },
-					scrollIntoView: true,
-				},
-			];
-		}
-	}
-	return tr;
-});
-
-/**
  * 基础编辑器配置（不包含语言支持）
  * 包含所有编辑器共享的核心功能扩展
  * 语言支持在 getEditorExtensions 中根据参数动态添加
@@ -151,6 +128,7 @@ export const baseEditorExtensions = [
 	highlightSpecialChars(),
 	history(),
 	fluentFoldGutter, // 自定义折叠槽
+	fallbackFoldService, // 大数据量快速折叠兜底服务
 	drawSelection(),
 	dropCursor(),
 	EditorState.allowMultipleSelections.of(true),
@@ -174,9 +152,8 @@ export const baseEditorExtensions = [
 	]),
 	// 注意：语言支持（json/javascript）已移至 getEditorExtensions 中动态选择
 	fluentTheme, // Fluent 主题
-	...bracketScopeLines, // JSON 括号范围线
+	...bracketScopeLines, // JSON 括号范围线（视口级裁剪优化）
 	...searchWithMatchCount, // 带匹配计数的搜索面板
-	pasteTransactionFilter, // 粘贴行为控制
 	richCopyExtension, // 富文本复制（保留语法高亮）
 ];
 
