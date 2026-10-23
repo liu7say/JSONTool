@@ -1,6 +1,8 @@
 # JSONTool (Chrome/Edge Extension)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg) ![Version](https://img.shields.io/badge/version-v0.7.0-blue.svg)
+[简体中文](README.md) | [English](README_EN.md)
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg) ![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)
 
 > 个人自用扩展，欢迎提交 Issue。
 

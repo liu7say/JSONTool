@@ -10,27 +10,60 @@ JSONTool
 **Short Description** [REQUIRED]
 Fast JSON formatting, visual diff comparison, table view, and history snapshot manager running 100% locally in your browser.
 
-**Detailed Description** [REQUIRED]
-JSONTool is a clean, modern, and privacy-first browser extension for developers and data analysts working with JSON. 
+**Detailed Description (English)** [REQUIRED]
+JSONTool is a fast, local-first Chrome extension for JSON formatting, visual diff comparison, and tabular data viewing. All operations execute entirely on your device. Your data never leaves your browser.
 
-All operations run entirely on your device — your data never leaves your browser.
+Key Features
 
-Key Features:
-- Format & Beautify: Instantly format, indent, compact, and sort complex JSON documents with one click.
-- JS Object & Loose Syntax: Effortlessly parse and convert loose JavaScript object literals into valid JSON.
-- Visual Diff Comparison: Side-by-side real-time diff view to quickly identify, highlight, and review changes between two JSON payloads.
-- Interactive Table View: Automatically convert arrays of JSON objects into customizable data tables with column resizing, multi-column sorting, and instant search.
-- Multi-Tab Session & Snapshots: Keep multiple JSON tabs open without losing your place; save instant snapshots to revisit earlier revisions at any time.
-- Modern Fluent 2 Interface: Clean acrylic glass styling with seamless dark and light mode support.
+1. Formatting and Editing
+- Format, compact, and recursively sort object keys with one click.
+- Support for loose JavaScript object literals, effortlessly handling unquoted keys and flexible syntax.
+- Syntax highlighting, code folding, and regex-powered find and replace.
+- Per-tab code folding persistence that prevents unexpected expansions during tab switching.
+- Optional automatic format detection to avoid intrusive validation while typing.
 
-How to Use:
-1. Click the JSONTool icon in your browser toolbar to open the workspace.
-2. Paste or type your JSON into the editor.
-3. Use the toolbar buttons to format, compact, sort keys, or switch to Table and Diff views.
-4. Press Ctrl+S (Cmd+S on Mac) anytime to save a snapshot to your local history.
+2. Side-by-Side Diff Comparison
+- Real-time two-pane visual diff viewer that highlights insertions, deletions, and modifications.
+- Independent format and compact controls for each comparison pane.
 
-Privacy & Security:
-JSONTool does not make network requests, does not use external tracking or analytics, and does not require third-party accounts. Your payloads stay in your local browser storage.
+3. Interactive Table View
+- Convert root or nested JSON arrays into structured, interactive data tables.
+- Drag-and-drop column resizing, multi-column sorting, and instant keyword filtering.
+
+4. Session and Snapshot Management
+- Multi-tab workspace with middle-click tab closure.
+- Instant snapshot creation via Ctrl+S (Cmd+S on macOS) with full local revision rollback.
+
+Privacy and Security
+JSONTool does not initiate network requests, does not collect analytics or personal data, and operates 100% offline. All contents and snapshots are stored strictly within your browser's local storage (chrome.storage.local).
+
+
+**Detailed Description (Chinese)**
+JSONTool 是一款运行在浏览器本地的 JSON 格式化、文本对比与数据表格化扩展。所有数据处理均在浏览器本地完成，不依赖外部服务器，不上传任何用户数据。
+
+主要功能
+
+1. 格式化与编辑
+- 支持标准 JSON 格式化、紧凑压缩与对象键名递归排序。
+- 支持宽松 JavaScript 对象（JS Object）语法解析，自动处理无引号键名等常见格式。
+- 提供代码高亮、折叠展开与正则搜索替换。
+- 独立保持每个标签页的折叠展开状态，避免切换时重复重绘。
+- 提供格式自动检测开关，减少输入过程中的频繁校验中断。
+
+2. 视觉差异对比 (Diff)
+- 提供双栏并排比对视图，精确定位并高亮显示两段文本的差异。
+- 对比侧支持独立的格式化与压缩操作。
+
+3. 数据表格视图 (Table View)
+- 一键将顶层或指定层级的 JSON 数组转为交互式表格。
+- 支持列宽自由拖拽调整、表头多维排序与全文关键词即时筛选。
+
+4. 会话管理与快照
+- 支持多标签页并发工作与鼠标中键快速关闭。
+- 支持通过快捷键 Ctrl+S / Cmd+S 保存历史快照，随时回溯并恢复历史状态。
+
+隐私与安全
+本扩展不包含网络请求逻辑，不收集任何用户行为，不追踪任何使用数据。所有编辑内容及快照均保存在浏览器的本地存储 (chrome.storage.local) 中。
 
 **Category** [REQUIRED]
 Developer Tools
@@ -97,4 +130,4 @@ JSONTool processes all JSON text locally in the browser runtime and stores user-
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
-| 0.7.0 | 2026-10-23 | Initial Chrome Web Store package with Fluent 2 design, i18n, table view, and diff mode. | Draft |
+| 0.8.0 | 2026-10-23 | Initial Chrome Web Store package with Fluent 2 design, i18n, table view, and diff mode. | Draft |
