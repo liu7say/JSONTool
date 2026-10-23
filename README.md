@@ -16,7 +16,7 @@ JSONTool 是一款本地运行的 Chrome/Edge 浏览器扩展，用于 JSON 数�
 
 - 遵循 Fluent 2 设计规范，支持深色与浅色模式。
 - 标签栏支持多标签管理、鼠标中键快速关闭及滚动平滑遮罩。
-- 支持快捷键保存快照（Ctrl+S / Cmd+S）。
+- 自动保持工作区多标签会话，重新打开浏览器自动恢复。
 
 ### 编辑器与格式化
 
@@ -36,10 +36,6 @@ JSONTool 是一款本地运行的 Chrome/Edge 浏览器扩展，用于 JSON 数�
 - 双栏实时对比（Side-by-side），精确高亮差异内容。
 - 对比侧支持独立的格式化与紧凑操作。
 
-### 历史记录
-
-- 关键操作自动生成快照，支持本地历史记录浏览与一键恢复。
-
 ### 国际化 (i18n)
 
 - 内置中文与英文语言界面，支持自动检测与手动切换。
@@ -56,7 +52,7 @@ JSONTool 是一款本地运行的 Chrome/Edge 浏览器扩展，用于 JSON 数�
 
 ```
 src/
-├── stores/          # 状态管理 (Session, History, Theme, Settings)
+├── stores/          # 状态管理 (Session, Theme, Settings)
 ├── domain/          # 领域模型 (Document Model)
 ├── features/        # 功能模块 (CodeMirror 扩展, JSON 解析/排序/表格, 差异对比)
 ├── components/      # Vue 组件 (编辑器, UI 控件)
@@ -89,3 +85,4 @@ npm run build
 1. 在 Chromium 内核浏览器中打开扩展管理页面 (`chrome://extensions/` 或 `edge://extensions/`)。
 2. 开启右上角的“开发者模式”。
 3. 点击“加载已解压的扩展程序”，选择项目构建输出的 `dist/` 目录。
+4. 或从 Releases 下载预打包好的压缩包 (`JSONTool-ChromeWebStore-v0.8.0.zip`) 解压载入。

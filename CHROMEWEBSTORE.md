@@ -8,7 +8,7 @@
 JSONTool
 
 **Short Description** [REQUIRED]
-Fast JSON formatting, visual diff comparison, table view, and history snapshot manager running 100% locally in your browser.
+Fast JSON formatting, visual diff comparison, and interactive table view running 100% locally in your browser.
 
 **Detailed Description (English)** [REQUIRED]
 JSONTool is a fast, local-first Chrome extension for JSON formatting, visual diff comparison, and tabular data viewing. All operations execute entirely on your device. Your data never leaves your browser.
@@ -30,12 +30,12 @@ Key Features
 - Convert root or nested JSON arrays into structured, interactive data tables.
 - Drag-and-drop column resizing, multi-column sorting, and instant keyword filtering.
 
-4. Session and Snapshot Management
+4. Session and Multi-Tab Management
 - Multi-tab workspace with middle-click tab closure.
-- Instant snapshot creation via Ctrl+S (Cmd+S on macOS) with full local revision rollback.
+- Automatic session persistence that preserves open editor tabs across browser restarts.
 
 Privacy and Security
-JSONTool does not initiate network requests, does not collect analytics or personal data, and operates 100% offline. All contents and snapshots are stored strictly within your browser's local storage (chrome.storage.local).
+JSONTool does not initiate network requests, does not collect analytics or personal data, and operates 100% offline. All contents are stored strictly within your browser's local storage (chrome.storage.local).
 
 
 **Detailed Description (Chinese)**
@@ -58,12 +58,12 @@ JSONTool 是一款运行在浏览器本地的 JSON 格式化、文本对比与�
 - 一键将顶层或指定层级的 JSON 数组转为交互式表格。
 - 支持列宽自由拖拽调整、表头多维排序与全文关键词即时筛选。
 
-4. 会话管理与快照
+4. 会话与多标签管理
 - 支持多标签页并发工作与鼠标中键快速关闭。
-- 支持通过快捷键 Ctrl+S / Cmd+S 保存历史快照，随时回溯并恢复历史状态。
+- 自动持久化当前工作区会话，关闭浏览器后重新打开自动恢复标签内容。
 
 隐私与安全
-本扩展不包含网络请求逻辑，不收集任何用户行为，不追踪任何使用数据。所有编辑内容及快照均保存在浏览器的本地存储 (chrome.storage.local) 中。
+本扩展不包含网络请求逻辑，不收集任何用户行为，不追踪任何使用数据。所有编辑内容均保存在浏览器的本地存储 (chrome.storage.local) 中。
 
 **Category** [REQUIRED]
 Developer Tools
@@ -84,7 +84,7 @@ Chinese (Simplified) / English
 | Screenshot 1 [REQUIRED] | 1280×800 | ⬜ To be captured | Main Editor & Formatting (Dark/Light mode) |
 | Screenshot 2 [RECOMMENDED] | 1280×800 | ⬜ To be captured | Side-by-Side Diff View |
 | Screenshot 3 [RECOMMENDED] | 1280×800 | ⬜ To be captured | Interactive Table View |
-| Screenshot 4 | 1280×800 | ⬜ To be captured | Multi-tab & History Snapshots |
+| Screenshot 4 | 1280×800 | ⬜ To be captured | Multi-tab Workspace (Fluent 2 theme) |
 | Small Promo Tile [RECOMMENDED] | 440×280 | ⬜ To be created | Promo banner |
 
 ---
@@ -93,7 +93,7 @@ Chinese (Simplified) / English
 
 | Permission | Type | Justification |
 |------------|------|---------------|
-| `storage` | permissions | Used exclusively to save user editor tabs, snapshots, and interface preferences (theme and language) in the browser's local storage (`chrome.storage.local`). No data is ever transmitted to remote servers. |
+| `storage` | permissions | Used exclusively to save user editor tabs and interface preferences (theme and language) in the browser's local storage (`chrome.storage.local`). No data is ever transmitted to remote servers. |
 
 ---
 
@@ -102,7 +102,7 @@ Chinese (Simplified) / English
 ### Data Collection
 **Does the extension collect user data?** No
 
-JSONTool processes all JSON text locally in the browser runtime and stores user-saved snapshots strictly in browser local storage. No data is collected, logged, or transferred off-device.
+JSONTool processes all JSON text locally in the browser runtime and stores workspace tabs strictly in browser local storage. No data is collected, logged, or transferred off-device.
 
 ### Data Use Certification
 - [x] Data is NOT sold to third parties
