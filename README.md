@@ -15,7 +15,7 @@ JSONTool 是一款本地运行的 Chrome/Edge 浏览器扩展，用于 JSON 数�
 ### 界面与交互
 
 - 遵循 Fluent 2 设计规范，支持深色与浅色模式。
-- 标签栏支持多标签管理、右键上下文菜单（关闭、关闭其他、关闭下方、复制副本、重命名）、鼠标中键快速关闭及滚动平滑遮罩。
+- 标签栏遵循 Fluent 2 纵向导航标准，支持折叠与展开平滑过渡（常驻单字徽章与标题弹性收缩、悬浮预览卡片）、左侧滑动激活指示条（GPU 硬件加速）、多标签管理、右键上下文菜单（关闭、关闭其他、关闭下方、复制副本、重命名）、鼠标中键快速关闭及清晰悬停反馈。
 - 自动保持工作区多标签会话，重新打开浏览器自动恢复。
 
 ### 编辑器与格式化
@@ -55,7 +55,8 @@ src/
 ├── stores/          # 状态管理 (Session, Theme, Settings)
 ├── domain/          # 领域模型 (Document Model)
 ├── features/        # 功能模块 (CodeMirror 扩展, JSON 解析/排序/表格, 差异对比)
-├── components/      # Vue 组件 (编辑器, UI 控件)
+├── components/      # 通用 UI 组件 (FButton, FInput, FTabs 等)
+├── view/            # 业务模块化视图 (Header, Sidebar, Content, HistoryDrawer, StatusBar)
 ├── services/        # 浏览器存储与底层服务
 └── styles/          # Fluent 2 样式规范实现
 ```

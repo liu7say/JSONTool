@@ -15,7 +15,7 @@ All data is stored directly in browser local storage (`chrome.storage.local`).
 ### UI and Interaction
 
 - Built with Fluent 2 design guidelines, supporting both light and dark themes.
-- Multi-tab management with context menus (Close, Close Others, Close Below, Duplicate, Rename), middle-click tab closing, and smooth scroll masks.
+- Tab bar adheres to Fluent 2 vertical navigation standards with smooth collapse/expand animations (persistent initial badges, elastic title transition, float preview popover), smooth left sliding active indicator (GPU accelerated), multi-tab management with context menus (Close, Close Others, Close Below, Duplicate, Rename), middle-click closing, and clear hover feedback.
 - Automatic workspace session persistence that restores open tabs across browser restarts.
 
 ### Editor and Formatting
@@ -55,7 +55,8 @@ src/
 ├── stores/          # State management (Session, Theme, Settings)
 ├── domain/          # Domain models (Document Model)
 ├── features/        # Feature modules (CodeMirror extensions, JSON parsing/sorting/tables, Diff)
-├── components/      # Vue components (Editor, UI controls)
+├── components/      # Common UI components (FButton, FInput, FTabs, etc.)
+├── view/            # Modularized business views (Header, Sidebar, Content, HistoryDrawer, StatusBar)
 ├── services/        # Browser storage and platform services
 └── styles/          # Fluent 2 design token implementations
 ```
