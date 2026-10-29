@@ -7,7 +7,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 // CodeMirror 核心
 import { EditorView } from 'codemirror';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Compartment } from '@codemirror/state';
 import { lintGutter, linter, nextDiagnostic } from '@codemirror/lint';
 import { search } from '@codemirror/search';
 import {
@@ -21,7 +21,7 @@ import {
 
 import { useThemeStore } from '../stores/theme';
 import { useSettingsStore } from '../stores/settings';
-import { getEditorExtensions } from '../features/codemirror/editor-config';
+import { getEditorExtensions, getThemeExtensions } from '../features/codemirror/editor-config';
 import { relaxedJsonParse } from '../features/json/parse';
 import { stringifyJson } from '../features/json/stringify';
 
@@ -64,6 +64,8 @@ const settingsStore = useSettingsStore();
 let editorView = null;
 // 当前使用的语言模式：'json' 或 'javascript'
 let currentLanguage = 'json';
+// 主题扩展配置槽（用于原地动态热重配主题，避免销毁实例造成滚动条跳动）
+const themeCompartment = new Compartment();
 
 // 去除 BOM 头
 const stripBom = (text) =>
@@ -331,7 +333,10 @@ const getCodeEditorExtensions = () => [
 // 组装所有 Editor 扩展（使用共享配置 + CodeEditor 特有配置）
 // language 参数：'json'（默认）或 'javascript'（用于 JS Object 格式）
 const getExtensions = (isDark, language = 'json') => {
-	return getEditorExtensions(isDark, getCodeEditorExtensions(), { language });
+	return getEditorExtensions(isDark, getCodeEditorExtensions(), {
+		language,
+		themeCompartment,
+	});
 };
 
 const initEditor = () => {
@@ -397,27 +402,17 @@ watch(
 	},
 );
 
+// 监听主题变化：通过 Compartment 原地热重配，避免销毁重建引发的代码滚动与光标跳动
 watch(
 	() => themeStore.isDark,
 	(isDark) => {
 		if (!editorView) return;
-		// 重建编辑器以切换主题高亮（保持当前语言模式）
-		const content = editorView.state.doc.toString();
-		const selection = editorView.state.selection;
-
-		editorView.destroy();
-
-		const state = EditorState.create({
-			doc: content,
-			extensions: getExtensions(isDark, currentLanguage),
-			selection,
+		// 动态热更新主题样式，零 DOM 销毁重建，零滚动位移
+		editorView.dispatch({
+			effects: themeCompartment.reconfigure(
+				getThemeExtensions(isDark, currentLanguage),
+			),
 		});
-
-		editorView = new EditorView({
-			state,
-			parent: editorContainer.value,
-		});
-		applyFoldRanges(props.foldRanges);
 	},
 );
 

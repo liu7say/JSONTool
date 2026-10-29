@@ -165,37 +165,60 @@ export const baseEditorExtensions = [
  * @param {string} options.language - 语言模式：'json'（默认）或 'javascript'（用于 JS Object 格式）
  * @returns {Array} 完整的扩展配置数组
  */
+/**
+ * 获取与主题强相关的样式与高亮扩展配置
+ * 用于通过 Compartment 动态热重配，避免销毁重建 EditorView
+ * @param {boolean} isDark - 是否深色模式
+ * @param {string} language - 语言模式：'json' 或 'javascript'
+ * @returns {Array} 主题扩展数组
+ */
+export const getThemeExtensions = (isDark, language = 'json') => {
+	const themeExtensions = [];
+
+	// 深色模式加载 oneDark 主题
+	if (isDark) {
+		themeExtensions.push(oneDark);
+	}
+
+	// JavaScript 模式下根据深浅色挂载相应高亮样式
+	if (language === 'javascript') {
+		const highlightStyle = isDark
+			? jsObjectHighlightStyleDark
+			: jsObjectHighlightStyleLight;
+		themeExtensions.push(syntaxHighlighting(highlightStyle));
+	}
+
+	return themeExtensions;
+};
+
+/**
+ * 获取带主题切换和语言支持的完整扩展配置
+ * @param {boolean} isDark - 是否使用深色主题
+ * @param {Array} additionalExtensions - 额外的扩展配置
+ * @param {Object} options - 选项配置
+ * @param {string} options.language - 语言模式：'json'（默认）或 'javascript'（用于 JS Object 格式）
+ * @param {import('@codemirror/state').Compartment} [options.themeCompartment] - 主题动态配置槽
+ * @returns {Array} 完整的扩展配置数组
+ */
 export const getEditorExtensions = (
 	isDark,
 	additionalExtensions = [],
 	options = {},
 ) => {
-	const { language = 'json' } = options;
+	const { language = 'json', themeCompartment } = options;
 
-	// 根据语言模式选择不同的语言解析器和高亮样式
-	// JS Object 格式（无引号的键名）需要使用 JavaScript 解析器才能正确解析语法树，确保折叠功能正常
-	// 同时使用自定义高亮样式使颜色与 JSON 模式保持一致
+	// 根据语言模式选择不同的语言解析器
 	const languageExtension = language === 'javascript' ? javascript() : json();
+
+	const themeExtensions = getThemeExtensions(isDark, language);
 
 	const extensions = [
 		...baseEditorExtensions,
 		languageExtension,
 		...additionalExtensions,
+		// 若传入了 Compartment 则封装进动态插槽，支持运行时热重配
+		themeCompartment ? themeCompartment.of(themeExtensions) : themeExtensions,
 	];
-
-	// 深色模式先加载 oneDark 主题
-	if (isDark) {
-		extensions.push(oneDark);
-	}
-
-	// JavaScript 模式下添加自定义高亮样式，覆盖默认的 JS 高亮颜色
-	// 必须在 oneDark 之后添加，才能覆盖其样式
-	if (language === 'javascript') {
-		const highlightStyle = isDark
-			? jsObjectHighlightStyleDark
-			: jsObjectHighlightStyleLight;
-		extensions.push(syntaxHighlighting(highlightStyle));
-	}
 
 	return extensions;
 };

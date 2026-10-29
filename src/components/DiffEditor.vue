@@ -5,6 +5,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { EditorView } from 'codemirror';
+import { Compartment } from '@codemirror/state';
 import { MergeView } from '@codemirror/merge';
 import {
 	foldAll,
@@ -16,7 +17,7 @@ import {
 } from '@codemirror/language';
 
 import { useThemeStore } from '../stores/theme';
-import { getEditorExtensions } from '../features/codemirror/editor-config';
+import { getEditorExtensions, getThemeExtensions } from '../features/codemirror/editor-config';
 import { relaxedJsonParse } from '../features/json/parse';
 
 const props = defineProps({
@@ -53,14 +54,17 @@ const lastEmittedModified = ref(null);
 const diffCount = ref(0);
 // 当前使用的语言模式：'json' 或 'javascript'
 let currentLanguage = 'json';
+// 主题扩展配置槽（用于左右对比视图原地热重配主题）
+const themeCompartmentA = new Compartment();
+const themeCompartmentB = new Compartment();
 
 // 去除 BOM 头
 const stripBom = (text) =>
 	text && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 
 // DiffEditor 特有的扩展配置生成器（支持语言参数）
-const getDiffEditorExtensions = (isDark, language = 'json') => {
-	return getEditorExtensions(isDark, [], { language });
+const getDiffEditorExtensions = (isDark, language = 'json', themeCompartment) => {
+	return getEditorExtensions(isDark, [], { language, themeCompartment });
 };
 
 let applyingFoldRanges = false;
@@ -146,7 +150,7 @@ const initMergeView = () => {
 		a: {
 			doc: props.original,
 			extensions: [
-				...getDiffEditorExtensions(themeStore.isDark, currentLanguage),
+				...getDiffEditorExtensions(themeStore.isDark, currentLanguage, themeCompartmentA),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
 						const val = update.state.doc.toString();
@@ -163,7 +167,7 @@ const initMergeView = () => {
 		b: {
 			doc: props.modified,
 			extensions: [
-				...getDiffEditorExtensions(themeStore.isDark, currentLanguage),
+				...getDiffEditorExtensions(themeStore.isDark, currentLanguage, themeCompartmentB),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) {
 						const val = update.state.doc.toString();
@@ -227,12 +231,18 @@ watch(
 	{ deep: true },
 );
 
-// 监听主题变化
+// 监听主题变化：通过 Compartment 原地热重配，严禁销毁重建，保证对比视图滚动与差异位置稳定
 watch(
 	() => themeStore.isDark,
-	() => {
-		// MergeView 比较复杂，通常建议重建
-		initMergeView();
+	(isDark) => {
+		if (!mergeView) return;
+		const exts = getThemeExtensions(isDark, currentLanguage);
+		mergeView.a.dispatch({
+			effects: themeCompartmentA.reconfigure(exts),
+		});
+		mergeView.b.dispatch({
+			effects: themeCompartmentB.reconfigure(exts),
+		});
 	},
 );
 
