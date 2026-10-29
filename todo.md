@@ -18,11 +18,11 @@
 - [x] 将左侧垂直标签侧边栏完整抽取为独立视图组件 (src/view/SidebarView.vue)
 - [x] 全面解耦 App.vue 单体结构，顶部与右侧独立为视图组件 (HeaderView, ContentView, HistoryDrawerView, StatusBarView)
 - [x] 优化垂直 Tab 标签栏折叠/展开交错动效与单字徽章居中 (Layer Stacking)
+- [ ] 侧边栏收缩时鼠标悬浮浮动展开 Tab (超出横向显示范围，WIP)
 - [x] 修复 app.compress 国际化丢失与 Tab 悬停样式规范
 - [x] 输入大括号或方括号时移除自动补全（避免连续输入时补全成冗余括号）
 - [ ] 编辑器右键增加“复制当前节点路径”操作（例如：grandp.parent.lastchild，支持扩展多种语言/语法格式）
 - [ ] 左侧标签栏的,每一个标签应当有底色
-- [ ] 添加 Chrome 和 Edge 自动化发布流程
 
 ## Bug
 
