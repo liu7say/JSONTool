@@ -76,7 +76,7 @@
 			--colorNeutralBackgroundSubtleHover
 		); /* 悬浮淡蓝/白亮色 */
 		border-color: var(--colorNeutralStrokeAccessible);
-		transform: translateY(-1px); /* 向上微移 */
+		// transform: translateY(-1px); /* 向上微移 */
 		box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 	}
 
@@ -98,7 +98,7 @@
 
 		&:hover:not(:disabled):not(.disabled) {
 			background-color: var(--colorBrandBackgroundHover);
-			transform: translateY(-1px);
+			// transform: translateY(-1px);
 			box-shadow: 0 4px 8px rgba(0, 120, 212, 0.4);
 		}
 		&:active:not(:disabled):not(.disabled) {
@@ -123,7 +123,7 @@
 				var(--colorBrandBackground) 10%,
 				transparent
 			); /* 淡淡的蓝色悬浮底 */
-			transform: translateY(-1px);
+			// transform: translateY(-1px);
 		}
 		&:active:not(:disabled):not(.disabled) {
 			background-color: color-mix(
@@ -137,14 +137,20 @@
 
 		/* 中性色幽灵按钮 (例如需要黑/白字，不要主题蓝的场景) */
 		&.neutral {
-			color: var(--colorNeutralForeground1); /* 使用系统标准中性前景色，自动适配暗色/亮色模式 */
+			color: var(
+				--colorNeutralForeground1
+			); /* 使用系统标准中性前景色，自动适配暗色/亮色模式 */
 
 			&:hover:not(:disabled):not(.disabled) {
-				background-color: var(--colorNeutralBackgroundSubtleHover); /* 悬浮时使用中性浅背景 */
-				transform: translateY(-1px);
+				background-color: var(
+					--colorNeutralBackgroundSubtleHover
+				); /* 悬浮时使用中性浅背景 */
+				// transform: translateY(-1px);
 			}
 			&:active:not(:disabled):not(.disabled) {
-				background-color: var(--colorNeutralBackgroundSubtlePressed); /* 按下时使用稍深的中性背景 */
+				background-color: var(
+					--colorNeutralBackgroundSubtlePressed
+				); /* 按下时使用稍深的中性背景 */
 				color: var(--colorNeutralForeground1);
 				transform: translateY(0) scale(0.97);
 			}
@@ -164,7 +170,7 @@
 			background-color: var(--colorStatusErrorForeground);
 			color: #ffffff;
 			border-color: transparent;
-			transform: translateY(-1px);
+			// transform: translateY(-1px);
 			box-shadow: 0 4px 8px rgba(196, 43, 28, 0.3);
 		}
 		&:active:not(:disabled):not(.disabled) {

@@ -113,50 +113,59 @@
 								<component :is="ArrowDown" style="width: 12px; height: 12px" />
 							</FButton>
 
-							<!-- 下拉菜单 -->
-							<transition name="fade-scale">
+							<!-- 格式化下拉菜单 -->
+							<FPopoverMenu
+								v-model:visible="showFormatMenu"
+								:anchor="formatButtonRef"
+								placement="bottom-start">
+								<div class="menu-item switch-menu-item" @click.stop>
+									<span style="white-space: nowrap">{{
+										t('app.autoFormat')
+									}}</span>
+									<FVerticalSwitch
+										v-model="settingsStore.autoFormatDetection"
+										:title="t('app.autoFormat')"
+										:aria-label="t('app.autoFormat')" />
+								</div>
+								<div class="menu-item switch-menu-item" @click.stop>
+									<span style="white-space: nowrap">JS Object</span>
+									<FVerticalSwitch
+										:model-value="settingsStore.indent === 'jsObj'"
+										@update:model-value="
+											setFormatIndent($event ? 'jsObj' : 2, false)
+										"
+										title="JS Object"
+										aria-label="JS Object" />
+								</div>
 								<div
-									v-if="showFormatMenu"
-									class="f-popover-menu f-acrylic"
-									ref="formatMenuRef">
-									<div class="menu-item switch-menu-item" @click.stop>
-										<span style="white-space: nowrap">{{
-											t('app.autoFormat')
-										}}</span>
-										<FVerticalSwitch
-											v-model="settingsStore.autoFormatDetection"
-											:title="t('app.autoFormat')"
-											:aria-label="t('app.autoFormat')" />
+									class="menu-item"
+									@click="
+										setFormatIndent(2);
+										showFormatMenu = false;
+									">
+									<span>{{ t('app.indent2Spaces') }}</span>
+									<div class="check-box">
+										<component
+											v-if="settingsStore.indent === 2"
+											:is="Check"
+											style="width: 12px" />
 									</div>
-									<div class="menu-item switch-menu-item" @click.stop>
-										<span style="white-space: nowrap">JS Object</span>
-										<FVerticalSwitch
-											:model-value="settingsStore.indent === 'jsObj'"
-											@update:model-value="
-												setFormatIndent($event ? 'jsObj' : 2, false)
-											"
-											title="JS Object"
-											aria-label="JS Object" />
+								</div>
+								<div
+									class="menu-item"
+									@click="
+										setFormatIndent(4);
+										showFormatMenu = false;
+									">
+									<span>{{ t('app.indent4Spaces') }}</span>
+									<div class="check-box">
+										<component
+											v-if="settingsStore.indent === 4"
+											:is="Check"
+											style="width: 12px" />
 									</div>
-									<div class="menu-item" @click="setFormatIndent(2)">
-										<span>{{ t('app.indent2Spaces') }}</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.indent === 2"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div>
-									<div class="menu-item" @click="setFormatIndent(4)">
-										<span>{{ t('app.indent4Spaces') }}</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.indent === 4"
-												:is="Check"
-												style="width: 12px" />
-										</div>
-									</div>
-									<!-- <div class="menu-item" @click="setFormatIndent('\t')">
+								</div>
+								<!-- <div class="menu-item" @click="setFormatIndent('\t')">
 										<span>Tab 缩进</span>
 										<div class="check-box">
 											<component
@@ -165,8 +174,7 @@
 												style="width: 12px" />
 										</div>
 									</div> -->
-								</div>
-							</transition>
+							</FPopoverMenu>
 						</div>
 						<div class="f-button-group">
 							<FButton
@@ -221,23 +229,26 @@
 								<component :is="ArrowDown" style="width: 12px; height: 12px" />
 							</FButton>
 
-							<!-- 下拉菜单 -->
-							<transition name="fade-scale">
+							<!-- 排序下拉菜单 -->
+							<FPopoverMenu
+								v-model:visible="showSortMenu"
+								:anchor="sortButtonRef"
+								placement="bottom-start">
 								<div
-									v-if="showSortMenu"
-									class="f-popover-menu f-acrylic"
-									ref="sortMenuRef">
-									<div class="menu-item" @click="toggleSortStructureAtEnd">
-										<span>{{ t('app.structureAtEnd') }}</span>
-										<div class="check-box">
-											<component
-												v-if="settingsStore.sortStructureAtEnd"
-												:is="Check"
-												style="width: 12px" />
-										</div>
+									class="menu-item"
+									@click="
+										toggleSortStructureAtEnd();
+										showSortMenu = false;
+									">
+									<span>{{ t('app.structureAtEnd') }}</span>
+									<div class="check-box">
+										<component
+											v-if="settingsStore.sortStructureAtEnd"
+											:is="Check"
+											style="width: 12px" />
 									</div>
 								</div>
-							</transition>
+							</FPopoverMenu>
 						</div>
 
 						<div class="f-button-group">
@@ -320,31 +331,39 @@
 						</FButton>
 
 						<!-- 语言下拉菜单 -->
-						<transition name="fade-scale">
+						<FPopoverMenu
+							v-model:visible="showLanguageMenu"
+							:anchor="languageButtonRef"
+							placement="bottom-end">
 							<div
-								v-if="showLanguageMenu"
-								class="f-popover-menu language-menu f-acrylic"
-								ref="languageMenuRef">
-								<div class="menu-item" @click="changeLocale('zh')">
-									<span>{{ t('common.chinese') }}</span>
-									<div class="check-box">
-										<component
-											v-if="locale === 'zh'"
-											:is="Check"
-											style="width: 12px" />
-									</div>
-								</div>
-								<div class="menu-item" @click="changeLocale('en')">
-									<span>{{ t('common.english') }}</span>
-									<div class="check-box">
-										<component
-											v-if="locale === 'en'"
-											:is="Check"
-											style="width: 12px" />
-									</div>
+								class="menu-item"
+								@click="
+									changeLocale('zh');
+									showLanguageMenu = false;
+								">
+								<span>{{ t('common.chinese') }}</span>
+								<div class="check-box">
+									<component
+										v-if="locale === 'zh'"
+										:is="Check"
+										style="width: 12px" />
 								</div>
 							</div>
-						</transition>
+							<div
+								class="menu-item"
+								@click="
+									changeLocale('en');
+									showLanguageMenu = false;
+								">
+								<span>{{ t('common.english') }}</span>
+								<div class="check-box">
+									<component
+										v-if="locale === 'en'"
+										:is="Check"
+										style="width: 12px" />
+								</div>
+							</div>
+						</FPopoverMenu>
 					</div>
 
 					<!-- 主题切换按钮 (采用中性色按钮，使其不呈现主题蓝色) -->
@@ -416,11 +435,25 @@
 								:class="{ active: sessionStore.activeTabId === tab.id }"
 								:data-id="tab.id"
 								@click="sessionStore.setActive(tab.id)"
+								@contextmenu.prevent="openTabContextMenu($event, tab)"
 								@mousedown.middle.prevent="sessionStore.closeTab(tab.id)"
 								@mouseenter="(e) => onTabMouseEnter(e, tab.id)"
 								@mouseleave="onTabMouseLeave">
 								<div class="tab-content">
-									<span class="tab-text" :title="tab.title">
+									<input
+										v-if="renamingTabId === tab.id"
+										ref="renameInputRef"
+										v-model="renameTitleInput"
+										class="tab-rename-input"
+										@click.stop
+										@keydown.enter="submitRenameTab(tab.id)"
+										@keydown.esc="cancelRenameTab"
+										@blur="submitRenameTab(tab.id)" />
+									<span
+										v-else
+										class="tab-text"
+										:title="tab.title"
+										@dblclick.stop="startRenameTab(tab)">
 										{{
 											sessionStore.sidebarCollapsed
 												? getShortTitle(tab.title)
@@ -495,11 +528,25 @@
 				sessionStore.setActive(hoveredTab.id);
 				hoveredTabId = null;
 			"
+			@contextmenu.prevent="openTabContextMenu($event, hoveredTab)"
 			@mousedown.middle.prevent="sessionStore.closeTab(hoveredTab.id)">
 			<div class="tab-content">
-				<span class="tab-text" :title="hoveredTab.title">{{
-					hoveredTab.title
-				}}</span>
+				<input
+					v-if="renamingTabId === hoveredTab.id"
+					ref="renameInputRef"
+					v-model="renameTitleInput"
+					class="tab-rename-input"
+					@click.stop
+					@keydown.enter="submitRenameTab(hoveredTab.id)"
+					@keydown.esc="cancelRenameTab"
+					@blur="submitRenameTab(hoveredTab.id)" />
+				<span
+					v-else
+					class="tab-text"
+					:title="hoveredTab.title"
+					@dblclick.stop="startRenameTab(hoveredTab)"
+					>{{ hoveredTab.title }}</span
+				>
 			</div>
 			<span
 				class="tab-close"
@@ -579,6 +626,12 @@
 				<span>{{ toastMessage }}</span>
 			</div>
 		</transition>
+
+		<!-- Tab 鼠标右键上下文菜单 -->
+		<FPopoverMenu
+			v-model:visible="tabMenuVisible"
+			:position="tabMenuPos"
+			:items="tabMenuItems" />
 	</div>
 </template>
 
@@ -595,6 +648,7 @@ import GithubIconUrl from './assets/github.svg';
 import FButton from './components/FButton.vue';
 import FVerticalSwitch from './components/FVerticalSwitch.vue';
 import Logo from './components/Logo.vue';
+import FPopoverMenu from './components/FPopoverMenu.vue';
 // 引入 Tabler Icons 并通过别名映射到原有变量，保持模板逻辑不变，同时注入现代扁平线性设计
 import {
 	IconPlus as Plus, // 新建标签页
@@ -605,6 +659,9 @@ import {
 	IconSun as Sunny, // 浅色主题
 	IconSettings as Operation, // 保存快照/设置操作
 	IconCopy as DocumentCopy, // 复制/格式化
+	IconEdit as Edit, // 重命名
+	IconCircleX as CloseOthers, // 关闭其他
+	IconArrowBarToDown as CloseBelow, // 关闭下方
 	IconArrowAutofitWidth as ScaleToOriginal, // 压缩 JSON
 	IconArrowsSort as Rank, // 排序
 	IconLayoutGrid as Grid, // 网格/表格视图
@@ -636,15 +693,12 @@ const showHistory = ref(false); // 控制历史记录抽屉的显示
 const jsonEditorRef = ref(null); // JsonEditor 实例引用
 const showSortMenu = ref(false);
 const sortButtonRef = ref(null);
-const sortMenuRef = ref(null);
 
 const showFormatMenu = ref(false);
 const formatButtonRef = ref(null);
-const formatMenuRef = ref(null);
 
 const showLanguageMenu = ref(false);
 const languageButtonRef = ref(null);
-const languageMenuRef = ref(null);
 const currentLanguageLabel = computed(() =>
 	locale.value === 'zh' ? '中' : 'EN',
 );
@@ -684,39 +738,7 @@ const saveWorkspaceNow = () => {
 		});
 };
 
-// 点击外部关闭菜单
-const handleClickOutside = (e) => {
-	// 排序菜单
-	if (
-		showSortMenu.value &&
-		sortButtonRef.value &&
-		!sortButtonRef.value.contains(e.target) &&
-		sortMenuRef.value &&
-		!sortMenuRef.value.contains(e.target)
-	) {
-		showSortMenu.value = false;
-	}
-	// 格式化菜单
-	if (
-		showFormatMenu.value &&
-		formatButtonRef.value &&
-		!formatButtonRef.value.contains(e.target) &&
-		formatMenuRef.value &&
-		!formatMenuRef.value.contains(e.target)
-	) {
-		showFormatMenu.value = false;
-	}
-	// 语言菜单
-	if (
-		showLanguageMenu.value &&
-		languageButtonRef.value &&
-		!languageButtonRef.value.contains(e.target) &&
-		languageMenuRef.value &&
-		!languageMenuRef.value.contains(e.target)
-	) {
-		showLanguageMenu.value = false;
-	}
-};
+// 下拉菜单与右键菜单外部点击监听已统一收敛至 FPopoverMenu 内部维护
 
 // 全局快捷键处理
 const handleGlobalKeydown = (e) => {
@@ -761,7 +783,6 @@ onMounted(async () => {
 	if (typeof window !== 'undefined') {
 		window.__tabler_icons_registry = __keep_icons_prevent_tree_shaking;
 	}
-	window.addEventListener('click', handleClickOutside);
 	window.addEventListener('keydown', handleGlobalKeydown);
 
 	await settingsStore.loadSettings();
@@ -782,7 +803,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-	window.removeEventListener('click', handleClickOutside);
 	window.removeEventListener('keydown', handleGlobalKeydown);
 	unsubscribeSessionStore?.();
 	unsubscribeSessionStore = null;
@@ -988,6 +1008,108 @@ const activeTab = computed(() => sessionStore.activeTab);
 const hoveredTab = computed(() =>
 	sessionStore.tabs.find((t) => t.id === hoveredTabId.value),
 );
+
+// Tab 右键上下文菜单与重命名状态
+const tabMenuVisible = ref(false);
+const tabMenuPos = ref({ x: 0, y: 0 });
+const tabMenuTarget = ref(null);
+
+const renamingTabId = ref(null);
+const renameTitleInput = ref('');
+const renameInputRef = ref(null);
+
+/**
+ * 弹出 Tab 鼠标右键上下文菜单
+ */
+const openTabContextMenu = (event, tab) => {
+	tabMenuTarget.value = tab;
+	tabMenuPos.value = { x: event.clientX, y: event.clientY };
+	tabMenuVisible.value = true;
+};
+
+/**
+ * 触发 Tab 原地内联重命名
+ */
+const startRenameTab = (tab) => {
+	renamingTabId.value = tab.id;
+	renameTitleInput.value = tab.title;
+	nextTick(() => {
+		const el = Array.isArray(renameInputRef.value)
+			? renameInputRef.value[0]
+			: renameInputRef.value;
+		el?.focus();
+		el?.select();
+	});
+};
+
+/**
+ * 提交 Tab 重命名
+ */
+const submitRenameTab = (tabId) => {
+	if (renamingTabId.value !== tabId) return;
+	const trimmed = renameTitleInput.value.trim();
+	if (trimmed) {
+		sessionStore.updateTabTitle(tabId, trimmed, true);
+	}
+	renamingTabId.value = null;
+};
+
+/**
+ * 取消 Tab 重命名
+ */
+const cancelRenameTab = () => {
+	renamingTabId.value = null;
+};
+
+/**
+ * Tab 右键菜单项清单
+ */
+const tabMenuItems = computed(() => {
+	if (!tabMenuTarget.value) return [];
+	const target = tabMenuTarget.value;
+	const tabs = sessionStore.tabs;
+	const targetIdx = tabs.findIndex((t) => t.id === target.id);
+	const isLast = targetIdx === tabs.length - 1;
+	const isOnlyOne = tabs.length <= 1;
+
+	return [
+		{
+			id: 'duplicate',
+			label: t('app.duplicateTab'),
+			icon: DocumentCopy,
+			action: () => sessionStore.duplicateTab(target.id, t('app.copySuffix')),
+		},
+		{
+			id: 'rename',
+			label: t('app.renameTab'),
+			icon: Edit,
+			action: () => startRenameTab(target),
+		},
+		{
+			divider: true,
+		},
+		{
+			id: 'close',
+			label: t('app.closeTab'),
+			icon: Close,
+			action: () => sessionStore.closeTab(target.id),
+		},
+		{
+			id: 'closeOthers',
+			label: t('app.closeOtherTabs'),
+			icon: CloseOthers,
+			disabled: isOnlyOne,
+			action: () => sessionStore.closeOtherTabs(target.id),
+		},
+		{
+			id: 'closeBelow',
+			label: t('app.closeTabsBelow'),
+			icon: CloseBelow,
+			disabled: isLast,
+			action: () => sessionStore.closeTabsBelow(target.id),
+		},
+	];
+});
 
 // 状态栏信息
 const statusBarInfo = computed(() => {
@@ -1236,84 +1358,7 @@ const handleThemeToggle = (event) => {
 	display: inline-flex;
 }
 
-.language-menu {
-	right: 0;
-	left: auto;
-}
-
-.f-popover-menu {
-	position: absolute;
-	top: 100%;
-	left: 0;
-	margin-top: 4px;
-	/* 提供坚实、不可透光的降级背景 (避免在 Chrome 插件 Stacking Context 渲染失效时发生文字重叠) */
-	background-color: var(--colorNeutralBackground3) !important;
-	border: 1px solid var(--colorNeutralStroke1) !important;
-	border-radius: var(--borderRadiusSmall); /* 降级为2px纤细控件圆角 */
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-	padding: 6px;
-	min-width: 140px;
-	z-index: 1000;
-	display: flex;
-	flex-direction: column;
-
-	/* 仅当浏览器支持且触发渲染时应用厚度极高 (96%/98%) 的亚克力，防穿透阅读灾难 */
-	@supports (backdrop-filter: blur(20px)) or
-		(-webkit-backdrop-filter: blur(20px)) {
-		background-color: var(--f-popover-acrylic-bg) !important;
-		backdrop-filter: blur(20px) saturate(125%) !important;
-		-webkit-backdrop-filter: blur(20px) saturate(125%) !important;
-		border-color: var(--colorNeutralStroke2) !important;
-	}
-
-	.menu-item {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 6px 10px;
-		border-radius: var(--borderRadiusSmall); /* 与外层容器小圆角保持一致，防止悬浮高亮时溢出边界 */
-		cursor: pointer;
-		font-size: 13px;
-		color: var(--colorNeutralForeground1);
-		gap: 12px;
-		user-select: none;
-		transition: background-color var(--f-transition-fast);
-
-		&:hover {
-			background-color: var(
-				--colorNeutralBackgroundSubtleHover
-			); /* 修正了原本的拼写错误 */
-		}
-
-		&.switch-menu-item {
-			cursor: default;
-			padding: 4px 6px 4px 10px;
-		}
-
-		.check-box {
-			width: 16px;
-			height: 16px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: var(--colorBrandBackground);
-		}
-	}
-}
-
-/* 菜单过渡 */
-.fade-scale-enter-active,
-.fade-scale-leave-active {
-	transition:
-		opacity 0.15s ease,
-		transform 0.15s ease;
-}
-
-.fade-scale-enter-from,
-.fade-scale-leave-to {
-	opacity: 0;
-	transform: scale(0.95) translateY(-4px);
-}
+/* 弹出层与菜单样式及 fade-scale 过渡动效已统一内聚至 FPopoverMenu.vue */
 
 /* 侧边栏样式 */
 .sidebar {
@@ -1483,6 +1528,19 @@ const handleThemeToggle = (event) => {
 		min-width: 0;
 		margin-right: 4px;
 		margin-left: 6px;
+	}
+
+	.tab-rename-input {
+		width: 100%;
+		height: 22px;
+		padding: 0 4px;
+		font-size: 12px;
+		color: var(--colorNeutralForeground1);
+		background: var(--colorNeutralBackground1);
+		border: 1px solid var(--colorBrandBackground);
+		border-radius: 4px;
+		outline: none;
+		box-shadow: 0 0 0 1px var(--colorBrandBackground);
 	}
 
 	.tab-text {

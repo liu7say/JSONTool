@@ -41,6 +41,7 @@ const createFoldRanges = () => asTabFoldRanges();
 const toSnapshotTab = (tab) => ({
 	id: tab.id,
 	title: tab.title,
+	isCustomTitle: !!tab.isCustomTitle,
 	doc: {
 		sourceText: asText(tab.doc?.sourceText),
 	},
@@ -58,6 +59,7 @@ const fromSnapshotTab = (tab, index) => {
 	return {
 		id: asText(tab.id) || createId(),
 		title,
+		isCustomTitle: !!tab.isCustomTitle,
 		doc: createDocument(sourceText),
 		viewMode: asViewMode(tab.viewMode),
 		compareContent: asText(tab.compareContent),
@@ -95,6 +97,7 @@ export const useSessionStore = defineStore('session', {
 			const newTab = {
 				id,
 				title: initialTitle,
+				isCustomTitle: false,
 				doc,
 				// 每个 Tab 独立的视图状态
 				viewMode: 'code', // 'code' | 'table' | 'diff'
@@ -151,14 +154,80 @@ export const useSessionStore = defineStore('session', {
 
 			tab.doc = updateDocumentText(tab.doc, text);
 
-			// 更新文档内容时，同时更新标题（如果不为空）
-			tab.title = generateTabName(text, tab.title);
+			// 更新文档内容时，若非用户自定义标题，则通过智能算法自动刷新
+			if (!tab.isCustomTitle) {
+				tab.title = generateTabName(text, tab.title);
+			}
 		},
 
 		// 更新 Tab 标题
-		updateTabTitle(id, title) {
+		updateTabTitle(id, title, isCustom = true) {
 			const tab = this.tabs.find((t) => t.id === id);
-			if (tab) tab.title = title;
+			if (tab) {
+				tab.title = title;
+				tab.isCustomTitle = !!isCustom;
+			}
+		},
+
+		/**
+		 * 关闭除指定标签页以外的所有标签页
+		 * @param {string} targetId - 保留的目标 Tab ID
+		 */
+		closeOtherTabs(targetId) {
+			const target = this.tabs.find((t) => t.id === targetId);
+			if (!target) return;
+			this.tabs = [target];
+			this.activeTabId = targetId;
+		},
+
+		/**
+		 * 关闭指定标签页下方的所有标签页
+		 * @param {string} targetId - 目标 Tab ID
+		 */
+		closeTabsBelow(targetId) {
+			const idx = this.tabs.findIndex((t) => t.id === targetId);
+			if (idx === -1 || idx === this.tabs.length - 1) return;
+
+			const removedTabs = this.tabs.slice(idx + 1);
+			this.tabs = this.tabs.slice(0, idx + 1);
+
+			// 若当前激活的 Tab 位于被裁剪的下方区域，则回退激活 targetId
+			if (removedTabs.some((t) => t.id === this.activeTabId)) {
+				this.activeTabId = targetId;
+			}
+		},
+
+		/**
+		 * 复制指定标签页并创建副本
+		 * @param {string} targetId - 被复制的 Tab ID
+		 * @param {string} copySuffix - 副本后缀 (如 "副本" 或 "Copy")
+		 * @returns {Object|null} 新创建的副本 Tab
+		 */
+		duplicateTab(targetId, copySuffix = '副本') {
+			const idx = this.tabs.findIndex((t) => t.id === targetId);
+			if (idx === -1) return null;
+
+			const target = this.tabs[idx];
+			const newId = createId();
+			const title = `${target.title} (${copySuffix})`;
+
+			// 深度复制文档及状态
+			const newTab = {
+				id: newId,
+				title,
+				isCustomTitle: true,
+				doc: createDocument(target.doc?.sourceText || ''),
+				viewMode: target.viewMode,
+				compareContent: target.compareContent,
+				splitRatio: target.splitRatio,
+				selectedArrayPath: target.selectedArrayPath,
+				foldRanges: asTabFoldRanges(target.foldRanges),
+			};
+
+			// 紧邻插入到目标 Tab 的下方
+			this.tabs.splice(idx + 1, 0, newTab);
+			this.activeTabId = newId;
+			return newTab;
 		},
 
 		// 更新 Tab 视图模式

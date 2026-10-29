@@ -15,7 +15,7 @@ All data is stored directly in browser local storage (`chrome.storage.local`).
 ### UI and Interaction
 
 - Built with Fluent 2 design guidelines, supporting both light and dark themes.
-- Multi-tab management with middle-click tab closing and smooth horizontal scroll masks.
+- Multi-tab management with context menus (Close, Close Others, Close Below, Duplicate, Rename), middle-click tab closing, and smooth scroll masks.
 - Automatic workspace session persistence that restores open tabs across browser restarts.
 
 ### Editor and Formatting
