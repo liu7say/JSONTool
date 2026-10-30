@@ -110,10 +110,12 @@
 					@click="onFlyoutClick(hoveredTab.id)"
 					@contextmenu.prevent="openTabContextMenu($event, hoveredTab)"
 					@mousedown.middle.prevent="onFlyoutMiddleClick(hoveredTab.id)">
-					<!-- 激活态左侧指示条 (与展开态 1:1 对齐) -->
-					<div
-						v-if="sessionStore.activeTabId === hoveredTab.id"
-						class="flyout-indicator" />
+					<!-- 激活态左侧指示条 (与展开态 1:1 对齐，支持就地平滑伸展) -->
+					<transition name="indicator-fade">
+						<div
+							v-if="sessionStore.activeTabId === hoveredTab.id"
+							class="flyout-indicator" />
+					</transition>
 
 					<!-- 标题区域与内联重命名 -->
 					<div class="tab-title-wrap">
@@ -317,10 +319,9 @@ const scheduleHoverLeave = () => {
 	}, 140);
 };
 
-// 浮层交互：点击激活标签页
+// 浮层交互：点击激活标签页 (原地响应式切换为 active，坚决不设 null 避免闪烁重绘)
 const onFlyoutClick = (tabId) => {
-	sessionStore.setActive(tabId);
-	hoveredTabId.value = null;
+	handleTabClick(tabId);
 };
 
 // 浮层交互：鼠标中键关闭标签页
@@ -769,13 +770,13 @@ onUnmounted(() => {
 		}
 	}
 
-	/* 未激活态 Tab 浮层：底色与激活态完全统一，悬停仅增强边框可见度，绝不改动背景透明度 */
+	/* 未激活态 Tab 浮层：使用浅淡边框，彻底告别过深的 #616161 */
 	&.hover-inactive {
 		border-color: var(--colorNeutralStroke2) !important;
 
 		&:hover {
 			border-color: var(
-				--colorNeutralStrokeAccessible,
+				--colorNeutralStroke1,
 				var(--colorNeutralStroke2)
 			) !important;
 		}
@@ -797,6 +798,7 @@ onUnmounted(() => {
 		text-overflow: ellipsis;
 		font-size: 13px;
 		color: var(--colorNeutralForeground1);
+		transition: color 150ms ease, font-weight 150ms ease;
 	}
 
 	.tab-rename-input {
@@ -833,6 +835,21 @@ onUnmounted(() => {
 			opacity: 1;
 		}
 	}
+}
+
+
+/* 激活指示条就地滑入动效 */
+.indicator-fade-enter-active,
+.indicator-fade-leave-active {
+	transition:
+		opacity 150ms ease,
+		transform 150ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.indicator-fade-enter-from,
+.indicator-fade-leave-to {
+	opacity: 0;
+	transform: translateY(-50%) scaleY(0.4);
 }
 
 /* 横向舒展滑出过渡动画 (Smooth Flyout) */
