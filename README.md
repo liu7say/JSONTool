@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg) ![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg) ![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)
 
 > 个人自用扩展，欢迎提交 Issue。
 
@@ -41,6 +41,15 @@ JSONTool 是一款本地运行的 Chrome/Edge 浏览器扩展，用于 JSON 数�
 ### 国际化 (i18n)
 
 - 内置中文与英文语言界面，支持自动检测与手动切换。
+
+### 系统设置与多端同步 (Settings & Cloud Sync)
+
+- 顶部工具栏右侧提供统一的系统设置中心（Fluent 2 居中模态弹窗），模块化分组管理各项核心配置。
+- **字体与排版**：支持分别设置界面 UI 字体与代码编辑器字体（默认采用各桌面系统自带的通用等宽字体，支持主流预设与自由输入本地自定义字体名及回退链），支持精确调整界面字重（300 ~ 700）、编辑器代码字号（12px ~ 20px）与代码字重（400 ~ 700）。
+- **自定义 CSS**：提供全局自定义 CSS 注入功能，支持输入原生 CSS 样式规则实时全局生效，随心所欲深度定制界面与编辑器细节。
+- **无动画模式**：支持一键开启 Reduced Motion 模式，全面抑制全站过渡与动效，满足极速响应与低功耗需求。
+- **数据自动存储控制**：支持自主开启或关闭会话草稿自动持久化；关闭后敏感数据不落盘，重启浏览器保持干净无痕。
+- **多端账号同步**：所有配置项原生接入 `chrome.storage.sync`，随浏览器登录账号多端自动跨设备同步。
 
 ## 技术选型
 
@@ -88,4 +97,4 @@ npm run build
 1. 在 Chromium 内核浏览器中打开扩展管理页面 (`chrome://extensions/` 或 `edge://extensions/`)。
 2. 开启右上角的“开发者模式”。
 3. 点击“加载已解压的扩展程序”，选择项目构建输出的 `dist/` 目录。
-4. 或从 Releases 下载预打包好的压缩包 (`JSONTool-ChromeWebStore-v0.8.0.zip`) 解压载入。
+4. 或从 Releases 下载预打包好的压缩包 (`JSONTool-ChromeWebStore-v1.0.0.zip`) 解压载入。

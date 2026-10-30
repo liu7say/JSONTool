@@ -379,6 +379,19 @@
 						style="width: 16px" />
 				</FButton>
 
+				<!-- 系统全局设置按钮 -->
+				<FButton
+					size="small"
+					type="subtle"
+					color="neutral"
+					icon-only
+					@click="emit('openSettings')"
+					:title="t('settings.title')">
+					<component
+						:is="SettingsIcon"
+						style="width: 16px; height: 16px" />
+				</FButton>
+
 				<a
 					class="f-button small subtle icon-only"
 					title="GitHub"
@@ -430,6 +443,7 @@ import {
 	IconWand as MagicStick,
 	IconTransfer as Connection,
 	IconBrandGithub as BrandGithub,
+	IconSettings as SettingsIcon,
 } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -440,7 +454,7 @@ const props = defineProps({
 	},
 });
 
-defineEmits(['openHistory', 'saveHistory']);
+const emit = defineEmits(['openHistory', 'saveHistory', 'openSettings']);
 
 const { t, locale } = useI18n();
 const sessionStore = useSessionStore();

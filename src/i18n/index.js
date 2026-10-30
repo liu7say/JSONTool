@@ -11,12 +11,17 @@ const normalizeLocale = (value) => {
 };
 
 export const detectLocale = () => {
+	// 服务端或测试环境安全回退
+	if (typeof window === 'undefined' || typeof localStorage === 'undefined') return 'en';
+
 	const saved = normalizeLocale(localStorage.getItem(LOCALE_STORAGE_KEY));
 	if (saved) return saved;
 
 	const browserLocales = [
-		navigator.language,
-		...(Array.isArray(navigator.languages) ? navigator.languages : []),
+		typeof navigator !== 'undefined' ? navigator.language : '',
+		...(typeof navigator !== 'undefined' && Array.isArray(navigator.languages)
+			? navigator.languages
+			: []),
 	];
 	return browserLocales.some((item) => normalizeLocale(item) === 'zh')
 		? 'zh'
@@ -63,6 +68,7 @@ export const messages = {
 			sortTitle: '按 Keys 排序',
 			sortOptions: '排序选项',
 			structureAtEnd: '结构类型在后',
+			sortStructureAtEnd: '结构类型在后',
 			unicodeToChinese: 'Uni->中',
 			unicodeToChineseTitle: '将 Unicode 转义序列转换为中文',
 			chineseToUnicode: '中->Uni',
@@ -111,6 +117,29 @@ export const messages = {
 			emptyArray: '数组为空',
 			linterErrorPrefix: '[JSONTool] Linter 意外错误:',
 		},
+		settings: {
+			title: '设置',
+			appearance: '外观与字体',
+			uiFont: '界面字体',
+			uiFontWeight: '界面字重',
+			editorFont: '代码字体',
+			editorFontSize: '代码字号',
+			editorFontWeight: '代码字重',
+			customFontPlaceholder: '输入字体名称，如 PingFang SC',
+			customEditorFontPlaceholder: '输入代码字体名称，如 Cascadia Code',
+			customCss: '自定义 CSS',
+			customCssDesc: '注入原生全局 CSS 样式规则，实时微调界面与编辑器外观',
+			customCssPlaceholder:
+				"/* 输入全局自定义 CSS，例如：\n.f-button {'{'} border-radius: 8px; {'}'}\n*/",
+			reducedMotion: '无动画模式',
+			reducedMotionDesc: '禁用全站切换与过渡动画，适合低配设备或偏好极速静态响应',
+			editingAndStorage: '编辑与存储',
+			autoSave: '数据自动存储',
+			autoSaveDesc: '在输入过程中自动保存会话草稿；关闭后保护敏感数据不落盘，刷新或重启扩展恢复为空白或默认状态',
+			autoFormat: '格式自动检测',
+			autoFormatDesc: '输入过程中实时检测 JSON 语法错误并予以标注',
+			syncNotice: '设置已自动随浏览器登录账号进行多端同步 (chrome.storage.sync)',
+		},
 	},
 	en: {
 		common: {
@@ -151,6 +180,7 @@ export const messages = {
 			sortTitle: 'Sort by keys',
 			sortOptions: 'Sort Options',
 			structureAtEnd: 'Structures Last',
+			sortStructureAtEnd: 'Structures Last',
 			unicodeToChinese: 'Uni->CN',
 			unicodeToChineseTitle: 'Convert Unicode escapes to Chinese',
 			chineseToUnicode: 'CN->Uni',
@@ -198,6 +228,29 @@ export const messages = {
 			selectedPathNotArray: 'Selected path is not an array. Choose another path.',
 			emptyArray: 'Array is empty',
 			linterErrorPrefix: '[JSONTool] Unexpected linter error:',
+		},
+		settings: {
+			title: 'Settings',
+			appearance: 'Appearance & Typography',
+			uiFont: 'UI Font',
+			uiFontWeight: 'UI Font Weight',
+			editorFont: 'Editor Font',
+			editorFontSize: 'Font Size',
+			editorFontWeight: 'Font Weight',
+			customFontPlaceholder: 'Enter font name, e.g. Segoe UI',
+			customEditorFontPlaceholder: 'Enter monospace font name, e.g. Cascadia Code',
+			customCss: 'Custom CSS',
+			customCssDesc: 'Inject native global CSS rules to customize UI and editor appearance in real-time',
+			customCssPlaceholder:
+				"/* Enter global custom CSS, e.g.:\n.f-button {'{'} border-radius: 8px; {'}'}\n*/",
+			reducedMotion: 'Reduced Motion',
+			reducedMotionDesc: 'Disable all transitions and animations throughout the interface',
+			editingAndStorage: 'Editing & Storage',
+			autoSave: 'Auto-save Workspace Data',
+			autoSaveDesc: 'Automatically persist session drafts; disable to prevent sensitive data from saving to disk',
+			autoFormat: 'Auto Format Detection',
+			autoFormatDesc: 'Automatically detect and highlight JSON syntax errors during typing',
+			syncNotice: 'All settings are synced across devices via browser account (chrome.storage.sync)',
 		},
 	},
 };

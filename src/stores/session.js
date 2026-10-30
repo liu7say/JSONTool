@@ -54,7 +54,8 @@ const toSnapshotTab = (tab) => ({
 
 const fromSnapshotTab = (tab, index) => {
 	const sourceText = asText(tab.doc?.sourceText ?? tab.sourceText);
-	const title = asText(tab.title) || generateTabName(sourceText, `Tab ${index + 1}`);
+	const title =
+		asText(tab.title) || generateTabName(sourceText, `Tab ${index + 1}`);
 
 	return {
 		id: asText(tab.id) || createId(),
@@ -284,6 +285,11 @@ export const useSessionStore = defineStore('session', {
 
 		saveWorkspaceSnapshot() {
 			return saveStoredWorkspaceSnapshot(this.getWorkspaceSnapshot());
+		},
+
+		// 清理工作区持久化快照（当用户关闭自动存储时调用，防止敏感数据落盘）
+		clearWorkspaceSnapshot() {
+			return saveStoredWorkspaceSnapshot(null);
 		},
 
 		// 切换侧边栏状态

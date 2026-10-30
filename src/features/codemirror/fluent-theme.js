@@ -8,15 +8,16 @@ export const fluentTheme = EditorView.theme({
 	// 编辑器基础容器样式 (Base Editor Styles)
 	'&': {
 		height: '100%',
-		fontSize: '14px',
+		fontSize: 'var(--editorFontSize, 14px)',
+		fontWeight: 'var(--editorFontWeight, 400)',
 		color: 'var(--colorNeutralForeground1)',
 		backgroundColor: 'var(--f-editor-bg)',
-		fontFamily: "'Fira Code', 'Microsoft YaHei', 'PingFang SC', monospace",
+		fontFamily: 'var(--fontFamilyMonospace, Consolas, Monaco, monospace)',
 	},
 	// 滚动区域 (Scroller)
 	'.cm-scroller': {
 		overflow: 'auto',
-		fontFamily: "'Fira Code', 'Microsoft YaHei', 'PingFang SC', monospace",
+		fontFamily: 'var(--fontFamilyMonospace, Consolas, Monaco, monospace)',
 	},
 	// 侧边栏/行号区域 (Gutters)
 	'.cm-gutters': {
@@ -280,9 +281,10 @@ export const fluentTheme = EditorView.theme({
 		color: 'white !important',
 		border: '1px solid transparent !important',
 	},
-	'.cm-search button[name="replace"]:hover, .cm-search button[name="replaceAll"]:hover': {
-		backgroundColor: 'var(--colorBrandBackgroundHover) !important',
-	},
+	'.cm-search button[name="replace"]:hover, .cm-search button[name="replaceAll"]:hover':
+		{
+			backgroundColor: 'var(--colorBrandBackgroundHover) !important',
+		},
 
 	// 复选框外观 (Checkboxes)
 	'.cm-search input[type="checkbox"]': {
@@ -318,8 +320,9 @@ export const fluentTheme = EditorView.theme({
 	},
 
 	// 强制删除自带的多余箭头
-	'.cm-search button[name="next"]::before, .cm-search button[name="prev"]::before': {
-		content: 'none !important',
-		display: 'none !important',
-	},
+	'.cm-search button[name="next"]::before, .cm-search button[name="prev"]::before':
+		{
+			content: 'none !important',
+			display: 'none !important',
+		},
 });

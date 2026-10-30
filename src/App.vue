@@ -4,6 +4,7 @@
 		<HeaderView
 			:editor="contentViewRef"
 			@open-history="showHistory = true"
+			@open-settings="showSettings = true"
 			@save-history="onSaveHistory" />
 
 		<!-- 下方核心工作区：左侧标签边栏 + 右侧主内容编辑区 -->
@@ -20,6 +21,9 @@
 		<!-- 右侧历史记录抽屉 (从右侧滑出) -->
 		<HistoryDrawerView v-model:visible="showHistory" />
 
+		<!-- 全局中央设置弹窗 -->
+		<SettingsModal v-model:visible="showSettings" />
+
 		<!-- Toast 轻量全局通知 -->
 		<transition name="toast-fade">
 			<div v-if="toastVisible" class="toast-notification f-acrylic">
@@ -33,7 +37,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSessionStore } from './stores/session';
 import { useHistoryStore } from './stores/history';
@@ -43,6 +47,7 @@ import SidebarView from './view/SidebarView.vue';
 import ContentView from './view/ContentView.vue';
 import StatusBarView from './view/StatusBarView.vue';
 import HistoryDrawerView from './view/HistoryDrawerView.vue';
+import SettingsModal from './view/SettingsModal.vue';
 import { IconCheck as Check } from '@tabler/icons-vue';
 
 const { t } = useI18n();
@@ -50,9 +55,10 @@ const sessionStore = useSessionStore();
 const historyStore = useHistoryStore();
 const settingsStore = useSettingsStore();
 
-// 引用与抽屉状态
+// 引用与抽屉/弹窗状态
 const contentViewRef = ref(null);
 const showHistory = ref(false);
+const showSettings = ref(false);
 
 // 全局 Toast 提示状态
 const toastVisible = ref(false);
@@ -92,6 +98,11 @@ let workspaceSaveQueued = false;
 let unsubscribeSessionStore = null;
 
 const saveWorkspaceNow = () => {
+	// 如果用户关闭了自动存储，则直接跳过落盘
+	if (!settingsStore.autoSaveWorkspace) {
+		return Promise.resolve();
+	}
+
 	if (workspaceSaveInFlight) {
 		workspaceSaveQueued = true;
 		return Promise.resolve();
@@ -112,11 +123,28 @@ const saveWorkspaceNow = () => {
 		});
 };
 
+// 监听自动存储开关切换
+watch(
+	() => settingsStore.autoSaveWorkspace,
+	(enabled) => {
+		if (enabled) {
+			saveWorkspaceNow();
+		} else {
+			// 关闭时立即清理已落盘草稿，防止敏感数据留存
+			sessionStore.clearWorkspaceSnapshot();
+		}
+	},
+);
+
 onMounted(async () => {
 	await settingsStore.loadSettings();
 
 	try {
-		const restored = await sessionStore.loadWorkspaceSnapshot();
+		// 仅在开启了自动存储时恢复上次会话草稿，否则新建干净的空白 Tab
+		let restored = false;
+		if (settingsStore.autoSaveWorkspace) {
+			restored = await sessionStore.loadWorkspaceSnapshot();
+		}
 		if (!restored) sessionStore.createTab();
 	} catch (error) {
 		console.error(error);
@@ -127,13 +155,17 @@ onMounted(async () => {
 	unsubscribeSessionStore = sessionStore.$subscribe(saveWorkspaceNow, {
 		detached: true,
 	});
-	saveWorkspaceNow();
+	if (settingsStore.autoSaveWorkspace) {
+		saveWorkspaceNow();
+	}
 });
 
 onUnmounted(() => {
 	unsubscribeSessionStore?.();
 	unsubscribeSessionStore = null;
-	saveWorkspaceNow();
+	if (settingsStore.autoSaveWorkspace) {
+		saveWorkspaceNow();
+	}
 	if (toastTimer) clearTimeout(toastTimer);
 });
 </script>

@@ -9,30 +9,39 @@
 	   -------------------------------------------------------------------------- */
 
 	/* 官方标准字体族 (Typography Fonts) */
-	--fontFamilyBase: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'PingFang SC', sans-serif; /* 默认主字体 */
+	--fontFamilyBase:
+		'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Microsoft YaHei',
+		'PingFang SC', sans-serif; /* 默认主字体 */
 	--fontFamilyNumeric: 'Inter', system-ui, sans-serif; /* 数字专用字体 */
-	--fontFamilyMonospace: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace; /* 等宽/代码字体 */
+	--fontFamilyMonospace:
+		Consolas, Monaco, Menlo, 'Courier New', monospace; /* 等宽/代码字体，默认多数系统皆自带 */
+	--editorFontSize: 14px; /* 代码编辑器默认字号 */
+	--editorFontWeight: 400; /* 代码编辑器默认字重 */
 
 	/* 官方标准圆角 (Border Radius) */
-	--borderRadiusNone: 0px;       /* 无圆角 */
-	--borderRadiusSmall: 2px;      /* 纤细控件圆角 */
-	--borderRadiusMedium: 4px;     /* 标准按钮、输入框圆角 */
-	--borderRadiusLarge: 6px;      /* 中等卡片圆角 */
-	--borderRadiusXLarge: 8px;     /* 大卡片、下拉面板圆角 */
-	--borderRadiusXXLarge: 12px;   /* 浮动对话框、浮沉窗口圆角 */
-	--borderRadiusXXXLarge: 16px;  /* 顶级大窗口圆角 */
+	--borderRadiusNone: 0px; /* 无圆角 */
+	--borderRadiusSmall: 2px; /* 纤细控件圆角 */
+	--borderRadiusMedium: 4px; /* 标准按钮、输入框圆角 */
+	--borderRadiusLarge: 6px; /* 中等卡片圆角 */
+	--borderRadiusXLarge: 8px; /* 大卡片、下拉面板圆角 */
+	--borderRadiusXXLarge: 12px; /* 浮动对话框、浮沉窗口圆角 */
+	--borderRadiusXXXLarge: 16px; /* 顶级大窗口圆角 */
 	--borderRadiusCircular: 9999px; /* 胶囊或圆形 */
 
 	/* 官方标准字重 (Font Weights) */
-	--fontWeightRegular: 400;      /* 常规体 */
-	--fontWeightMedium: 500;       /* 中等粗细 */
-	--fontWeightSemibold: 600;     /* 半粗体 */
-	--fontWeightBold: 700;         /* 粗体 */
+	--uiFontWeight: 400; /* 界面默认字重 */
+	--fontWeightRegular: var(
+		--uiFontWeight,
+		400
+	); /* 常规体跟随用户界面字重设置 */
+	--fontWeightMedium: 500; /* 中等粗细 */
+	--fontWeightSemibold: 600; /* 半粗体 */
+	--fontWeightBold: 700; /* 粗体 */
 
 	/* 官方标准动画缓动 (Transitions & Motion) */
-	--f-transition-fast: 100ms cubic-bezier(0.33, 0, 0.67, 1);   /* 快速过渡 (悬浮等) */
+	--f-transition-fast: 100ms cubic-bezier(0.33, 0, 0.67, 1); /* 快速过渡 (悬浮等) */
 	--f-transition-normal: 200ms cubic-bezier(0.33, 0, 0.67, 1); /* 标准过渡 (切换等) */
-	--f-transition-slow: 400ms cubic-bezier(0.33, 0, 0.67, 1);   /* 慢速过渡 (页面过渡) */
+	--f-transition-slow: 400ms cubic-bezier(0.33, 0, 0.67, 1); /* 慢速过渡 (页面过渡) */
 
 	/* --------------------------------------------------------------------------
 	   经典变量别名兼容 (对齐原系统内部样式)
@@ -57,58 +66,83 @@
    ========================================================================== */
 :root {
 	/* 品牌色体系 (Brand Colors - 暗色优化版 Windows 蓝) */
-	--colorBrandBackground: #118fe3;          /* 品牌主背景色 */
-	--colorBrandBackgroundHover: #249ce6;     /* 品牌背景悬浮色 */
-	--colorBrandBackgroundPressed: #0078d4;   /* 品牌背景按下色 */
-	--colorBrandBackgroundSelected: #118fe3;  /* 品牌背景选中色 */
-	--colorBrandForeground1: #4cc2ff;         /* 品牌高亮文本前景色 1 */
-	--colorBrandForeground2: #0078d4;         /* 品牌文本前景色 2 */
-	--colorBrandForegroundHover: #66d0ff;     /* 品牌文本悬浮色 */
-	--colorBrandForegroundPressed: #4cc2ff;   /* 品牌文本按下色 */
-	--colorBrandBackground2: #002d4d;         /* 暗色微妙品牌背景 */
+	--colorBrandBackground: #118fe3; /* 品牌主背景色 */
+	--colorBrandBackgroundHover: #249ce6; /* 品牌背景悬浮色 */
+	--colorBrandBackgroundPressed: #0078d4; /* 品牌背景按下色 */
+	--colorBrandBackgroundSelected: #118fe3; /* 品牌背景选中色 */
+	--colorBrandForeground1: #4cc2ff; /* 品牌高亮文本前景色 1 */
+	--colorBrandForeground2: #0078d4; /* 品牌文本前景色 2 */
+	--colorBrandForegroundHover: #66d0ff; /* 品牌文本悬浮色 */
+	--colorBrandForegroundPressed: #4cc2ff; /* 品牌文本按下色 */
+	--colorBrandBackground2: #002d4d; /* 暗色微妙品牌背景 */
 
 	/* 中性背景体系 (Neutral Backgrounds) */
-	--colorNeutralBackground1: #202020;             /* 应用主面板底色 (App Canvas) */
-	--colorNeutralBackground2: #2c2c2c;             /* 一级卡片、内容列表底色 */
-	--colorNeutralBackground3: #333333;             /* 二级悬浮面板、下拉菜单底色 */
-	--colorNeutralBackground4: #3b3b3b;             /* 三级对话框、强提示卡片底色 */
-	--colorNeutralBackground5: #444444;             /* 极浅层底色 */
-	--colorNeutralBackgroundSubtle: rgba(255, 255, 255, 0.06); /* 控件常规背景 (透明底) */
-	--colorNeutralBackgroundSubtleHover: rgba(255, 255, 255, 0.09); /* 控件悬浮底色 */
-	--colorNeutralBackgroundSubtlePressed: rgba(255, 255, 255, 0.04); /* 控件按下底色 */
-	--colorNeutralBackgroundDisabled: rgba(255, 255, 255, 0.04); /* 禁用状态背景 */
-	--colorNeutralBackgroundInverted: #ffffff;      /* 反转背景 (用于极端反差对比) */
+	--colorNeutralBackground1: #202020; /* 应用主面板底色 (App Canvas) */
+	--colorNeutralBackground2: #2c2c2c; /* 一级卡片、内容列表底色 */
+	--colorNeutralBackground3: #333333; /* 二级悬浮面板、下拉菜单底色 */
+	--colorNeutralBackground4: #3b3b3b; /* 三级对话框、强提示卡片底色 */
+	--colorNeutralBackground5: #444444; /* 极浅层底色 */
+	--colorNeutralBackgroundSubtle: rgba(
+		255,
+		255,
+		255,
+		0.06
+	); /* 控件常规背景 (透明底) */
+	--colorNeutralBackgroundSubtleHover: rgba(
+		255,
+		255,
+		255,
+		0.09
+	); /* 控件悬浮底色 */
+	--colorNeutralBackgroundSubtlePressed: rgba(
+		255,
+		255,
+		255,
+		0.04
+	); /* 控件按下底色 */
+	--colorNeutralBackgroundDisabled: rgba(
+		255,
+		255,
+		255,
+		0.04
+	); /* 禁用状态背景 */
+	--colorNeutralBackgroundInverted: #ffffff; /* 反转背景 (用于极端反差对比) */
 
 	/* 中性文本/前景体系 (Neutral Foregrounds) */
-	--colorNeutralForeground1: #ffffff;             /* 主文本、正文色 */
-	--colorNeutralForeground2: #d1d1d1;             /* 次要说明、辅助文本色 */
-	--colorNeutralForeground3: #9e9e9e;             /* 弱化提示、占位符文本色 */
-	--colorNeutralForeground4: #707070;             /* 不常用弱化文字 */
-	--colorNeutralForegroundDisabled: #6e6e6e;      /* 禁用文本颜色 */
-	--colorNeutralForegroundOnBrand: #ffffff;       /* 覆盖在品牌背景上的反差文字 */
-	--colorNeutralForegroundInverted: #242424;      /* 反转中性文本色 */
+	--colorNeutralForeground1: #ffffff; /* 主文本、正文色 */
+	--colorNeutralForeground2: #d1d1d1; /* 次要说明、辅助文本色 */
+	--colorNeutralForeground3: #9e9e9e; /* 弱化提示、占位符文本色 */
+	--colorNeutralForeground4: #707070; /* 不常用弱化文字 */
+	--colorNeutralForegroundDisabled: #6e6e6e; /* 禁用文本颜色 */
+	--colorNeutralForegroundOnBrand: #ffffff; /* 覆盖在品牌背景上的反差文字 */
+	--colorNeutralForegroundInverted: #242424; /* 反转中性文本色 */
 
 	/* 中性边框描边体系 (Neutral Strokes) */
-	--colorNeutralStroke1: rgba(255, 255, 255, 0.12);       /* 标准通用边框 */
-	--colorNeutralStroke2: rgba(255, 255, 255, 0.08);       /* 细微内边框或分割线 */
-	--colorNeutralStrokeSubtle: rgba(255, 255, 255, 0.06);  /* 极淡分割线 */
-	--colorNeutralStrokeStrong: rgba(255, 255, 255, 0.45);  /* 强对比边框 (聚焦/滑块等) */
-	--colorNeutralStrokeDisabled: rgba(255, 255, 255, 0.04);/* 禁用状态边框 */
-	--colorNeutralStrokeAccessible: #adadad;                /* 无障碍对比强化边框 */
+	--colorNeutralStroke1: rgba(255, 255, 255, 0.12); /* 标准通用边框 */
+	--colorNeutralStroke2: rgba(255, 255, 255, 0.08); /* 细微内边框或分割线 */
+	--colorNeutralStrokeSubtle: rgba(255, 255, 255, 0.06); /* 极淡分割线 */
+	--colorNeutralStrokeStrong: rgba(
+		255,
+		255,
+		255,
+		0.45
+	); /* 强对比边框 (聚焦/滑块等) */
+	--colorNeutralStrokeDisabled: rgba(255, 255, 255, 0.04); /* 禁用状态边框 */
+	--colorNeutralStrokeAccessible: #adadad; /* 无障碍对比强化边框 */
 
 	/* 功能状态颜色 (Status Colors - 暗色模式) */
-	--colorStatusErrorBackground: #442726;          /* 错误状态背景 */
-	--colorStatusErrorForeground: #f1707a;          /* 错误状态前景/文字 */
-	--colorStatusErrorBorder: #b13c38;              /* 错误状态描边 */
-	--colorStatusSuccessBackground: #173416;        /* 成功状态背景 */
-	--colorStatusSuccessForeground: #6bc26b;        /* 成功状态前景/文字 */
-	--colorStatusSuccessBorder: #2b5d2b;            /* 成功状态描边 */
-	--colorStatusWarningBackground: #46310f;        /* 警告状态背景 */
-	--colorStatusWarningForeground: #ffb900;        /* 警告状态前景/文字 */
-	--colorStatusWarningBorder: #8f6200;            /* 警告状态描边 */
-	--colorStatusInfoBackground: #0c293c;           /* 信息提示背景 */
-	--colorStatusInfoForeground: #4cc2ff;           /* 信息提示前景/文字 */
-	--colorStatusInfoBorder: #0067b8;               /* 信息提示描边 */
+	--colorStatusErrorBackground: #442726; /* 错误状态背景 */
+	--colorStatusErrorForeground: #f1707a; /* 错误状态前景/文字 */
+	--colorStatusErrorBorder: #b13c38; /* 错误状态描边 */
+	--colorStatusSuccessBackground: #173416; /* 成功状态背景 */
+	--colorStatusSuccessForeground: #6bc26b; /* 成功状态前景/文字 */
+	--colorStatusSuccessBorder: #2b5d2b; /* 成功状态描边 */
+	--colorStatusWarningBackground: #46310f; /* 警告状态背景 */
+	--colorStatusWarningForeground: #ffb900; /* 警告状态前景/文字 */
+	--colorStatusWarningBorder: #8f6200; /* 警告状态描边 */
+	--colorStatusInfoBackground: #0c293c; /* 信息提示背景 */
+	--colorStatusInfoForeground: #4cc2ff; /* 信息提示前景/文字 */
+	--colorStatusInfoBorder: #0067b8; /* 信息提示描边 */
 
 	/* 三维投影体系 (Elevation & Shadows) */
 	--f-shadow-2: 0 2px 4px rgba(0, 0, 0, 0.24);
@@ -133,58 +167,58 @@
    ========================================================================== */
 html.light {
 	/* 品牌色体系 (Brand Colors - 经典 Windows 蓝) */
-	--colorBrandBackground: #0078d4;          /* 品牌主背景色 */
-	--colorBrandBackgroundHover: #106ebe;     /* 品牌背景悬浮色 */
-	--colorBrandBackgroundPressed: #005a9e;   /* 品牌背景按下色 */
-	--colorBrandBackgroundSelected: #0078d4;  /* 品牌背景选中色 */
-	--colorBrandForeground1: #0078d4;         /* 品牌高亮文本前景色 1 */
-	--colorBrandForeground2: #005a9e;         /* 品牌文本前景色 2 */
-	--colorBrandForegroundHover: #106ebe;     /* 品牌文本悬浮色 */
-	--colorBrandForegroundPressed: #004578;   /* 品牌文本按下色 */
-	--colorBrandBackground2: #eff6fc;         /* 亮色微妙品牌背景 */
+	--colorBrandBackground: #0078d4; /* 品牌主背景色 */
+	--colorBrandBackgroundHover: #106ebe; /* 品牌背景悬浮色 */
+	--colorBrandBackgroundPressed: #005a9e; /* 品牌背景按下色 */
+	--colorBrandBackgroundSelected: #0078d4; /* 品牌背景选中色 */
+	--colorBrandForeground1: #0078d4; /* 品牌高亮文本前景色 1 */
+	--colorBrandForeground2: #005a9e; /* 品牌文本前景色 2 */
+	--colorBrandForegroundHover: #106ebe; /* 品牌文本悬浮色 */
+	--colorBrandForegroundPressed: #004578; /* 品牌文本按下色 */
+	--colorBrandBackground2: #eff6fc; /* 亮色微妙品牌背景 */
 
 	/* 中性背景体系 (Neutral Backgrounds) */
-	--colorNeutralBackground1: #f3f3f3;             /* 应用主面板底色 (App Canvas) */
-	--colorNeutralBackground2: #ffffff;             /* 一级卡片、内容列表底色 */
-	--colorNeutralBackground3: #fafafa;             /* 二级悬浮面板、下拉菜单底色 */
-	--colorNeutralBackground4: #f0f0f0;             /* 三级对话框、强提示卡片底色 */
-	--colorNeutralBackground5: #ebebeb;             /* 极浅层底色 */
-	--colorNeutralBackgroundSubtle: transparent;   /* 控件常规背景 (透明底) */
+	--colorNeutralBackground1: #f9f9f9; /* 应用主面板底色 (App Canvas) */
+	--colorNeutralBackground2: #ffffff; /* 一级卡片、内容列表底色 */
+	--colorNeutralBackground3: #fafafa; /* 二级悬浮面板、下拉菜单底色 */
+	--colorNeutralBackground4: #f0f0f0; /* 三级对话框、强提示卡片底色 */
+	--colorNeutralBackground5: #ebebeb; /* 极浅层底色 */
+	--colorNeutralBackgroundSubtle: transparent; /* 控件常规背景 (透明底) */
 	--colorNeutralBackgroundSubtleHover: rgba(0, 0, 0, 0.04); /* 控件悬浮底色 */
 	--colorNeutralBackgroundSubtlePressed: rgba(0, 0, 0, 0.08); /* 控件按下底色 */
 	--colorNeutralBackgroundDisabled: rgba(0, 0, 0, 0.04); /* 禁用状态背景 */
-	--colorNeutralBackgroundInverted: #292929;      /* 反转背景 */
+	--colorNeutralBackgroundInverted: #292929; /* 反转背景 */
 
 	/* 中性文本/前景体系 (Neutral Foregrounds) */
-	--colorNeutralForeground1: #242424;             /* 主文本、正文色 */
-	--colorNeutralForeground2: #5d5d5d;             /* 次要说明、辅助文本色 */
-	--colorNeutralForeground3: #707070;             /* 弱化提示、占位符文本色 */
-	--colorNeutralForeground4: #a1a1a1;             /* 不常用弱化文字 */
-	--colorNeutralForegroundDisabled: #bdbdbd;      /* 禁用文本颜色 */
-	--colorNeutralForegroundOnBrand: #ffffff;       /* 覆盖在品牌背景上的反差文字 */
-	--colorNeutralForegroundInverted: #ffffff;      /* 反转中性文本色 */
+	--colorNeutralForeground1: #242424; /* 主文本、正文色 */
+	--colorNeutralForeground2: #5d5d5d; /* 次要说明、辅助文本色 */
+	--colorNeutralForeground3: #707070; /* 弱化提示、占位符文本色 */
+	--colorNeutralForeground4: #a1a1a1; /* 不常用弱化文字 */
+	--colorNeutralForegroundDisabled: #bdbdbd; /* 禁用文本颜色 */
+	--colorNeutralForegroundOnBrand: #ffffff; /* 覆盖在品牌背景上的反差文字 */
+	--colorNeutralForegroundInverted: #ffffff; /* 反转中性文本色 */
 
 	/* 中性边框描边体系 (Neutral Strokes) */
-	--colorNeutralStroke1: #d1d1d1;                 /* 标准通用边框 */
-	--colorNeutralStroke2: #e0e0e0;                 /* 细微内边框或分割线 */
-	--colorNeutralStrokeSubtle: #f0f0f0;            /* 极淡分割线 */
-	--colorNeutralStrokeStrong: #8a8a8a;            /* 强对比边框 (聚焦/滑块等) */
-	--colorNeutralStrokeDisabled: #e0e0e0;          /* 禁用状态边框 */
-	--colorNeutralStrokeAccessible: #616161;        /* 无障碍对比强化边框 */
+	--colorNeutralStroke1: #d1d1d1; /* 标准通用边框 */
+	--colorNeutralStroke2: #e0e0e0; /* 细微内边框或分割线 */
+	--colorNeutralStrokeSubtle: #f0f0f0; /* 极淡分割线 */
+	--colorNeutralStrokeStrong: #8a8a8a; /* 强对比边框 (聚焦/滑块等) */
+	--colorNeutralStrokeDisabled: #e0e0e0; /* 禁用状态边框 */
+	--colorNeutralStrokeAccessible: #616161; /* 无障碍对比强化边框 */
 
 	/* 功能状态颜色 (Status Colors - 亮色模式) */
-	--colorStatusErrorBackground: #fde7e9;          /* 错误状态背景 */
-	--colorStatusErrorForeground: #c42b1c;          /* 错误状态前景/文字 */
-	--colorStatusErrorBorder: #f1707a;              /* 错误状态描边 */
-	--colorStatusSuccessBackground: #dff6dd;        /* 成功状态背景 */
-	--colorStatusSuccessForeground: #107c10;        /* 成功状态前景/文字 */
-	--colorStatusSuccessBorder: #6bc26b;            /* 成功状态描边 */
-	--colorStatusWarningBackground: #fff4ce;        /* 警告状态背景 */
-	--colorStatusWarningForeground: #9d5d00;        /* 警告状态前景/文字 */
-	--colorStatusWarningBorder: #ffb900;            /* 警告状态描边 */
-	--colorStatusInfoBackground: #eff6fc;           /* 信息提示背景 */
-	--colorStatusInfoForeground: #0078d4;           /* 信息提示前景/文字 */
-	--colorStatusInfoBorder: #4cc2ff;               /* 信息提示描边 */
+	--colorStatusErrorBackground: #fde7e9; /* 错误状态背景 */
+	--colorStatusErrorForeground: #c42b1c; /* 错误状态前景/文字 */
+	--colorStatusErrorBorder: #f1707a; /* 错误状态描边 */
+	--colorStatusSuccessBackground: #dff6dd; /* 成功状态背景 */
+	--colorStatusSuccessForeground: #107c10; /* 成功状态前景/文字 */
+	--colorStatusSuccessBorder: #6bc26b; /* 成功状态描边 */
+	--colorStatusWarningBackground: #fff4ce; /* 警告状态背景 */
+	--colorStatusWarningForeground: #9d5d00; /* 警告状态前景/文字 */
+	--colorStatusWarningBorder: #ffb900; /* 警告状态描边 */
+	--colorStatusInfoBackground: #eff6fc; /* 信息提示背景 */
+	--colorStatusInfoForeground: #0078d4; /* 信息提示前景/文字 */
+	--colorStatusInfoBorder: #4cc2ff; /* 信息提示描边 */
 
 	/* 三维投影体系 (Elevation & Shadows) */
 	--f-shadow-2: 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -232,4 +266,22 @@ html.light {
 	--input: var(--colorNeutralStrokeStrong);
 	--ring: var(--colorBrandBackground);
 	--radius: var(--borderRadiusXLarge);
+}
+
+/* ==========================================================================
+   无动画模式全局规则 (Reduced Motion Support)
+   ========================================================================== */
+html[data-reduced-motion='true'] {
+	--f-transition-fast: 0ms !important;
+	--f-transition-normal: 0ms !important;
+	--f-transition-slow: 0ms !important;
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
 }

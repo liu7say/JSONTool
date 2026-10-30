@@ -130,4 +130,5 @@ JSONTool processes all JSON text locally in the browser runtime and stores works
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
+| 1.0.0 | 2026-10-30 | Official release: Settings modal, UI & editor font customization, font weight & size tuning, custom CSS injection, reduced motion, auto-save toggle, and cloud sync via chrome.storage.sync. | Published |
 | 0.8.0 | 2026-10-23 | Initial Chrome Web Store package with Fluent 2 design, i18n, table view, and diff mode. | Draft |

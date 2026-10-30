@@ -18,6 +18,7 @@ body {
 	color: var(--colorNeutralForeground1);
 	font-family: var(--fontFamilyBase);
 	font-size: var(--f-font-size-base);
+	font-weight: var(--uiFontWeight, 400);
 	-webkit-font-smoothing: antialiased;
 	overflow: hidden; /* App-like feel */
 	transition:
