@@ -3,16 +3,59 @@
 	<aside
 		class="sidebar f-acrylic"
 		:class="{ collapsed: sessionStore.sidebarCollapsed }">
-		<!-- 侧边栏折叠/展开切换按钮 -->
-		<div class="toggle-btn" @click="sessionStore.toggleSidebar">
-			<!-- :title="
-				sessionStore.sidebarCollapsed
-					? t('app.expandSidebar')
-					: t('app.collapseSidebar')
-			" -->
-			<component
-				:is="sessionStore.sidebarCollapsed ? ArrowRight : ArrowLeft"
-				style="width: 12px" />
+		<!-- 侧边栏顶部 Header 工具栏区 -->
+		<div class="sidebar-header">
+			<!-- 侧边栏折叠/展开切换按钮 (28x28 Fluent 2 独立微型按钮) -->
+			<button
+				type="button"
+				class="sidebar-toggle-btn"
+				:title="
+					sessionStore.sidebarCollapsed
+						? t('app.expandSidebar')
+						: t('app.collapseSidebar')
+				"
+				:aria-label="
+					sessionStore.sidebarCollapsed
+						? t('app.expandSidebar')
+						: t('app.collapseSidebar')
+				"
+				@click="sessionStore.toggleSidebar">
+				<!-- Fluent 2 侧边栏语义化动画矢量图标 -->
+				<svg
+					class="sidebar-toggle-icon"
+					viewBox="0 0 16 16"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg">
+					<!-- 主面板外框 -->
+					<rect
+						class="panel-frame"
+						x="1.5"
+						y="2.5"
+						width="13"
+						height="11"
+						rx="2"
+						stroke="currentColor"
+						stroke-width="1.2" />
+					<!-- 侧边栏垂直分割线 (展开态位于 x=5.5，折叠时平滑收缩贴边) -->
+					<line
+						class="panel-divider"
+						x1="5.5"
+						y1="2.5"
+						x2="5.5"
+						y2="13.5"
+						stroke="currentColor"
+						stroke-width="1.2"
+						stroke-linecap="round" />
+					<!-- 导向折叠箭头 (以 (9.5, 8) 为中心平滑翻转 180 度) -->
+					<path
+						class="panel-arrow"
+						d="M10.5 6L8.5 8L10.5 10"
+						stroke="currentColor"
+						stroke-width="1.2"
+						stroke-linecap="round"
+						stroke-linejoin="round" />
+				</svg>
+			</button>
 		</div>
 
 		<!-- 垂直 Tab 标签列表 -->
@@ -168,8 +211,6 @@ import {
 	IconEdit as Edit,
 	IconCircleX as CloseOthers,
 	IconArrowBarToDown as CloseBelow,
-	IconChevronLeft as ArrowLeft,
-	IconChevronRight as ArrowRight,
 } from '@tabler/icons-vue';
 
 const { t } = useI18n();
@@ -516,33 +557,92 @@ onUnmounted(() => {
 			}
 		}
 
-		.toggle-btn {
+		/* 折叠状态下顶部工具栏居中对齐 */
+		.sidebar-header {
 			justify-content: center;
-			padding: 8px 0;
+			padding: 0;
+		}
+
+		/* 折叠状态下的联动动效：分割线收缩贴边，箭头平滑翻转 */
+		.sidebar-toggle-btn {
+			.sidebar-toggle-icon {
+				.panel-divider {
+					transform: translateX(-2.5px);
+					opacity: 0.45;
+				}
+
+				.panel-arrow {
+					transform: rotate(180deg);
+				}
+			}
 		}
 	}
 }
 
-.toggle-btn {
-	/* 顶部静态位置：展开模式下右对齐，带下分割线；折叠模式下居中对齐 */
+/* 侧边栏顶部 Header 工具栏 (36px 高度，底部浅色分割线) */
+.sidebar-header {
 	width: 100%;
-	height: 32px;
+	height: 36px;
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
-	padding: 0 8px;
-	cursor: pointer;
-	color: var(--colorNeutralForeground2);
+	padding: 0 6px;
+	box-sizing: border-box;
 	border-bottom: 1px solid var(--colorNeutralStroke2);
 	margin-bottom: 4px;
-	transition:
-		background-color 0.2s,
-		color 0.2s,
-		padding 250ms cubic-bezier(0.2, 0.9, 0.2, 1);
+	transition: padding 250ms cubic-bezier(0.2, 0.9, 0.2, 1);
 
-	&:hover {
-		background-color: var(--colorNeutralBackgroundSubtleHover);
-		color: var(--colorNeutralForeground1);
+	/* Fluent 2 风格 28x28px 独立微型图标按钮 */
+	.sidebar-toggle-btn {
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		color: var(--colorNeutralForeground2);
+		transition:
+			background-color 150ms ease,
+			color 150ms ease,
+			transform 150ms cubic-bezier(0.2, 0.9, 0.2, 1);
+
+		&:hover {
+			background-color: var(--colorNeutralBackgroundSubtleHover);
+			color: var(--colorNeutralForeground1);
+		}
+
+		&:active {
+			background-color: var(--colorNeutralBackgroundSubtlePressed);
+			transform: scale(0.92);
+		}
+
+		/* Fluent 2 语义化动画矢量图 */
+		.sidebar-toggle-icon {
+			width: 15px;
+			height: 15px;
+			overflow: visible;
+
+			.panel-frame {
+				transition: stroke 150ms ease;
+			}
+
+			.panel-divider {
+				transition:
+					transform 250ms cubic-bezier(0.2, 0.9, 0.2, 1),
+					opacity 250ms ease;
+			}
+
+			.panel-arrow {
+				transform-origin: 9.5px 8px;
+				transition:
+					transform 250ms cubic-bezier(0.2, 0.9, 0.2, 1),
+					stroke 150ms ease;
+			}
+		}
 	}
 }
 
