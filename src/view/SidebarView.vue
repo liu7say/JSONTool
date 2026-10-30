@@ -297,6 +297,11 @@ const handleTabHoverEnter = (event, tabId) => {
 		return;
 	}
 
+	// 若当前正在操作右键菜单或正在重命名，锁死当前交互目标，禁止切换其他 Tab
+	if (tabMenuVisible.value || renamingTabId.value) {
+		return;
+	}
+
 	clearHoverTimer();
 
 	// 捕获目标标签项在视口中的精确坐标
@@ -309,10 +314,18 @@ const handleTabHoverEnter = (event, tabId) => {
 	hoveredTabId.value = tabId;
 };
 
-// 鼠标移出 Tab 或移出浮层卡片：启动 140ms 防抖离场
+// 鼠标移出 Tab 或移出浮层卡片：启动 140ms 防抖离场 (受交互锁保护)
 const scheduleHoverLeave = () => {
 	clearHoverTimer();
+	// 若右键菜单正处于打开状态，或当前正在内联重命名，坚决保持浮动卡片展示，不予关闭
+	if (tabMenuVisible.value || renamingTabId.value) {
+		return;
+	}
 	flyoutLeaveTimer = setTimeout(() => {
+		// 二次防抖检测，防止在定时器等待期间打开了右键菜单或重命名
+		if (tabMenuVisible.value || renamingTabId.value) {
+			return;
+		}
 		hoveredTabId.value = null;
 	}, 140);
 };
@@ -344,10 +357,34 @@ const renameTitleInput = ref('');
 const renameInputRef = ref(null);
 
 const openTabContextMenu = (event, tab) => {
+	// 立即清除任何可能残留的离场定时器
+	clearHoverTimer();
 	tabMenuTarget.value = tab;
 	tabMenuPos.value = { x: event.clientX, y: event.clientY };
 	tabMenuVisible.value = true;
+
+	// 若处于折叠状态，确保当前 tab 处于悬浮展示状态并校准精确坐标
+	if (sessionStore.sidebarCollapsed) {
+		hoveredTabId.value = tab.id;
+		const targetEl =
+			document.querySelector(`.f-tab-item.vertical[data-id="${tab.id}"]`) ||
+			event.currentTarget;
+		if (targetEl && targetEl.getBoundingClientRect) {
+			const rect = targetEl.getBoundingClientRect();
+			flyoutStyle.value = {
+				top: `${rect.top}px`,
+				left: `${rect.left}px`,
+			};
+		}
+	}
 };
+
+// 监听右键上下文菜单可见性：菜单关闭时若无重命名，恢复常规离场判定
+watch(tabMenuVisible, (visible) => {
+	if (!visible && !renamingTabId.value) {
+		scheduleHoverLeave();
+	}
+});
 
 const startRenameTab = (tab) => {
 	renamingTabId.value = tab.id;
@@ -368,10 +405,18 @@ const submitRenameTab = (tabId) => {
 		sessionStore.updateTabTitle(tabId, trimmed, true);
 	}
 	renamingTabId.value = null;
+	// 重命名结束后若右键菜单已关闭，恢复常规离场判定
+	if (!tabMenuVisible.value) {
+		scheduleHoverLeave();
+	}
 };
 
 const cancelRenameTab = () => {
 	renamingTabId.value = null;
+	// 重命名取消后若右键菜单已关闭，恢复常规离场判定
+	if (!tabMenuVisible.value) {
+		scheduleHoverLeave();
+	}
 };
 
 const tabMenuItems = computed(() => {
