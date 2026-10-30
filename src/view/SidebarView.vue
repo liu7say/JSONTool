@@ -3,23 +3,22 @@
 	<aside
 		class="sidebar f-acrylic"
 		:class="{ collapsed: sessionStore.sidebarCollapsed }">
-		<!-- 侧边栏顶部 Header 工具栏区 -->
-		<div class="sidebar-header">
-			<!-- 侧边栏折叠/展开切换按钮 (28x28 Fluent 2 独立微型按钮) -->
-			<button
-				type="button"
-				class="sidebar-toggle-btn"
-				:title="
-					sessionStore.sidebarCollapsed
-						? t('app.expandSidebar')
-						: t('app.collapseSidebar')
-				"
-				:aria-label="
-					sessionStore.sidebarCollapsed
-						? t('app.expandSidebar')
-						: t('app.collapseSidebar')
-				"
-				@click="sessionStore.toggleSidebar">
+		<!-- 侧边栏顶部 Header 工具栏区 (整行通栏可点击，盲点无压力) -->
+		<div
+			class="sidebar-header"
+			:title="
+				sessionStore.sidebarCollapsed
+					? t('app.expandSidebar')
+					: t('app.collapseSidebar')
+			"
+			:aria-label="
+				sessionStore.sidebarCollapsed
+					? t('app.expandSidebar')
+					: t('app.collapseSidebar')
+			"
+			@click="sessionStore.toggleSidebar">
+			<!-- 视觉指示器容器 (固定右锚点 12px，随边栏缩进平滑跟滑至正中) -->
+			<div class="sidebar-toggle-indicator">
 				<!-- Fluent 2 侧边栏语义化动画矢量图标 -->
 				<svg
 					class="sidebar-toggle-icon"
@@ -36,7 +35,7 @@
 						rx="2"
 						stroke="currentColor"
 						stroke-width="1.2" />
-					<!-- 侧边栏垂直分割线 (展开态位于 x=5.5，折叠时平滑收缩贴边) -->
+					<!-- 侧边栏垂直分割线 (展开态位于 x=5.5，折叠时平滑淡出贴边，无灰色残留) -->
 					<line
 						class="panel-divider"
 						x1="5.5"
@@ -46,16 +45,16 @@
 						stroke="currentColor"
 						stroke-width="1.2"
 						stroke-linecap="round" />
-					<!-- 导向折叠箭头 (以 (9.5, 8) 为中心平滑翻转 180 度) -->
+					<!-- 导向折叠箭头 (伴随位移与 180 度翻转) -->
 					<path
 						class="panel-arrow"
-						d="M10.5 6L8.5 8L10.5 10"
+						d="M10.5 5.5L8 8L10.5 10.5"
 						stroke="currentColor"
-						stroke-width="1.2"
+						stroke-width="1.25"
 						stroke-linecap="round"
 						stroke-linejoin="round" />
 				</svg>
-			</button>
+			</div>
 		</div>
 
 		<!-- 垂直 Tab 标签列表 -->
@@ -557,73 +556,75 @@ onUnmounted(() => {
 			}
 		}
 
-		/* 折叠状态下顶部工具栏居中对齐 */
+		/* 折叠状态下的联动动效：分割线彻底淡出，箭头平滑向中心位移并翻转 */
 		.sidebar-header {
-			justify-content: center;
-			padding: 0;
-		}
+			.sidebar-toggle-indicator {
+				.sidebar-toggle-icon {
+					/* 分割线彻底淡出，无任何灰色残留 */
+					.panel-divider {
+						transform: translateX(-4px);
+						opacity: 0;
+					}
 
-		/* 折叠状态下的联动动效：分割线收缩贴边，箭头平滑翻转 */
-		.sidebar-toggle-btn {
-			.sidebar-toggle-icon {
-				.panel-divider {
-					transform: translateX(-2.5px);
-					opacity: 0.45;
-				}
-
-				.panel-arrow {
-					transform: rotate(180deg);
+					/* 箭头向中心位移并翻转 180 度 */
+					.panel-arrow {
+						transform: translateX(-1.25px) rotate(180deg);
+					}
 				}
 			}
 		}
 	}
 }
 
-/* 侧边栏顶部 Header 工具栏 (36px 高度，底部浅色分割线) */
+/* 侧边栏顶部 Header 工具栏 (36px 高度，整行可点击，盲点无压力) */
 .sidebar-header {
 	width: 100%;
 	height: 36px;
+	position: relative;
 	display: flex;
 	align-items: center;
-	justify-content: flex-end;
-	padding: 0 6px;
+	padding: 0;
 	box-sizing: border-box;
 	border-bottom: 1px solid var(--colorNeutralStroke2);
 	margin-bottom: 4px;
-	transition: padding 250ms cubic-bezier(0.2, 0.9, 0.2, 1);
+	cursor: pointer;
+	user-select: none;
+	color: var(--colorNeutralForeground2);
+	transition:
+		background-color 150ms ease,
+		color 150ms ease;
 
-	/* Fluent 2 风格 28x28px 独立微型图标按钮 */
-	.sidebar-toggle-btn {
-		width: 28px;
-		height: 28px;
-		padding: 0;
+	&:hover {
+		background-color: var(--colorNeutralBackgroundSubtleHover);
+		color: var(--colorNeutralForeground1);
+	}
+
+	&:active {
+		background-color: var(--colorNeutralBackgroundSubtlePressed);
+
+		.sidebar-toggle-indicator {
+			transform: translateY(-50%) scale(0.92);
+		}
+	}
+
+	/* 视觉指示器：固定右锚点 12px，展开停靠右上，折叠随边栏自然滑到 48px 正中 (12+24+12=48) */
+	.sidebar-toggle-indicator {
+		position: absolute;
+		right: 12px;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 24px;
+		height: 24px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: transparent;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		color: var(--colorNeutralForeground2);
-		transition:
-			background-color 150ms ease,
-			color 150ms ease,
-			transform 150ms cubic-bezier(0.2, 0.9, 0.2, 1);
-
-		&:hover {
-			background-color: var(--colorNeutralBackgroundSubtleHover);
-			color: var(--colorNeutralForeground1);
-		}
-
-		&:active {
-			background-color: var(--colorNeutralBackgroundSubtlePressed);
-			transform: scale(0.92);
-		}
+		pointer-events: none;
+		transition: transform 150ms cubic-bezier(0.2, 0.9, 0.2, 1);
 
 		/* Fluent 2 语义化动画矢量图 */
 		.sidebar-toggle-icon {
-			width: 15px;
-			height: 15px;
+			width: 16px;
+			height: 16px;
 			overflow: visible;
 
 			.panel-frame {
@@ -633,11 +634,11 @@ onUnmounted(() => {
 			.panel-divider {
 				transition:
 					transform 250ms cubic-bezier(0.2, 0.9, 0.2, 1),
-					opacity 250ms ease;
+					opacity 200ms ease;
 			}
 
 			.panel-arrow {
-				transform-origin: 9.5px 8px;
+				transform-origin: 9.25px 8px;
 				transition:
 					transform 250ms cubic-bezier(0.2, 0.9, 0.2, 1),
 					stroke 150ms ease;
