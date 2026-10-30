@@ -29,6 +29,9 @@
 	font-weight: var(--fontWeightMedium); /* 微软 Fluent 偏好中粗字重 */
 	cursor: pointer;
 	user-select: none;
+	white-space: nowrap; /* 统一限制单行显示，禁止意外折行 */
+	overflow: hidden; /* 超出按钮边界的内容全部隐藏，防止穿透溢出 */
+	text-overflow: ellipsis; /* 单行文本溢出时优雅截断显示省略号 */
 	text-decoration: none;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 	transition:
@@ -66,6 +69,7 @@
 		width: 16px;
 		height: 16px;
 		fill: currentColor;
+		flex-shrink: 0; /* 保持图标比例，防止被挤压变形 */
 	}
 
 	/* 默认普通按钮悬浮与按下 */

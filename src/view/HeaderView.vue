@@ -604,6 +604,13 @@ const handleThemeToggle = (event) => {
 	&.left {
 		flex: 1;
 		justify-content: flex-start;
+		min-width: 0; /* 允许弹性容器自适应收缩 */
+		overflow-x: auto; /* 极端缩放下支持横向滚动，避免挤压破损 */
+		overflow-y: hidden;
+		scrollbar-width: none; /* 隐藏滚动条 */
+		&::-webkit-scrollbar {
+			display: none;
+		}
 	}
 
 	&.right {
@@ -617,6 +624,7 @@ const handleThemeToggle = (event) => {
 	gap: 6px;
 	padding-right: 12px;
 	border-right: 1px solid var(--colorNeutralStroke1);
+	flex-shrink: 0; /* 工具分区保持自身宽度，不被暴力挤压变形 */
 
 	&:last-child {
 		border-right: none;
@@ -649,6 +657,15 @@ const handleThemeToggle = (event) => {
 		color: var(--colorNeutralForeground1);
 		position: relative;
 		padding: 0 8px;
+		white-space: nowrap; /* 保证分段按钮文本严格单行，禁止换行 */
+		overflow: hidden; /* 严格隐藏超出边界的内容，杜绝破框 */
+		text-overflow: ellipsis; /* 溢出文本省略截断 */
+
+		/* 内部图标防挤压变形 */
+		.f-icon,
+		svg {
+			flex-shrink: 0;
+		}
 
 		display: flex;
 		align-items: center;
@@ -689,6 +706,7 @@ const handleThemeToggle = (event) => {
 		&.group-right {
 			padding: 0;
 			width: 20px;
+			flex-shrink: 0; /* 下拉箭头按钮禁止被压缩 */
 		}
 
 		&.primary {
