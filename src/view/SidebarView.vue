@@ -63,7 +63,6 @@
 								<span
 									v-else
 									class="tab-text"
-									:title="tab.title"
 									@dblclick.stop="startRenameTab(tab)">
 									{{ tab.title }}
 								</span>
@@ -131,7 +130,6 @@
 						<span
 							v-else
 							class="tab-text"
-							:title="hoveredTab.title"
 							@dblclick.stop="startRenameTab(hoveredTab)">
 							{{ hoveredTab.title }}
 						</span>
@@ -719,7 +717,8 @@ onUnmounted(() => {
 
 .tab-flyout-card {
 	position: fixed !important;
-	z-index: 99999 !important;
+	/* 系统级层叠上下文规范：高于工作区与编辑器(50)，低于全局右键菜单与下拉面板(10000) */
+	z-index: 1000 !important;
 	width: 142px !important;
 	height: 32px !important;
 	min-height: 32px !important;
@@ -798,7 +797,9 @@ onUnmounted(() => {
 		text-overflow: ellipsis;
 		font-size: 13px;
 		color: var(--colorNeutralForeground1);
-		transition: color 150ms ease, font-weight 150ms ease;
+		transition:
+			color 150ms ease,
+			font-weight 150ms ease;
 	}
 
 	.tab-rename-input {
@@ -836,7 +837,6 @@ onUnmounted(() => {
 		}
 	}
 }
-
 
 /* 激活指示条就地滑入动效 */
 .indicator-fade-enter-active,
