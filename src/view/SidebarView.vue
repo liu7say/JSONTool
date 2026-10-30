@@ -40,8 +40,8 @@
 						@click="handleTabClick(tab.id)"
 						@contextmenu.prevent="openTabContextMenu($event, tab)"
 						@mousedown.middle.prevent="sessionStore.closeTab(tab.id)"
-						@mouseenter="(e) => onTabMouseEnter(e, tab.id)"
-						@mouseleave="onTabMouseLeave">
+						@mouseenter="handleTabHoverEnter($event, tab.id)"
+						@mouseleave="scheduleHoverLeave">
 						<!-- 折叠图层：单字徽章 (绝对居中，交错弹性缩放淡入) -->
 						<div class="tab-collapsed-layer">
 							<span class="tab-badge">{{ getShortTitle(tab.title) }}</span>
@@ -94,31 +94,28 @@
 			</div>
 		</div>
 
-		<!-- 折叠标签页的原位浮动展开卡片 (平滑向右舒展延伸至 142px，悬浮于编辑区上方) -->
+		<!-- 折叠标签页的原位浮动展开卡片 (固定视口悬浮于编辑区上方，超出 48px 边栏边界) -->
 		<Teleport to="body">
 			<transition name="tab-flyout">
 				<div
 					v-if="sessionStore.sidebarCollapsed && hoveredTab"
-					class="tab-flyout-item f-tab-item vertical"
+					class="tab-flyout-card f-acrylic"
 					:class="{
 						active: sessionStore.activeTabId === hoveredTab.id,
 						'hover-inactive': sessionStore.activeTabId !== hoveredTab.id,
 					}"
-					:style="popoverStyle"
-					@mouseenter="onPopoverMouseEnter"
-					@mouseleave="onPopoverMouseLeave"
-					@click="
-						sessionStore.setActive(hoveredTab.id);
-						hoveredTabId = null;
-					"
+					:style="flyoutStyle"
+					@mouseenter="clearHoverTimer"
+					@mouseleave="scheduleHoverLeave"
+					@click="onFlyoutClick(hoveredTab.id)"
 					@contextmenu.prevent="openTabContextMenu($event, hoveredTab)"
-					@mousedown.middle.prevent="sessionStore.closeTab(hoveredTab.id)">
-					<!-- 激活态指示条 (与展开态对齐) -->
+					@mousedown.middle.prevent="onFlyoutMiddleClick(hoveredTab.id)">
+					<!-- 激活态左侧指示条 (与展开态 1:1 对齐) -->
 					<div
 						v-if="sessionStore.activeTabId === hoveredTab.id"
-						class="flyout-active-indicator" />
+						class="flyout-indicator" />
 
-					<!-- 纯文字标题区域 (完全复刻展开态，无单字徽章) -->
+					<!-- 标题区域与内联重命名 -->
 					<div class="tab-title-wrap">
 						<input
 							v-if="renamingTabId === hoveredTab.id"
@@ -138,10 +135,10 @@
 						</span>
 					</div>
 
-					<!-- 关闭标签按钮 -->
+					<!-- 关闭标签页按钮 (×) -->
 					<span
 						class="tab-close"
-						@click.stop="sessionStore.closeTab(hoveredTab.id)"
+						@click.stop="onFlyoutCloseTab(hoveredTab.id)"
 						:title="t('app.closeTab')">
 						<component :is="Close" style="width: 12px; height: 12px" />
 					</span>
@@ -270,66 +267,72 @@ watch(
 	},
 );
 
-// 折叠状态悬浮展开卡片相关逻辑
+// 折叠态 Tab 浮动展开卡片相关状态 (Linus 式非对称防抖)
 const hoveredTabId = ref(null);
-const popoverStyle = ref({ top: '0px', left: '0px' });
-let hoverTimer = null;
+const flyoutStyle = ref({ top: '0px', left: '0px' });
+let flyoutLeaveTimer = null;
 
 const getShortTitle = (title) => {
 	if (!title) return '';
 	return String(title).substring(0, 1).toUpperCase();
 };
 
+// 计算当前悬停的目标 Tab
 const hoveredTab = computed(() =>
 	sessionStore.tabs.find((t) => t.id === hoveredTabId.value),
 );
 
-const onTabMouseEnter = (e, tabId) => {
+// 清理离场防抖定时器
+const clearHoverTimer = () => {
+	if (flyoutLeaveTimer) {
+		clearTimeout(flyoutLeaveTimer);
+		flyoutLeaveTimer = null;
+	}
+};
+
+// 鼠标移入折叠状态下的某个 Tab：即刻定位并展现浮层
+const handleTabHoverEnter = (event, tabId) => {
 	if (!sessionStore.sidebarCollapsed) {
 		hoveredTabId.value = null;
 		return;
 	}
 
-	const target = e.currentTarget;
-	const rect = target.getBoundingClientRect();
+	clearHoverTimer();
 
-	popoverStyle.value = {
-		top: rect.top + 'px',
-		left: rect.left + 'px',
+	// 捕获目标标签项在视口中的精确坐标
+	const rect = event.currentTarget.getBoundingClientRect();
+	flyoutStyle.value = {
+		top: `${rect.top}px`,
+		left: `${rect.left}px`,
 	};
 
 	hoveredTabId.value = tabId;
-
-	if (hoverTimer) clearTimeout(hoverTimer);
 };
 
-const onTabMouseLeave = (e) => {
-	// 如果由于 Teleport 节点直接插入鼠标下方导致 relatedTarget 为 null，切勿误杀浮层
-	if (!e.relatedTarget) {
-		return;
-	}
-	// 如果光标移动到了浮动的展开项内，保持展开
-	if (
-		e.relatedTarget &&
-		e.relatedTarget.closest &&
-		e.relatedTarget.closest('.tab-flyout-item')
-	) {
-		return;
-	}
-
-	hoverTimer = setTimeout(() => {
+// 鼠标移出 Tab 或移出浮层卡片：启动 140ms 防抖离场
+const scheduleHoverLeave = () => {
+	clearHoverTimer();
+	flyoutLeaveTimer = setTimeout(() => {
 		hoveredTabId.value = null;
-	}, 120);
+	}, 140);
 };
 
-const onPopoverMouseEnter = () => {
-	if (hoverTimer) clearTimeout(hoverTimer);
+// 浮层交互：点击激活标签页
+const onFlyoutClick = (tabId) => {
+	sessionStore.setActive(tabId);
+	hoveredTabId.value = null;
 };
 
-const onPopoverMouseLeave = () => {
-	hoverTimer = setTimeout(() => {
-		hoveredTabId.value = null;
-	}, 100);
+// 浮层交互：鼠标中键关闭标签页
+const onFlyoutMiddleClick = (tabId) => {
+	sessionStore.closeTab(tabId);
+	hoveredTabId.value = null;
+};
+
+// 浮层交互：点击关闭按钮 (×)
+const onFlyoutCloseTab = (tabId) => {
+	sessionStore.closeTab(tabId);
+	hoveredTabId.value = null;
 };
 
 // Tab 右键上下文菜单与重命名状态
@@ -427,7 +430,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
 	window.removeEventListener('resize', updateIndicatorPosition);
-	if (hoverTimer) clearTimeout(hoverTimer);
+	clearHoverTimer();
 });
 </script>
 
@@ -713,35 +716,37 @@ onUnmounted(() => {
 	z-index: 9999;
 }
 
-.tab-flyout-item {
-	position: fixed;
-	z-index: 1000;
+.tab-flyout-card {
+	position: fixed !important;
+	z-index: 99999 !important;
 	width: 142px !important;
-	height: 32px;
-	min-height: 32px;
-	padding: 0 8px;
-	display: flex;
-	align-items: center;
-	border-radius: 6px;
-	cursor: pointer;
-	user-select: none;
-	overflow: hidden;
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
-	box-sizing: border-box;
+	height: 32px !important;
+	min-height: 32px !important;
+	padding: 0 8px !important;
+	box-sizing: border-box !important;
+	display: flex !important;
+	align-items: center !important;
+	border-radius: 6px !important;
+	cursor: pointer !important;
+	user-select: none !important;
+	overflow: hidden !important;
+	backdrop-filter: blur(20px) !important;
+	-webkit-backdrop-filter: blur(20px) !important;
+	background-color: var(--colorNeutralBackground2) !important;
+	border: 1px solid var(--colorNeutralStroke1) !important;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+	will-change: width, box-shadow, opacity;
 
-	/* 激活状态浮动卡片 */
+	/* 激活态 Tab 浮层 */
 	&.active {
-		background-color: var(--colorNeutralBackground2) !important;
-		border: 1px solid var(--colorNeutralStroke1) !important;
+		border-color: var(--colorNeutralStroke1) !important;
 
 		.tab-text {
 			font-weight: 700;
 			color: var(--colorBrandForegroundLink, var(--colorBrandBackground));
 		}
 
-		.flyout-active-indicator {
+		.flyout-indicator {
 			position: absolute;
 			left: 0;
 			top: 50%;
@@ -753,14 +758,14 @@ onUnmounted(() => {
 		}
 	}
 
-	/* 未激活状态浮动卡片 */
+	/* 未激活态 Tab 浮层 */
 	&.hover-inactive {
-		background-color: var(--colorNeutralBackground2) !important;
-		border: 1px solid var(--colorNeutralStroke1) !important;
-
 		&:hover {
 			background-color: var(--colorNeutralBackgroundSubtleHover) !important;
-			border-color: var(--colorNeutralStrokeAccessible, var(--colorNeutralStroke1)) !important;
+			border-color: var(
+				--colorNeutralStrokeAccessible,
+				--colorNeutralStroke1
+			) !important;
 		}
 	}
 
@@ -771,6 +776,15 @@ onUnmounted(() => {
 		white-space: nowrap;
 		margin-right: 4px;
 		padding-left: 2px;
+	}
+
+	.tab-text {
+		display: block;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: 13px;
+		color: var(--colorNeutralForeground1);
 	}
 
 	.tab-rename-input {
@@ -784,15 +798,6 @@ onUnmounted(() => {
 		border-radius: 4px;
 		outline: none;
 		box-shadow: 0 0 0 1px var(--colorBrandBackground);
-	}
-
-	.tab-text {
-		display: block;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		font-size: 13px;
-		color: var(--colorNeutralForeground1);
 	}
 
 	.tab-close {
@@ -822,9 +827,9 @@ onUnmounted(() => {
 .tab-flyout-enter-active,
 .tab-flyout-leave-active {
 	transition:
-		width 150ms cubic-bezier(0.2, 0.9, 0.2, 1),
-		box-shadow 150ms ease,
-		opacity 100ms ease;
+		width 160ms cubic-bezier(0.2, 0.9, 0.2, 1),
+		box-shadow 160ms ease,
+		opacity 120ms ease;
 }
 
 .tab-flyout-enter-from,
