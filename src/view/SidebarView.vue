@@ -730,16 +730,27 @@ onUnmounted(() => {
 	cursor: pointer !important;
 	user-select: none !important;
 	overflow: hidden !important;
-	backdrop-filter: blur(20px) !important;
-	-webkit-backdrop-filter: blur(20px) !important;
-	background-color: var(--colorNeutralBackground2) !important;
-	border: 1px solid var(--colorNeutralStroke1) !important;
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+
+	/* 1. 对齐 FPopoverMenu 统一亚克力材质与饱和度滤镜 (浅色 96%、深色 98% 实底) */
+	background-color: var(
+		--f-popover-acrylic-bg,
+		var(--colorNeutralBackground3)
+	) !important;
+	backdrop-filter: blur(20px) saturate(125%) !important;
+	-webkit-backdrop-filter: blur(20px) saturate(125%) !important;
+
+	/* 2. 对齐 FPopoverMenu 细腻高光微描边 */
+	border: 1px solid var(--colorNeutralStroke2) !important;
+
+	/* 3. 对齐 FPopoverMenu 标准系统级双层柔和阴影 */
+	box-shadow:
+		0 8px 16px rgba(0, 0, 0, 0.18),
+		0 0 2px rgba(0, 0, 0, 0.12) !important;
 	will-change: width, box-shadow, opacity;
 
-	/* 激活态 Tab 浮层 */
+	/* 激活态 Tab 浮层：左侧品牌蓝指示条，文字加粗并使用品牌链接色 */
 	&.active {
-		border-color: var(--colorNeutralStroke1) !important;
+		border-color: var(--colorNeutralStroke2) !important;
 
 		.tab-text {
 			font-weight: 700;
@@ -758,13 +769,14 @@ onUnmounted(() => {
 		}
 	}
 
-	/* 未激活态 Tab 浮层 */
+	/* 未激活态 Tab 浮层：底色与激活态完全统一，悬停仅增强边框可见度，绝不改动背景透明度 */
 	&.hover-inactive {
+		border-color: var(--colorNeutralStroke2) !important;
+
 		&:hover {
-			background-color: var(--colorNeutralBackgroundSubtleHover) !important;
 			border-color: var(
 				--colorNeutralStrokeAccessible,
-				--colorNeutralStroke1
+				var(--colorNeutralStroke2)
 			) !important;
 		}
 	}
@@ -816,7 +828,7 @@ onUnmounted(() => {
 			color 150ms ease;
 
 		&:hover {
-			background-color: rgba(0, 0, 0, 0.08);
+			background-color: var(--colorNeutralBackgroundSubtleHover);
 			color: var(--colorNeutralForeground1);
 			opacity: 1;
 		}
