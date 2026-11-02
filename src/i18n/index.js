@@ -143,7 +143,6 @@ export const messages = {
 				monaco: 'Monaco / Menlo (Mac 标配)',
 				cascadiaCode: 'Cascadia Code',
 				jetbrainsMono: 'JetBrains Mono',
-				firaCode: 'Fira Code',
 				custom: '自定义 (Custom)',
 			},
 			weights: {
@@ -284,7 +283,6 @@ export const messages = {
 				monaco: 'Monaco / Menlo (macOS)',
 				cascadiaCode: 'Cascadia Code',
 				jetbrainsMono: 'JetBrains Mono',
-				firaCode: 'Fira Code',
 				custom: 'Custom',
 			},
 			weights: {

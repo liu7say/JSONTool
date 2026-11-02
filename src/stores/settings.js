@@ -78,12 +78,6 @@ export const EDITOR_FONT_PRESETS = [
 		css: "'JetBrains Mono', Consolas, monospace",
 	},
 	{
-		labelKey: 'settings.fontPresets.firaCode',
-		label: 'Fira Code',
-		value: 'Fira Code',
-		css: "'Fira Code', Consolas, monospace",
-	},
-	{
 		labelKey: 'settings.fontPresets.custom',
 		label: '自定义 (Custom)',
 		value: 'custom',
