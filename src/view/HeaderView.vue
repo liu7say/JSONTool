@@ -88,9 +88,7 @@
 				<!-- 格式化工具 (Code/Diff 模式) -->
 				<div
 					class="tool-section"
-					v-if="
-						activeTab.viewMode === 'code' || activeTab.viewMode === 'diff'
-					">
+					v-if="activeTab.viewMode === 'code' || activeTab.viewMode === 'diff'">
 					<div class="f-button-group" ref="formatButtonRef">
 						<FButton
 							size="small"
@@ -321,9 +319,7 @@
 						icon-only
 						@click.stop="showLanguageMenu = !showLanguageMenu"
 						:title="t('common.language')">
-						<span class="language-badge">{{
-							currentLanguageLabel
-						}}</span>
+						<span class="language-badge">{{ currentLanguageLabel }}</span>
 					</FButton>
 
 					<!-- 语言下拉菜单 -->
@@ -387,15 +383,13 @@
 					icon-only
 					@click="emit('openSettings')"
 					:title="t('settings.title')">
-					<component
-						:is="SettingsIcon"
-						style="width: 16px; height: 16px" />
+					<component :is="SettingsIcon" style="width: 16px; height: 16px" />
 				</FButton>
 
 				<a
 					class="f-button small subtle icon-only"
 					title="GitHub"
-					href="https://github.com/dnhyxc/JSONTool"
+					href="https://github.com/liu7say/JSONTool"
 					target="_blank"
 					style="
 						text-decoration: none;
@@ -403,9 +397,7 @@
 						border: none;
 						background: transparent;
 					">
-					<component
-						:is="BrandGithub"
-						style="width: 16px; height: 16px" />
+					<component :is="BrandGithub" style="width: 16px; height: 16px" />
 				</a>
 			</div>
 		</div>
@@ -477,7 +469,7 @@ const sortButtonRef = ref(null);
 const showLanguageMenu = ref(false);
 const languageButtonRef = ref(null);
 const currentLanguageLabel = computed(() =>
-	locale.value === 'zh' ? '中' : 'EN'
+	locale.value === 'zh' ? '中' : 'EN',
 );
 
 const changeLocale = (value) => {
