@@ -26,7 +26,7 @@
 	color: var(--colorNeutralForeground1);
 	font-family: inherit;
 	font-size: 14px;
-	font-weight: var(--fontWeightMedium); /* 微软 Fluent 偏好中粗字重 */
+	font-weight: var(--uiFontWeight, 400); /* 按钮字重跟随用户界面配置 */
 	cursor: pointer;
 	user-select: none;
 	white-space: nowrap; /* 统一限制单行显示，禁止意外折行 */
@@ -240,6 +240,7 @@
 	border-radius: var(--borderRadiusMedium);
 	font-family: inherit;
 	font-size: 14px;
+	font-weight: var(--uiFontWeight, 400);
 	width: 100%;
 	outline: none;
 	transition:

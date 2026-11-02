@@ -25,8 +25,8 @@
 							type="button"
 							class="f-modal-close-btn"
 							@click="close"
-							:aria-label="t('common.close') || '关闭'"
-							title="关闭">
+							:aria-label="t('common.close')"
+							:title="t('common.close')">
 							<component :is="CloseIcon" style="width: 16px; height: 16px" />
 						</button>
 					</div>

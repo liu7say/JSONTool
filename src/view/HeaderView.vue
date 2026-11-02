@@ -321,7 +321,7 @@
 						icon-only
 						@click.stop="showLanguageMenu = !showLanguageMenu"
 						:title="t('common.language')">
-						<span style="font-size: 12px; font-weight: 600">{{
+						<span class="language-badge">{{
 							currentLanguageLabel
 						}}</span>
 					</FButton>
@@ -768,6 +768,11 @@ const handleThemeToggle = (event) => {
 .language-selector-wrapper {
 	position: relative;
 	display: inline-flex;
+}
+
+.language-badge {
+	font-size: 12px;
+	font-weight: var(--uiFontWeight, 400);
 }
 
 /* 按钮弹跳动效 */

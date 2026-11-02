@@ -34,7 +34,10 @@
 		--uiFontWeight,
 		400
 	); /* 常规体跟随用户界面字重设置 */
-	--fontWeightMedium: 500; /* 中等粗细 */
+	--fontWeightMedium: var(
+		--uiFontWeight,
+		400
+	); /* 重点控件及按钮跟随用户界面字重设置 */
 	--fontWeightSemibold: 600; /* 半粗体 */
 	--fontWeightBold: 700; /* 粗体 */
 

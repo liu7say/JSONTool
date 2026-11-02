@@ -6,31 +6,37 @@ import { ref, watch } from 'vue';
  */
 export const UI_FONT_PRESETS = [
 	{
+		labelKey: 'settings.fontPresets.systemDefault',
 		label: '系统默认 (System Default)',
 		value: 'default',
 		css: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'PingFang SC', sans-serif",
 	},
 	{
+		labelKey: 'settings.fontPresets.inter',
 		label: 'Inter',
 		value: 'Inter',
 		css: "'Inter', sans-serif",
 	},
 	{
+		labelKey: 'settings.fontPresets.segoeUi',
 		label: 'Segoe UI (Fluent 推荐)',
 		value: 'Segoe UI',
 		css: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
 	},
 	{
+		labelKey: 'settings.fontPresets.yahei',
 		label: '微软雅黑 (Microsoft YaHei)',
 		value: 'Microsoft YaHei',
 		css: "'Microsoft YaHei', sans-serif",
 	},
 	{
+		labelKey: 'settings.fontPresets.pingfang',
 		label: '苹方 (PingFang SC)',
 		value: 'PingFang SC',
 		css: "'PingFang SC', -apple-system, sans-serif",
 	},
 	{
+		labelKey: 'settings.fontPresets.custom',
 		label: '自定义 (Custom)',
 		value: 'custom',
 		css: '',
@@ -42,36 +48,43 @@ export const UI_FONT_PRESETS = [
  */
 export const EDITOR_FONT_PRESETS = [
 	{
+		labelKey: 'settings.fontPresets.systemMonospace',
 		label: '系统默认等宽 (Consolas / Monaco)',
 		value: 'default',
 		css: "Consolas, Monaco, Menlo, 'Courier New', monospace",
 	},
 	{
+		labelKey: 'settings.fontPresets.consolas',
 		label: 'Consolas (Windows 标配)',
 		value: 'Consolas',
 		css: "Consolas, 'Courier New', monospace",
 	},
 	{
+		labelKey: 'settings.fontPresets.monaco',
 		label: 'Monaco / Menlo (Mac 标配)',
 		value: 'Monaco',
 		css: "Monaco, Menlo, Consolas, monospace",
 	},
 	{
+		labelKey: 'settings.fontPresets.cascadiaCode',
 		label: 'Cascadia Code',
 		value: 'Cascadia Code',
 		css: "'Cascadia Code', Consolas, monospace",
 	},
 	{
+		labelKey: 'settings.fontPresets.jetbrainsMono',
 		label: 'JetBrains Mono',
 		value: 'JetBrains Mono',
 		css: "'JetBrains Mono', Consolas, monospace",
 	},
 	{
+		labelKey: 'settings.fontPresets.firaCode',
 		label: 'Fira Code',
 		value: 'Fira Code',
 		css: "'Fira Code', Consolas, monospace",
 	},
 	{
+		labelKey: 'settings.fontPresets.custom',
 		label: '自定义 (Custom)',
 		value: 'custom',
 		css: '',
@@ -82,11 +95,11 @@ export const EDITOR_FONT_PRESETS = [
  * 界面字重可选范围
  */
 export const UI_FONT_WEIGHT_OPTIONS = [
-	{ label: '300 (纤细 Light)', value: 300 },
-	{ label: '400 (常规 Regular)', value: 400 },
-	{ label: '500 (中等 Medium)', value: 500 },
-	{ label: '600 (半粗 Semibold)', value: 600 },
-	{ label: '700 (粗体 Bold)', value: 700 },
+	{ labelKey: 'settings.weights.w300', label: '300 (纤细 Light)', value: 300 },
+	{ labelKey: 'settings.weights.w400', label: '400 (常规 Regular - 默认)', value: 400 },
+	{ labelKey: 'settings.weights.w500', label: '500 (中等 Medium)', value: 500 },
+	{ labelKey: 'settings.weights.w600', label: '600 (半粗 Semibold)', value: 600 },
+	{ labelKey: 'settings.weights.w700', label: '700 (粗体 Bold)', value: 700 },
 ];
 
 /**
@@ -98,10 +111,10 @@ export const EDITOR_FONT_SIZE_OPTIONS = [12, 13, 14, 15, 16, 18, 20];
  * 编辑器字重可选范围
  */
 export const EDITOR_FONT_WEIGHT_OPTIONS = [
-	{ label: '400 (常规 Regular)', value: 400 },
-	{ label: '500 (中等 Medium)', value: 500 },
-	{ label: '600 (半粗 Semibold)', value: 600 },
-	{ label: '700 (粗体 Bold)', value: 700 },
+	{ labelKey: 'settings.weights.w400', label: '400 (常规 Regular - 默认)', value: 400 },
+	{ labelKey: 'settings.weights.w500', label: '500 (中等 Medium)', value: 500 },
+	{ labelKey: 'settings.weights.w600', label: '600 (半粗 Semibold)', value: 600 },
+	{ labelKey: 'settings.weights.w700', label: '700 (粗体 Bold)', value: 700 },
 ];
 
 /**

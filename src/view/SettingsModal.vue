@@ -26,7 +26,7 @@
 									v-for="preset in UI_FONT_PRESETS"
 									:key="preset.value"
 									:value="preset.value">
-									{{ preset.label }}
+									{{ preset.labelKey ? t(preset.labelKey) : preset.label }}
 								</option>
 							</select>
 							<input
@@ -51,7 +51,7 @@
 									v-for="opt in UI_FONT_WEIGHT_OPTIONS"
 									:key="opt.value"
 									:value="opt.value">
-									{{ opt.label }}
+									{{ opt.labelKey ? t(opt.labelKey) : opt.label }}
 								</option>
 							</select>
 						</div>
@@ -70,7 +70,7 @@
 									v-for="preset in EDITOR_FONT_PRESETS"
 									:key="preset.value"
 									:value="preset.value">
-									{{ preset.label }}
+									{{ preset.labelKey ? t(preset.labelKey) : preset.label }}
 								</option>
 							</select>
 							<input
@@ -95,7 +95,7 @@
 									v-for="size in EDITOR_FONT_SIZE_OPTIONS"
 									:key="size"
 									:value="size">
-									{{ size }}px {{ size === 14 ? '(默认)' : '' }}
+									{{ size }}px {{ size === 14 ? t('settings.defaultTag') : '' }}
 								</option>
 							</select>
 						</div>
@@ -114,7 +114,7 @@
 									v-for="opt in EDITOR_FONT_WEIGHT_OPTIONS"
 									:key="opt.value"
 									:value="opt.value">
-									{{ opt.label }}
+									{{ opt.labelKey ? t(opt.labelKey) : opt.label }}
 								</option>
 							</select>
 						</div>
@@ -307,7 +307,7 @@ const settingsStore = useSettingsStore();
 
 .setting-label {
 	font-size: 14px;
-	font-weight: var(--fontWeightMedium);
+	font-weight: var(--uiFontWeight, 400);
 	color: var(--colorNeutralForeground1);
 }
 
@@ -328,14 +328,16 @@ const settingsStore = useSettingsStore();
 	flex-direction: column;
 	gap: 6px;
 	align-items: flex-end;
+	width: 260px;
 }
 
 /* 通用 Select 与 Input */
 .setting-select {
-	min-width: 170px;
+	width: 260px;
 	height: 28px;
 	padding: 0 10px;
 	font-size: 13px;
+	box-sizing: border-box;
 	border-radius: var(--borderRadiusMedium);
 	border: 1px solid var(--colorNeutralStroke1);
 	background-color: var(--colorNeutralBackground2);
@@ -356,7 +358,7 @@ const settingsStore = useSettingsStore();
 }
 
 .font-custom-input {
-	width: 170px;
+	width: 260px;
 	height: 28px;
 	padding: 0 8px;
 	font-size: 12px;

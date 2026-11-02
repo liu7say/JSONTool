@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg) ![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Vue](https://img.shields.io/badge/Vue-3.x-42b883.svg) ![Style](https://img.shields.io/badge/Style-Fluent%202-0078d4.svg) ![Version](https://img.shields.io/badge/version-v1.0.1-blue.svg)
 
 > 个人自用扩展，欢迎提交 Issue。
 
@@ -97,4 +97,4 @@ npm run build
 1. 在 Chromium 内核浏览器中打开扩展管理页面 (`chrome://extensions/` 或 `edge://extensions/`)。
 2. 开启右上角的“开发者模式”。
 3. 点击“加载已解压的扩展程序”，选择项目构建输出的 `dist/` 目录。
-4. 或从 Releases 下载预打包好的压缩包 (`JSONTool-ChromeWebStore-v1.0.0.zip`) 解压载入。
+4. 或从 Releases 下载预打包好的压缩包 (`JSONTool-ChromeWebStore-v1.0.1.zip`) 解压载入。
